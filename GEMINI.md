@@ -5,11 +5,11 @@ Gemini-specific loader. The canonical bootstrap is **[AGENTS.md](AGENTS.md)** �
 ## Start Here
 1. Read [AGENTS.md](AGENTS.md) and follow the Required Runtime Workflow.
 2. Before any task, load the AI Runtime context:
-   - `Assets/AI/context/Conventions.md`
-   - `Assets/AI/context/Rules.md`
-   - `Assets/AI/context/Workflows.md`
-3. `Assets/AI/skills/` holds task execution workflows.
-4. `Assets/AI/commands/` holds command → skill mappings.
+   - `AI/context/Conventions.md`
+   - `AI/context/Rules.md`
+   - `AI/context/Workflows.md`
+3. `AI/skills/` holds task execution workflows.
+4. `AI/commands/` holds command → skill mappings.
 
 ## Gemini CLI Notes
 - Prefer symbol search, then reference search, before reading files.

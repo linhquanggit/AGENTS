@@ -5,11 +5,11 @@ Claude-specific loader. The canonical bootstrap is **[AGENTS.md](AGENTS.md)** �
 ## Start Here
 1. Read [AGENTS.md](AGENTS.md) and follow the Required Runtime Workflow.
 2. Before any task, load the AI Runtime context:
-   - [Conventions.md](Assets/AI/context/Conventions.md)
-   - [Rules.md](Assets/AI/context/Rules.md)
-   - [Workflows.md](Assets/AI/context/Workflows.md)
-3. [skills/](Assets/AI/skills/) holds task execution workflows.
-4. [commands/](Assets/AI/commands/) holds command → skill mappings.
+   - [Conventions.md](AI/context/Conventions.md)
+   - [Rules.md](AI/context/Rules.md)
+   - [Workflows.md](AI/context/Workflows.md)
+3. [skills/](AI/skills/) holds task execution workflows.
+4. [commands/](AI/commands/) holds command → skill mappings.
 
 ## Claude Code Notes
 - Batch independent reads/searches in a single turn.

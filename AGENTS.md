@@ -11,7 +11,7 @@ This file is a **loader only**. It does not contain conventions, rules, or workf
 
 ## AI Runtime Location
 ```
-Assets/AI/
+AI/
 ├── context/    # Conventions.md, Rules.md, Workflows.md  (read before any task)
 ├── skills/     # task execution workflows
 └── commands/   # command → skill mappings
@@ -23,9 +23,9 @@ Assets/AI/
 
 ## Required Runtime Workflow (every task)
 1. Load AI Runtime context.
-2. Read `Assets/AI/context/Conventions.md`.
-3. Read `Assets/AI/context/Rules.md`.
-4. Read `Assets/AI/context/Workflows.md`.
+2. Read `AI/context/Conventions.md`.
+3. Read `AI/context/Rules.md`.
+4. Read `AI/context/Workflows.md`.
 5. Select the appropriate skill (via `commands/` or `skills/`).
 6. Follow the skill's workflow.
 7. Open the minimum source files required.
