@@ -1,34 +1,71 @@
-# Skill: unity-investigate
+# Rules
 
-Find the root cause of a bug with minimal reads and high precision. Load `../context/Rules.md` + `../context/Conventions.md`.
+Hard constraints for every task. Token efficiency is a primary goal.
 
-## Procedure
-1. **Perception & Framing**: 
-   - Restate symptom, expected vs actual, and repro trigger.
-   - **Perception Step**: Scan for related Managers, Singletons, or recent changes in the area to understand the "health" of the system before diving into code.
-2. **Locate (Surgical Search)**: 
-   - Search for the symbol named in the report (method, field, log string, UI name). 
-   - Use symbol search first, then reference search to find the entry point. 
-   - **DO NOT** scan `Assets/` or use recursive grep unless targeted searches fail.
-3. **Trace & Narrow (Hop-by-Hop)**: 
-   - Open only the file(s) containing the entry point. Read minimal spans (offset+limit).
-   - Follow the call path one hop at a time via reference search. 
-   - Validate state and data flow at each hop. Stop at the first authoritative `file:line` that identifies the fault.
-4. **Diagnosis**: 
-   - State the root cause clearly with `file:line` evidence.
-   - Categorize the bug (e.g., Logic Error, Null Ref, Race Condition, Config Issue).
-5. **Smallest Fix Proposal**: 
-   - Propose the minimal change required. Apply only if requested.
-   - If multiple similar bugs exist, propose a **Batch Fix** to save tokens.
+## Reading
+- Read the minimum number of files required to act. Stop when you can act.
+- Budget: ≤ 5 files before a first diagnosis; ≤ 10 before proposing a fix. To exceed, name the extra files and why.
+- Prefer symbol / reference search over opening files. Locate the symbol, then read only the relevant span.
+- Use targeted reads (offset + limit) instead of whole-file reads on large files.
+- Do NOT scan the repository. Avoid `find` / recursive `grep` over `Assets/` unless a targeted search has failed.
+- Never read `Library/`, `Temp/`, `Logs/`, `obj/`, `.meta` files, or generated folders.
 
-## Anti-Hallucination Guardrails
-- **DO NOT** assume execution flow without `file:line` evidence.
-- **DO NOT** suggest a fix before identifying the root cause with certainty (>90% confidence).
-- **DO NOT** open more than 5 files before providing a status update/initial diagnosis.
-- **DO NOT** ignore existing patterns (e.g., `DPDebug`, naming conventions) in the proposed fix.
-- **STOP** and ask for clarification if the repro trigger is ambiguous or logs are missing.
+## Runtime Disclosure
+- Before using any `.md` runtime file, say `Using <path/to/file.md> — <short purpose>` in chat.
+- This applies to bootstrap, context, command, and skill markdown files.
+- When a command maps to a skill, disclose both files before following them.
+- Keep disclosure short and status-like; do not explain the whole file.
+- Do not repeat a disclosure for the same file inside one task unless the file is read again.
+
+## Scope Discipline
+- Answer ONLY the exact question asked. Do not expand to the full flow, callers, side-effects, save/event/UI, or "related" aspects unless explicitly requested.
+- A narrow question ("điều kiện unlock", "giá trị mặc định", "hàm nào set X") gets a narrow trace — stop at the first authoritative `file:line` that answers it.
+- When delegating to a sub-agent, the sub-task prompt must be as narrow as the user's question. Never hand a broad multi-part investigation to answer a single-point question.
+- After answering, OFFER to go deeper (one line); do not pre-emptively investigate the deeper scope.
+## Permission Modes
+Follow these modes to balance autonomy and safety:
+- **Approval Mode (Default for High Risk)**: MUST ask for user approval before:
+    - Deleting any file or directory.
+    - Modifying Public APIs, Base Classes, or Singletons.
+    - Performing major architectural refactors.
+    - Entering Play Mode or performing Build-related tasks (if applicable).
+- **Auto Mode (Default for Low Risk)**: Act autonomously for:
+    - Adding or fixing `DPDebug` logs.
+    - Minor logic fixes inside private/protected methods.
+    - Creating new files within established patterns (e.g., a new Skill or sibling implementation).
+    - Fixing linting/naming convention issues.
+- **Bypass Mode**: Proceed without asking for any of the above ONLY if the user gives an explicit directive like: "Do it all", "Skip approval", or "Bypass modes".
+
+## Production Safety
+Ensure the codebase remains clean and stable for release:
+- **Conditional Compilation**: Always wrap Debug-only logic, Test commands, or temporary Gizmos in `#if UNITY_EDITOR` or custom define symbols (e.g., `DEBUG_MODE`).
+- **No Stray Debugs**: Never leave `UnityEngine.Debug` calls in the code. Use `DPDebug` as per [Conventions.md](Conventions.md).
+- **Hardcoded Values**: Avoid hardcoded test values in production paths. Use serialized fields or config files instead.
+- **Cleanup**: Remove any temporary "Perception" scripts or diagnostic logs before finalizing a task.
+
+## Searching
+... (rest of the file) ...
+
+- Investigation order: symbol → references → callers → callees → open source. Open source last whenever possible.
+- Scope searches to the smallest plausible directory (the feature folder, not all of `Assets/`).
+- Batch independent searches/reads in one step.
+
+## Editing
+- Investigate dependencies (callers, references, base classes) BEFORE refactoring or renaming.
+- Modify existing patterns; do not introduce new ones.
+- Minimize files modified and lines changed.
+- Follow [Conventions.md](Conventions.md) exactly (naming, DPDebug, no comments).
+- Do not change behavior outside the task scope.
+- Do not edit anything outside the requested scope without asking.
+
+## Planning
+- For non-trivial tasks, present an investigation/implementation plan and wait for approval before modifying code.
+- Skip planning for: explicit direct-implementation requests, small isolated changes, user-requested emergency fixes.
+
+## Uncertainty
+- When confidence is below 80%: state assumptions explicitly, then ask targeted questions.
+- Do not invent architecture details or assume execution flow without `file:line` evidence.
 
 ## Output
-- **Root Cause**: 1-2 lines + `file:line` evidence.
-- **Evidence Trace**: Concise list of hops leading to the bug.
-- **Proposed/Applied Fix**: Minimal code change or configuration update.
+- Be concise. Report what changed and why, with `file:line` references.
+- No speculative refactors, no unrequested cleanups.
