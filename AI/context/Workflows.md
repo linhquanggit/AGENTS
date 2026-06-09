@@ -5,8 +5,10 @@ High-level workflows. Each maps to a skill in `../skills/`. Always obey [Rules.m
 ## Intent Routing
 Route by user intent — natural language works identically to slash commands; commands are optional shortcuts.
 - Bug / unexpected behavior → `unity-investigate`
+- Project health & perception → `unity-perception`
 - New functionality → `unity-feature`
 - Code explanation → `unity-explain`
+- Architectural advice → `unity-advisory`
 - Performance concern → `unity-optimize`
 - Refactor request → `unity-refactor`
 - Code review request → `unity-review`

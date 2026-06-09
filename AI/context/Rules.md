@@ -23,6 +23,20 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - When delegating to a sub-agent, the sub-task prompt must be as narrow as the user's question. Never hand a broad multi-part investigation to answer a single-point question.
 - After answering, OFFER to go deeper (one line); do not pre-emptively investigate the deeper scope.
 
+## Permission Modes
+Follow these modes to balance autonomy and safety:
+- **Approval Mode (Default for High Risk)**: MUST ask for user approval before:
+    - Deleting any file or directory.
+    - Modifying Public APIs, Base Classes, or Singletons.
+    - Performing major architectural refactors.
+    - Entering Play Mode or performing Build-related tasks (if applicable).
+- **Auto Mode (Default for Low Risk)**: Act autonomously for:
+    - Adding or fixing `DPDebug` logs.
+    - Minor logic fixes inside private/protected methods.
+    - Creating new files within established patterns (e.g., a new Skill or sibling implementation).
+    - Fixing linting/naming convention issues.
+- **Bypass Mode**: Proceed without asking for any of the above ONLY if the user gives an explicit directive like: "Do it all", "Skip approval", or "Bypass modes".
+
 ## Searching
 - Investigation order: symbol → references → callers → callees → open source. Open source last whenever possible.
 - Scope searches to the smallest plausible directory (the feature folder, not all of `Assets/`).
