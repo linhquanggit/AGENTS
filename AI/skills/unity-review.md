@@ -1,20 +1,28 @@
 # Skill: unity-review
 
-Review changed code for convention and correctness issues. Load `../context/Rules.md` + `../context/Conventions.md`.
+Review changed code for conventions, correctness, and architectural integrity. Load `../context/Rules.md` + `../context/Conventions.md`.
 
 ## Procedure
-1. **Scope**: Review only the changed files/lines. Don't audit the whole project.
-2. **Conventions check**:
+1. **Targeted Perception**: 
+   - Review ONLY the changed files/lines. **DO NOT** audit unrelated parts of the project.
+2. **Conventions Audit**:
    - Naming: `_local`, camelCase private, PascalCase public.
-   - Logging: `DPDebug` only; correct color (#4aff21/#ffd900/#ff3838); `[]` holds only GameObject name/tag; values outside `[]`.
-   - No comments and no XML/`<summary>` docs unless explicitly requested.
-3. **Correctness check**: null safety, state/order, off-by-one, leaks, event un/subscription.
-4. **Architecture check**: reuse existing managers/base classes; flag new patterns duplicating existing systems; flag unnecessary new files; flag non-minimal file modifications.
-5. **Dependency check**: confirm changes don't break known callers (reference search if risky).
+   - Logging: `DPDebug` ONLY; correct color (#4aff21/#ffd900/#ff3838); `[]` holds ONLY GameObject name/tag.
+   - **NO** comments / XML docs unless explicitly requested.
+3. **Correctness & Safety Audit**: 
+   - Check null safety, execution order, race conditions, and memory leaks (event un/subscription).
+4. **Architectural Consistency Audit**: 
+   - Flag any new patterns that duplicate existing ones. 
+   - Check for **Batch-First** compliance: Could this change have been more efficient?
+   - Ensure minimal file modification and adherence to base classes.
+5. **Dependency Validation**: 
+   - Perform reference search on modified public symbols to ensure no callers are broken.
 
-## Guardrails
-- Targeted reads only; no repo-wide scan.
-- Distinguish blocking issues from nits.
+## Anti-Hallucination Guardrails
+- **DO NOT** guess the intent of a change; ask if ambiguous.
+- **DO NOT** let "nits" (minor issues) overshadow "Blockers" (correctness/safety).
+- **STOP** the review if the changes are too broad (>10 files) and ask for a scoped PR.
 
 ## Output
-Prioritized list (in order Blocker → Major → Minor → Nit): `[Blocker|Major|Minor|Nit] file:line — issue → suggestion`.
+- **Prioritized Findings**: List by severity `[Blocker|Major|Minor|Nit] file:line — issue → suggestion`.
+- **Architectural Score**: Brief comment on consistency and minimal impact.

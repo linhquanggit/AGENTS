@@ -1,19 +1,30 @@
-# Skill: unity-refactor
+# Skill: unity-optimize
 
-Restructure code without changing behavior. Load `../context/Rules.md` + `../context/Conventions.md`.
+Improve performance based on empirical evidence. Load `../context/Rules.md` + `../context/Conventions.md`.
 
 ## Procedure
-1. **Define target**: State what is being refactored and the invariant (behavior must stay identical unless told otherwise).
-2. **Map dependencies FIRST**: Reference-search every caller, override, and usage of the symbols you'll touch. Do not edit before this map is complete.
-3. **Assess impact**: List affected `file:line`. If public API changes, confirm with the user.
-4. **Refactor in steps**: Small, self-contained edits. Keep names per conventions. Modify existing patterns; don't introduce new ones.
-5. **Verify references**: Re-run reference search to confirm no caller is broken and signatures still match.
+1. **Goal & Evidence**: 
+   - State the optimization target (e.g., frame time, allocations).
+   - **Evidence Check**: Identify proof of the bottleneck (Profiler data, repro steps, hot loop). **DO NOT** proceed without evidence.
+2. **Perception & Path Analysis**: 
+   - Search by symbol/reference to the hot path code.
+   - Analyze the "Perception" of the surrounding system: Is this a global bottleneck or a local one?
+3. **Cost-Benefit Estimation**: 
+   - Judge the current cost vs. the potential recovery. 
+   - Focus on "Batch-First" solutions if applicable (e.g., reducing `GetComponent` calls in loops).
+4. **Surgical Implementation**: 
+   - Propose/Apply the smallest optimization that addresses the root cause. 
+   - **DO NOT** perform broad or speculative rewrites.
+5. **Validation**: Confirm the fix addresses the evidence without breaking behavior.
 
-## Guardrails
-- Investigate dependencies before refactoring (hard rule).
-- Keep diffs minimal; no opportunistic rewrites.
-- Preserve `DPDebug` logging and conventions.
+## Anti-Hallucination Guardrails
+- **DO NOT** micro-optimize cold paths (code that runs infrequently).
+- **DO NOT** suggest optimizations that violate naming or logging conventions.
+- **DO NOT** assume "common sense" optimizations (like caching) are needed without checking if they are already implemented or irrelevant.
 
 ## Output
-- Dependency map (callers touched).
-- Changes with `file:line` and confirmation behavior is unchanged.
+- **Bottleneck Identified**: `file:line` with evidence.
+- **Proposed Optimization**: Minimal code change.
+- **Batch Impact**: How it handles repeated operations efficiently.
+- **Expected Gain**: Estimated performance improvement.
+sult**: Confirmation that behavior remains unchanged and all callers are valid.

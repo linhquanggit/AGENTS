@@ -1,22 +1,32 @@
-# Skill: unity-feature
+# Skill: unity-optimize
 
-Add a feature by extending existing architecture. Load `../context/Rules.md` + `../context/Conventions.md`.
+Improve performance based on empirical evidence. Load `../context/Rules.md` + `../context/Conventions.md`.
 
 ## Procedure
-1. **Scope**: Restate the feature and acceptance criteria. Ask only if blocking.
-2. **Find the pattern**: Locate the closest existing implementation to mirror (sibling popup, manager, item). Search by symbol; open one reference example.
-3. **Plan minimal change**: Decide which existing files to extend. Prefer editing over new files. Identify base class (e.g. `PopupBase`) and helpers to reuse.
-4. **Implement**:
-   - Match naming: `_local`, camelCase fields, PascalCase public.
-   - Reuse existing managers/services; do not add new patterns.
-   - No comments / summaries unless requested.
-5. **Logging**: Add `DPDebug` calls per conventions only where they aid debugging (correct color + `[GameObject/tag]` only in brackets).
-6. **Wire-up**: Connect serialized fields / events following the existing example.
+1. **Goal & Evidence**: 
+   - State the optimization target (e.g., frame time, allocations).
+   - **Evidence Check**: Identify proof of the bottleneck (Profiler data, repro steps, hot loop). **DO NOT** proceed without evidence.
+2. **Perception & Path Analysis**: 
+   - Search by symbol/reference to the hot path code.
+   - Analyze the "Perception" of the surrounding system: Is this a global bottleneck or a local one?
+3. **Cost-Benefit Estimation**: 
+   - Judge the current cost vs. the potential recovery. 
+   - Focus on "Batch-First" solutions if applicable (e.g., reducing `GetComponent` calls in loops).
+4. **Surgical Implementation**: 
+   - Propose/Apply the smallest optimization that addresses the root cause. 
+   - **DO NOT** perform broad or speculative rewrites.
+5. **Validation**: Confirm the fix addresses the evidence without breaking behavior.
 
-## Guardrails
-- Minimize new files and modified lines.
-- Don't refactor surrounding code beyond the feature.
+## Anti-Hallucination Guardrails
+- **DO NOT** micro-optimize cold paths (code that runs infrequently).
+- **DO NOT** suggest optimizations that violate naming or logging conventions.
+- **DO NOT** assume "common sense" optimizations (like caching) are needed without checking if they are already implemented or irrelevant.
 
 ## Output
-- Files added/changed with `file:line`.
-- Any serialized-field wiring the user must do in the Editor.
+- **Bottleneck Identified**: `file:line` with evidence.
+- **Proposed Optimization**: Minimal code change.
+- **Batch Impact**: How it handles repeated operations efficiently.
+- **Expected Gain**: Estimated performance improvement.
+sult**: Confirmation that behavior remains unchanged and all callers are valid.
+*: Specific serialized-field connections needed in the Unity Editor.
+- **Batch Efficiency**: Brief note on how the feature handles multiple items efficiently.
