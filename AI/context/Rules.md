@@ -10,6 +10,13 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - Do NOT scan the repository. Avoid `find` / recursive `grep` over `Assets/` unless a targeted search has failed.
 - Never read `Library/`, `Temp/`, `Logs/`, `obj/`, `.meta` files, or generated folders.
 
+## Runtime Disclosure
+- Before using any `.md` runtime file, say `Using <path/to/file.md> — <short purpose>` in chat.
+- This applies to bootstrap, context, command, and skill markdown files.
+- When a command maps to a skill, disclose both files before following them.
+- Keep disclosure short and status-like; do not explain the whole file.
+- Do not repeat a disclosure for the same file inside one task unless the file is read again.
+
 ## Searching
 - Investigation order: symbol → references → callers → callees → open source. Open source last whenever possible.
 - Scope searches to the smallest plausible directory (the feature folder, not all of `Assets/`).
