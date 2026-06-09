@@ -1,32 +1,29 @@
-# Skill: unity-optimize
+# Skill: unity-feature
 
-Improve performance based on empirical evidence. Load `../context/Rules.md` + `../context/Conventions.md`.
+Add new functionality by extending existing patterns, not inventing new ones.
 
 ## Procedure
-1. **Goal & Evidence**: 
-   - State the optimization target (e.g., frame time, allocations).
-   - **Evidence Check**: Identify proof of the bottleneck (Profiler data, repro steps, hot loop). **DO NOT** proceed without evidence.
-2. **Perception & Path Analysis**: 
-   - Search by symbol/reference to the hot path code.
-   - Analyze the "Perception" of the surrounding system: Is this a global bottleneck or a local one?
-3. **Cost-Benefit Estimation**: 
-   - Judge the current cost vs. the potential recovery. 
-   - Focus on "Batch-First" solutions if applicable (e.g., reducing `GetComponent` calls in loops).
-4. **Surgical Implementation**: 
-   - Propose/Apply the smallest optimization that addresses the root cause. 
-   - **DO NOT** perform broad or speculative rewrites.
-5. **Validation**: Confirm the fix addresses the evidence without breaking behavior.
+1. **Scope & Acceptance**:
+   - Clarify what the feature must do and its acceptance criteria. Bound it; ignore unrelated systems.
+2. **Find the Pattern to Extend**:
+   - Search by symbol/reference for the closest existing system (e.g. a sibling popup extending `PopupBase`, an existing Manager). **DO NOT** scan `Assets/`.
+3. **Reuse First**:
+   - Reuse base classes, Managers, and helpers. **DO NOT** introduce a new pattern if an established one fits.
+4. **Implement Minimally**:
+   - Add the fewest new files and lines. Match surrounding naming and structure per `../context/Conventions.md`.
+   - Add `DPDebug` logging (correct color + `[]` rules) where it aids debugging.
+5. **Editor Wiring**:
+   - List any `[SerializeField]` / serialized-field connections the user must wire in the Unity Editor.
 
 ## Anti-Hallucination Guardrails
-- **DO NOT** micro-optimize cold paths (code that runs infrequently).
-- **DO NOT** suggest optimizations that violate naming or logging conventions.
-- **DO NOT** assume "common sense" optimizations (like caching) are needed without checking if they are already implemented or irrelevant.
+- **DO NOT** invent a new architecture when a sibling/base class already exists — find it first.
+- **DO NOT** add libraries or patterns not already present in the project.
+- **DO NOT** modify Public APIs, Base Classes, or Singletons without approval (Permission Modes).
+- **STOP** and ask if acceptance criteria are ambiguous.
 
 ## Output
-- **Bottleneck Identified**: `file:line` with evidence.
-- **Proposed Optimization**: Minimal code change.
-- **Batch Impact**: How it handles repeated operations efficiently.
-- **Expected Gain**: Estimated performance improvement.
-sult**: Confirmation that behavior remains unchanged and all callers are valid.
-*: Specific serialized-field connections needed in the Unity Editor.
+- **Scope & Acceptance**: Bounded summary.
+- **Pattern Reused**: `file:line` of the base class/sibling extended.
+- **Changes**: Files added/modified with a one-line rationale each.
+- **Editor Wiring**: Serialized-field connections needed.
 - **Batch Efficiency**: Brief note on how the feature handles multiple items efficiently.

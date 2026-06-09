@@ -1,7 +1,6 @@
 # Skill: unity-advisory
 
-Act as a Senior Unity Architect to provide expert advice on architecture, performance, and maintainability. 
-Load `../context/Rules.md` + `../context/Conventions.md`.
+Act as a Senior Unity Architect to provide expert advice on architecture, performance, and maintainability.
 **Reference Knowledge**: `../knowledge/architecture.md`, `../knowledge/performance.md`, `../knowledge/ui-patterns.md`.
 
 ## Procedure

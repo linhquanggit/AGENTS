@@ -1,21 +1,5 @@
 # CLAUDE.md — Claude Code Bootstrap
 
-Claude-specific loader. The canonical bootstrap is **[AGENTS.md](AGENTS.md)** — read it first. This file does not duplicate its content.
+Read **[AGENTS.md](AGENTS.md)** first and follow its Required Workflow before any task. It is the single source of truth for this runtime; there is no Claude-specific behavior beyond it.
 
-## Start Here
-1. Read [AGENTS.md](AGENTS.md) and follow the Required Runtime Workflow.
-2. Before any task, load the AI Runtime context:
-   - [Conventions.md](AI/context/Conventions.md)
-   - [Rules.md](AI/context/Rules.md)
-   - [Workflows.md](AI/context/Workflows.md)
-3. [skills/](AI/skills/) holds task execution workflows.
-4. [commands/](AI/commands/) holds command → skill mappings.
-
-## Claude Code Notes
-- Batch independent reads/searches in a single turn.
-- Use symbol/reference search before opening files; avoid repo-wide scans.
-- Use the minimum reads needed, then act. Preserve existing architecture and conventions.
-- Commands `bug` / `feature` / `refactor` / `review` map to the matching skill.
-
-## Verification
-Once the three `context/` files are loaded, prepend your first response of the session with `[AI_RUNTIME_LOADED]` (once per session, verification only). See [AGENTS.md](AGENTS.md#verification).
+Reminder: after loading the three `AI/context/` files, prepend your first response of the session with `[AI_RUNTIME_LOADED]`.

@@ -1,30 +1,28 @@
-# Skill: unity-optimize
+# Skill: unity-refactor
 
-Improve performance based on empirical evidence. Load `../context/Rules.md` + `../context/Conventions.md`.
+Restructure code while preserving behavior.
 
 ## Procedure
-1. **Goal & Evidence**: 
-   - State the optimization target (e.g., frame time, allocations).
-   - **Evidence Check**: Identify proof of the bottleneck (Profiler data, repro steps, hot loop). **DO NOT** proceed without evidence.
-2. **Perception & Path Analysis**: 
-   - Search by symbol/reference to the hot path code.
-   - Analyze the "Perception" of the surrounding system: Is this a global bottleneck or a local one?
-3. **Cost-Benefit Estimation**: 
-   - Judge the current cost vs. the potential recovery. 
-   - Focus on "Batch-First" solutions if applicable (e.g., reducing `GetComponent` calls in loops).
-4. **Surgical Implementation**: 
-   - Propose/Apply the smallest optimization that addresses the root cause. 
-   - **DO NOT** perform broad or speculative rewrites.
-5. **Validation**: Confirm the fix addresses the evidence without breaking behavior.
+1. **Map Dependencies**:
+   - Before touching code, find all callers, references, and overrides of the target via reference search. **DO NOT** edit before the dependency map is complete.
+2. **Confirm Invariant**:
+   - Confirm behavior must stay identical. State explicitly what must NOT change (public API, serialized field names, execution order).
+3. **Refactor in Small Steps**:
+   - Apply the smallest verifiable change at a time. Modify existing patterns; **DO NOT** introduce new ones.
+   - Keep diffs minimal; touch the fewest files possible.
+4. **Keep API Stable**:
+   - Keep public signatures and `[SerializeField]` names stable unless a change was explicitly requested (renaming serialized fields breaks Editor references).
+5. **Verify**:
+   - Re-run reference search on every changed symbol to confirm no caller broke.
 
 ## Anti-Hallucination Guardrails
-- **DO NOT** micro-optimize cold paths (code that runs infrequently).
-- **DO NOT** suggest optimizations that violate naming or logging conventions.
-- **DO NOT** assume "common sense" optimizations (like caching) are needed without checking if they are already implemented or irrelevant.
+- **DO NOT** rename or move a symbol before mapping its callers — broken references are silent in Unity.
+- **DO NOT** change behavior, only structure, unless the task says otherwise.
+- **DO NOT** perform major architectural refactors without approval (Permission Modes).
+- **STOP** if the dependency map reveals the change is broader than expected; report and ask.
 
 ## Output
-- **Bottleneck Identified**: `file:line` with evidence.
-- **Proposed Optimization**: Minimal code change.
-- **Batch Impact**: How it handles repeated operations efficiently.
-- **Expected Gain**: Estimated performance improvement.
-sult**: Confirmation that behavior remains unchanged and all callers are valid.
+- **Dependency Map**: Callers/references/overrides found, with `file:line`.
+- **Invariant**: What stays identical.
+- **Changes**: Step-by-step diff summary, minimal scope.
+- **Verification Result**: Confirmation that behavior is unchanged and all callers are valid.

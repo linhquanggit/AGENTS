@@ -1,6 +1,6 @@
 # Skill: unity-optimize
 
-Improve performance on an evidenced bottleneck. Load `../context/Rules.md` + `../context/Conventions.md`.
+Improve performance on an evidenced bottleneck.
 
 ## Procedure
 1. **Goal**: State the optimization target (frame time, allocations, load time, etc.).
@@ -9,10 +9,11 @@ Improve performance on an evidenced bottleneck. Load `../context/Rules.md` + `..
 4. **Estimate impact**: Judge how much this path costs and what a fix could recover.
 5. **Propose minimal change**: Smallest optimization that addresses the root cause. No speculative or broad rewrites.
 
-## Guardrails
-- No optimization without evidence of a bottleneck.
-- Preserve behavior and conventions; keep diffs minimal.
-- Don't micro-optimize cold paths.
+## Anti-Hallucination Guardrails
+- **DO NOT** optimize without evidence of a bottleneck (profiler data, repro, hot loop).
+- **DO NOT** change behavior or violate conventions; keep diffs minimal.
+- **DO NOT** micro-optimize cold paths (code that runs infrequently).
+- **DO NOT** assume "common sense" fixes (e.g. caching) are needed without checking they aren't already present.
 
 ## Output
 - Bottleneck.

@@ -1,6 +1,6 @@
 # Skill: unity-review
 
-Review changed code for conventions, correctness, and architectural integrity. Load `../context/Rules.md` + `../context/Conventions.md`.
+Review changed code for conventions, correctness, and architectural integrity.
 
 ## Procedure
 1. **Targeted Perception**: 

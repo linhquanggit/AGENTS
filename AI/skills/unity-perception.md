@@ -1,6 +1,6 @@
 # Skill: unity-perception
 
-Gain a deep understanding of the project's health, assets, and dependencies using filesystem analysis. Load `../context/Rules.md` + `../context/Conventions.md`.
+Gain a deep understanding of the project's health, assets, and dependencies using filesystem analysis.
 
 ## Procedure
 1. **Health Check (Filesystem)**:
