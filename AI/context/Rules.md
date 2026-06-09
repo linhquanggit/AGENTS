@@ -17,6 +17,12 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - Keep disclosure short and status-like; do not explain the whole file.
 - Do not repeat a disclosure for the same file inside one task unless the file is read again.
 
+## Scope Discipline
+- Answer ONLY the exact question asked. Do not expand to the full flow, callers, side-effects, save/event/UI, or "related" aspects unless explicitly requested.
+- A narrow question ("điều kiện unlock", "giá trị mặc định", "hàm nào set X") gets a narrow trace — stop at the first authoritative `file:line` that answers it.
+- When delegating to a sub-agent, the sub-task prompt must be as narrow as the user's question. Never hand a broad multi-part investigation to answer a single-point question.
+- After answering, OFFER to go deeper (one line); do not pre-emptively investigate the deeper scope.
+
 ## Searching
 - Investigation order: symbol → references → callers → callees → open source. Open source last whenever possible.
 - Scope searches to the smallest plausible directory (the feature folder, not all of `Assets/`).
