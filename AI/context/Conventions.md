@@ -9,9 +9,9 @@ Authoritative coding conventions. Apply on every edit. Match surrounding code fi
 - `[SerializeField]` fields follow private-field camelCase (with or without explicit `private`).
 
 ## Debug Logging
-- Always use `DPDebug.Log(...)` / `DPDebug.LogWarning(...)` / `DPDebug.LogError(...)`.
-- Namespace: `DP.Utilities` (add `using DP.Utilities;` if missing).
-- Never call `UnityEngine.Debug.Log` directly.
+- Prefer `DPDebug.Log(...)` / `DPDebug.LogWarning(...)` / `DPDebug.LogError(...)` (namespace `DP.Utilities` — add `using DP.Utilities;` if missing).
+- **Fallback**: if the project has no `DPDebug` class, use `UnityEngine.Debug.Log/LogWarning/LogError` instead. Match whichever the project already uses; never mix the two.
+- The color and bracket rules below apply to whichever logger is used.
 - Colors via rich text:
   - Normal: `<color=#4aff21>`
   - Warning: `<color=#ffd900>`
