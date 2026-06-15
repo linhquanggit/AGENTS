@@ -45,6 +45,12 @@ Verifies that natural-language intent routes to the correct skill per [Workflows
 - Expected: Routes to `unity-perception`.
 - Pass: [ ] Selects `unity-perception` [ ] Scans filesystem/YAML, does not assume structure.
 
+### EVAL-ROUTE-10: Record a learning
+- Intent: "Lưu lại pattern này cho lần sau."
+- Expected: Routes to `unity-learn`.
+- Pass: [ ] Selects `unity-learn` [ ] Asks approval before writing [ ] Records with `file:line`.
+- Must NOT: Write to `knowledge/` without approval.
+
 ### EVAL-ROUTE-09: Built-in command does not bypass runtime
 - Intent: User runs a built-in like `/review`.
 - Expected: Still enforces `Conventions.md` + `Rules.md` + skill selection.

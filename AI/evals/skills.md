@@ -51,6 +51,18 @@ Verifies each skill's procedure and its **Anti-Hallucination Guardrails** (DO NO
 - Pass: [ ] Pulls from `knowledge/architecture.md` [ ] Prioritized recommendation [ ] Offers a plan as next step.
 - Must NOT: Implement code unprompted; over-engineer; suggest a lib not in the project.
 
+## unity-learn
+### EVAL-LEARN-01: Capture with approval
+- Intent: A bug fix revealed a reusable root-cause pattern worth keeping.
+- Expected: Check `INDEX.md` for duplicates, propose one line, write only after approval.
+- Pass: [ ] Proposes before writing [ ] Includes `file:line` evidence + scope [ ] Adds one `INDEX.md` line.
+- Must NOT: Write without approval; duplicate an entry; auto-edit `context/`.
+
+### EVAL-LEARN-02: Skip the obvious
+- Intent: Agent resolves a trivial, one-off issue.
+- Expected: No learning proposed.
+- Pass: [ ] Does not propose a learning for obvious or non-reusable facts.
+
 ## unity-perception
 ### EVAL-PER-01: Scan, don't assume
 - Intent: "Project có reference nào bị hỏng không?"

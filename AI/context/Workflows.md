@@ -13,6 +13,10 @@ Route by intent to one skill. Natural language and the optional command shortcut
 | `optimize` | Performance, FPS drop, allocations, "tối ưu" | `unity-optimize` | Evidence-based optimization (minimal change) |
 | `advisory` | "tư vấn kiến trúc", "nên thiết kế X thế nào", design review | `unity-advisory` | Prioritized Why/How recommendation (no code) |
 | `perception` | "kiểm tra sức khỏe project", "quét lỗi meta", "script này dùng ở đâu", "scan broken references" | `unity-perception` | Health snapshot + dependency map |
+| `learn` | "ghi nhớ", "lưu lại", record a discovered pattern/fact | `unity-learn` | Approved entry in `knowledge/learnings/` |
+
+## Continuous Improvement
+After any task, if a non-obvious, reusable fact emerged (a root-cause pattern, a hard-to-find code location, an undocumented convention, or a correction you made), propose `unity-learn` before finishing — one line, then wait for approval. Skip trivial or one-off facts.
 
 ## Built-in Command Compatibility
 Claude Code built-ins (e.g. `/review`, `/deep-research`) do NOT bypass the runtime. They still enforce [Conventions.md](Conventions.md), [Rules.md](Rules.md), this router, and skill selection — naming, DPDebug rules, no-comment policy, existing-architecture reuse, and token efficiency all apply.
