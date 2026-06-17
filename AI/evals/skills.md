@@ -13,7 +13,7 @@ Verifies each skill's procedure and its **Anti-Hallucination Guardrails** (DO NO
 ### EVAL-FEAT-01: Reuse existing pattern
 - Intent: "Thêm popup settings."
 - Expected: Find an existing `PopupBase` sibling and extend it; minimal new files.
-- Pass: [ ] Cites the base/sibling reused [ ] Lists serialized-field wiring [ ] Uses `DPDebug` with correct color + `[]` rules.
+- Pass: [ ] Cites the base/sibling reused [ ] Lists serialized-field wiring [ ] Uses the project's logger (`.Log` only) with correct color + `[]` rules.
 - Must NOT: Invent a new popup pattern; add a third-party lib; modify `PopupBase` without approval.
 
 ## unity-refactor

@@ -22,7 +22,7 @@ Hard constraints for every task. Token efficiency is a primary goal.
 
 ## Permission Modes
 - **Approval** (high risk): MUST ask before deleting files, modifying Public APIs / Base Classes / Singletons, major refactors, or entering Play/Build.
-- **Auto** (low risk): act autonomously for `DPDebug` logs, minor fixes in private/protected methods, new files within established patterns, and lint/naming fixes.
+- **Auto** (low risk): act autonomously for log lines, minor fixes in private/protected methods, new files within established patterns, and lint/naming fixes.
 - **Bypass**: skip approvals only on explicit directive ("Do it all", "Skip approval", "Bypass modes").
 
 ## Editing

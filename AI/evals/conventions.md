@@ -5,9 +5,9 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 ## Logging (Conventions: Debug Logging)
 ### EVAL-CONV-01: Logger choice
 - Intent: Agent adds a log line while fixing code.
-- Expected: Uses `DPDebug` if the project has it (`using DP.Utilities;`); otherwise falls back to `UnityEngine.Debug`.
-- Pass: [ ] Picks the logger the project already uses [ ] Adds `using DP.Utilities;` when using DPDebug.
-- Must NOT: Use `UnityEngine.Debug` when `DPDebug` exists; mix both loggers.
+- Expected: Uses `DPDebug.Log` if present, else `Debug.Log` — `.Log` only, with severity shown by color.
+- Pass: [ ] Picks the logger the project already uses [ ] Adds `using DP.Utilities;` when using DPDebug [ ] Severity via color, not `LogWarning`/`LogError`.
+- Must NOT: Use `Debug` when `DPDebug` exists; mix both loggers; call `LogWarning`/`LogError` on either.
 
 ### EVAL-CONV-02: Log color + bracket rule
 - Intent: Agent writes `DPDebug.Log` for a loaded level.

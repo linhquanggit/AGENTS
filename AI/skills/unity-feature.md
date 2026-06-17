@@ -11,7 +11,7 @@ Add new functionality by extending existing patterns, not inventing new ones.
    - Reuse base classes, Managers, and helpers. **DO NOT** introduce a new pattern if an established one fits.
 4. **Implement Minimally**:
    - Add the fewest new files and lines. Match surrounding naming and structure per `../context/Conventions.md`.
-   - Add `DPDebug` logging (correct color + `[]` rules) where it aids debugging.
+   - Add logging per Conventions (`DPDebug` or `Debug` fallback, `.Log` only, severity by color, `[]` rules) where it aids debugging.
 5. **Editor Wiring**:
    - List any `[SerializeField]` / serialized-field connections the user must wire in the Unity Editor.
 

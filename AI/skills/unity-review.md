@@ -7,7 +7,7 @@ Review changed code for conventions, correctness, and architectural integrity.
    - Review ONLY the changed files/lines. **DO NOT** audit unrelated parts of the project.
 2. **Conventions Audit**:
    - Naming: `_local`, camelCase private, PascalCase public.
-   - Logging: `DPDebug` ONLY; correct color (#4aff21/#ffd900/#ff3838); `[]` holds ONLY GameObject name/tag.
+   - Logging per Conventions: `DPDebug` if present, else `Debug`; `.Log` only (never `LogWarning`/`LogError` — severity via color #4aff21/#ffd900/#ff3838); `[]` holds ONLY GameObject name/tag.
    - **NO** comments / XML docs unless explicitly requested.
 3. **Correctness & Safety Audit**: 
    - Check null safety, execution order, race conditions, and memory leaks (event un/subscription).

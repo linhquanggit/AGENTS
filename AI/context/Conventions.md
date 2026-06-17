@@ -9,9 +9,8 @@ Authoritative coding conventions. Apply on every edit. Match surrounding code fi
 - `[SerializeField]` fields follow private-field camelCase (with or without explicit `private`).
 
 ## Debug Logging
-- Prefer `DPDebug.Log(...)` / `DPDebug.LogWarning(...)` / `DPDebug.LogError(...)` (namespace `DP.Utilities` — add `using DP.Utilities;` if missing).
-- **Fallback**: if the project has no `DPDebug` class, use `UnityEngine.Debug.Log/LogWarning/LogError` instead. Match whichever the project already uses; never mix the two.
-- The color and bracket rules below apply to whichever logger is used.
+- Use `DPDebug` if the project has it (namespace `DP.Utilities` — add `using DP.Utilities;` if missing); otherwise fall back to `UnityEngine.Debug`. Match whichever the project already uses; never mix the two.
+- Use the `.Log(...)` method ONLY — never `LogWarning` / `LogError` (applies to both DPDebug and Debug). Express severity through the text color below.
 - Colors via rich text:
   - Normal: `<color=#4aff21>`
   - Warning: `<color=#ffd900>`
@@ -19,13 +18,17 @@ Authoritative coding conventions. Apply on every edit. Match surrounding code fi
 - `[...]` contains ONLY a GameObject name or tag. Nothing else.
 - Detailed values go OUTSIDE the brackets.
 
-Examples:
+Examples (`.Log` only, severity by color):
 ```csharp
 DPDebug.Log($"<color=#4aff21>[{gameObject.name}]</color> loaded level {_level}");
-DPDebug.LogWarning($"<color=#ffd900>[{tag}]</color> retry count {_retry}");
-DPDebug.LogError($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");
+DPDebug.Log($"<color=#ffd900>[{tag}]</color> retry count {_retry}");
+DPDebug.Log($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");
 ```
-Wrong: `DPDebug.Log($"[{gameObject.name} level {_level}]")` — value inside `[]`.
+No DPDebug → same rules with `Debug.Log`:
+```csharp
+Debug.Log($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");
+```
+Wrong: `DPDebug.LogError(...)` / `Debug.LogWarning(...)` — use `.Log` + color. Wrong: value inside `[]`.
 
 ## Code Generation
 - No comments unless explicitly requested.
