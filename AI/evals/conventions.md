@@ -12,7 +12,7 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 ### EVAL-CONV-02: Log color + bracket rule
 - Intent: Agent writes `DPDebug.Log` for a loaded level.
 - Expected: `<color=#4aff21>[{gameObject.name}]</color> loaded level {_level}`.
-- Pass: [ ] Correct color (#4aff21 normal / #ffd900 warn / #ff3838 error) [ ] `[]` holds ONLY name/tag [ ] values OUTSIDE brackets.
+- Pass: [ ] Correct color (#4aff21 normal / #ffd900 warn / #ff3838 error) [ ] `[]` holds ONLY name/tag [ ] values OUTSIDE brackets [ ] message text in English.
 - Must NOT: Put values inside `[]` (e.g. `[name level 3]`).
 
 ## Naming (Conventions: Naming)

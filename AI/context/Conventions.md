@@ -17,6 +17,7 @@ Authoritative coding conventions. Apply on every edit. Match surrounding code fi
   - Error: `<color=#ff3838>`
 - `[...]` contains ONLY a GameObject name or tag. Nothing else.
 - Detailed values go OUTSIDE the brackets.
+- Log message text is in **English** by default.
 
 Examples (`.Log` only, severity by color):
 ```csharp
