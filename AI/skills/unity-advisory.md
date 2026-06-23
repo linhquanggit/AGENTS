@@ -1,7 +1,7 @@
 # Skill: unity-advisory
 
 Act as a Senior Unity Architect to provide expert advice on architecture, performance, and maintainability.
-**Reference Knowledge**: `../knowledge/architecture.md`, `../knowledge/performance.md`, `../knowledge/ui-patterns.md`.
+**Reference Knowledge**: `../knowledge/architecture.md`, `../knowledge/performance.md`, `../knowledge/ui-patterns.md`, `../knowledge/anti-patterns.md`.
 
 ## Procedure
 1. **Perception & Inquiry**: 

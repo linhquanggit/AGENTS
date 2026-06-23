@@ -12,6 +12,7 @@ Find the root cause of a bug or unexpected behavior with minimal reads.
    - Stop at the first authoritative `file:line` that explains the fault.
 4. **Root Cause**:
    - State the cause with `file:line` evidence. Distinguish the cause from its symptoms.
+   - Check it against common traps in `../knowledge/anti-patterns.md` (event leaks, Unity null semantics, lifecycle order).
 5. **Propose Fix**:
    - Describe the smallest fix that addresses the root cause. Apply only if requested (see Permission Modes).
 

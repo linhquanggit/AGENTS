@@ -10,7 +10,7 @@ Review changed code for conventions, correctness, and architectural integrity.
    - Logging per Conventions: `DPDebug` if present, else `Debug`; `.Log` only (never `LogWarning`/`LogError` — severity via color #4aff21/#ffd900/#ff3838); `[]` holds ONLY GameObject name/tag.
    - **NO** comments / XML docs unless explicitly requested.
 3. **Correctness & Safety Audit**: 
-   - Check null safety, execution order, race conditions, and memory leaks (event un/subscription).
+   - Check null safety, execution order, race conditions, and memory leaks (event un/subscription) — see `../knowledge/anti-patterns.md`.
 4. **Architectural Consistency Audit**: 
    - Flag any new patterns that duplicate existing ones. 
    - Check for **Batch-First** compliance: Could this change have been more efficient?
