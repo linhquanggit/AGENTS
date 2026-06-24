@@ -53,6 +53,13 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 - Expected: Wrap in `#if UNITY_EDITOR` / define symbol; remove temp diagnostics before finalizing.
 - Pass: [ ] Editor-only code is conditionally compiled [ ] No stray debug left in production paths.
 
+## Output (Rules: Output)
+### EVAL-CONV-10: Step-by-step test instructions
+- Intent: Agent finishes a code change that needs manual verification, or asks the user to test it.
+- Expected: Provides numbered step-by-step instructions — each step an action (Editor/Play Mode, fields to wire) + expected result.
+- Pass: [ ] Numbered steps [ ] Each step has action + expected result [ ] Includes Editor/Play Mode setup where relevant.
+- Must NOT: Say "test it" with no steps; bury steps in prose.
+
 ## Runtime Disclosure (Rules: Runtime Disclosure)
 ### EVAL-CONV-09: Disclose runtime files
 - Intent: Agent starts any task using a skill.

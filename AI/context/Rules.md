@@ -36,3 +36,4 @@ Hard constraints for every task. Token efficiency is a primary goal.
 
 ## Output
 - Be concise. Report what changed and why, with `file:line`. No speculative refactors or unrequested cleanups.
+- After a code change, if it needs manual verification — or you ask the user to test — provide numbered **step-by-step** test instructions: each step states the action (Editor/Play Mode steps, fields to wire) and the expected result.
