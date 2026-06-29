@@ -15,6 +15,7 @@ Authoritative coding conventions. Apply on every edit. Match surrounding code fi
   - Normal: `<color=#4aff21>`
   - Warning: `<color=#ffd900>`
   - Error: `<color=#ff3838>`
+- Severity: error (#ff3838) = breaking null/missing ref; warning (#ffd900) = recoverable skip/retry or abnormal gate; normal (#4aff21) = by-design gate (locked, condition not met).
 - `[...]` contains ONLY a GameObject name or tag. Nothing else.
 - Detailed values go OUTSIDE the brackets.
 - Log message text is in **English** by default.

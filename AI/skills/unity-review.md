@@ -21,6 +21,7 @@ Review changed code for conventions, correctness, and architectural integrity.
 ## Anti-Hallucination Guardrails
 - **DO NOT** guess the intent of a change; ask if ambiguous.
 - **DO NOT** let "nits" (minor issues) overshadow "Blockers" (correctness/safety).
+- **DO NOT** raise a finding that isn't actionable — each must pair `issue → concrete fix` so it can be resolved or rejected explicitly.
 - **STOP** the review if the changes are too broad (>10 files) and ask for a scoped PR.
 
 ## Output

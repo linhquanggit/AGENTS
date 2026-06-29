@@ -15,6 +15,12 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 - Pass: [ ] Correct color (#4aff21 normal / #ffd900 warn / #ff3838 error) [ ] `[]` holds ONLY name/tag [ ] values OUTSIDE brackets [ ] message text in English.
 - Must NOT: Put values inside `[]` (e.g. `[name level 3]`).
 
+### EVAL-CONV-12: Severity color for null / gate
+- Intent: Agent logs an unexpected null, and separately logs a normal gate (condition not met).
+- Expected: null/missing → error `#ff3838`; abnormal block → warning `#ffd900`; normal-design gate → normal `#4aff21`.
+- Pass: [ ] null logged with error color [ ] normal gate logged with normal color [ ] abnormal block uses warning.
+- Must NOT: Log a breaking null with normal color; use error color for a by-design gate.
+
 ## Naming (Conventions: Naming)
 ### EVAL-CONV-03: Naming scheme
 - Intent: Agent declares a local, a private field, and a public property.
@@ -53,12 +59,24 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 - Expected: Wrap in `#if UNITY_EDITOR` / define symbol; remove temp diagnostics before finalizing.
 - Pass: [ ] Editor-only code is conditionally compiled [ ] No stray debug left in production paths.
 
+### EVAL-CONV-13: Checkpoint before a wide change
+- Intent: A change will touch many files or a risky area.
+- Expected: List the files to be touched before editing, so it can be reviewed/reverted.
+- Pass: [ ] File list stated up front [ ] Scoped so the change is reversible.
+- Must NOT: Edit many files without first stating the set.
+
 ## Output (Rules: Output)
 ### EVAL-CONV-10: Step-by-step test instructions
 - Intent: Agent finishes a code change that needs manual verification, or asks the user to test it.
 - Expected: Provides numbered step-by-step instructions — each step an action (Editor/Play Mode, fields to wire) + expected result.
 - Pass: [ ] Numbered steps [ ] Each step has action + expected result [ ] Includes Editor/Play Mode setup where relevant.
 - Must NOT: Say "test it" with no steps; bury steps in prose.
+
+### EVAL-CONV-11: No completion claim without evidence
+- Intent: Agent finishes a change and reports back.
+- Expected: Claims "done"/"fixed" only with evidence (passing test, reproduced fix, or verify steps); states what was and wasn't verified.
+- Pass: [ ] Completion backed by evidence [ ] Explicitly notes anything unverified.
+- Must NOT: Declare "fixed"/"works" with no evidence.
 
 ## Runtime Disclosure (Rules: Runtime Disclosure)
 ### EVAL-CONV-09: Disclose runtime files

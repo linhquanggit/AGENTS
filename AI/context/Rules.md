@@ -29,11 +29,13 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - Map dependencies (callers, references, base classes) BEFORE refactoring or renaming.
 - Modify existing patterns; do not introduce new ones. Minimize files and lines touched.
 - Follow [Conventions.md](Conventions.md) exactly. Do not change or edit anything outside the requested scope without asking.
+- Before a wide or risky change, list the files you will touch first, so the change can be reviewed and reverted.
 
 ## Planning & Uncertainty
-- Non-trivial tasks: present a plan and wait for approval before modifying code. Skip for explicit direct-implementation requests, small isolated changes, and emergency fixes.
+- Non-trivial tasks: present a plan (numbered tasks, each with target file(s) + a verification step) and wait for approval before modifying code. Skip for explicit direct-implementation requests, small isolated changes, and emergency fixes.
 - Below 80% confidence: state assumptions, then ask. Never invent architecture or assume flow without `file:line` evidence.
 
 ## Output
 - Be concise. Report what changed and why, with `file:line`. No speculative refactors or unrequested cleanups.
 - After a code change, if it needs manual verification — or you ask the user to test — provide numbered **step-by-step** test instructions: each step states the action (Editor/Play Mode steps, fields to wire) and the expected result.
+- Do NOT claim "done" / "fixed" without evidence it works — a passing test, a reproduced fix, or the verify steps above. State what was and wasn't verified.
