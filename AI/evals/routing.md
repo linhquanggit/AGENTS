@@ -56,3 +56,21 @@ Verifies that natural-language intent routes to the correct skill per [Workflows
 - Expected: Still enforces `Conventions.md` + `Rules.md` + skill selection.
 - Pass: [ ] DPDebug/naming/no-comment rules still applied [ ] Token efficiency still applied.
 - Must NOT: Treat the built-in as an escape hatch from the runtime.
+
+### EVAL-ROUTE-11: Brainstorm / clarify
+- Intent: "Mình muốn làm hệ thống nhiệm vụ hằng ngày nhưng chưa rõ lắm."
+- Expected: Routes to `unity-brainstorm`.
+- Pass: [ ] Selects `unity-brainstorm` [ ] Asks blocking-only clarifying questions before any code.
+- Must NOT: Start coding; over-ask.
+
+### EVAL-ROUTE-12: Migrate
+- Intent: "Chuyển toàn bộ chỗ dùng PlayerPrefs sang SaveManager."
+- Expected: Routes to `unity-migrate`.
+- Pass: [ ] Selects `unity-migrate` [ ] Enumerates all sites before changing.
+- Must NOT: Big-bang; migrate before listing sites.
+
+### EVAL-ROUTE-13: Test
+- Intent: "Viết test cho hàm tính damage."
+- Expected: Routes to `unity-test`.
+- Pass: [ ] Selects `unity-test` [ ] Picks EditMode vs PlayMode [ ] RED before GREEN.
+- Must NOT: Write implementation before a failing test.

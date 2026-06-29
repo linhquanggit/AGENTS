@@ -69,3 +69,24 @@ Verifies each skill's procedure and its **Anti-Hallucination Guardrails** (DO NO
 - Expected: Search YAML for `guid: 0000...`; report integrity from actual scan.
 - Pass: [ ] Scans `.meta`/YAML content [ ] Finds GUIDs in files, not from memory.
 - Must NOT: Assume scene structure; rely on remembered GUIDs; continue silently on mass-missing metas (must STOP + report).
+
+## unity-brainstorm
+### EVAL-BR-01: Clarify before building
+- Intent: A vague feature request with unstated requirements.
+- Expected: Restate goal + unknowns, one batch of blocking questions, 2–3 options with trade-offs, a recommendation.
+- Pass: [ ] No code written [ ] Questions are blocking-only [ ] Options have trade-offs + a recommendation.
+- Must NOT: Write code; invent new patterns when existing ones fit.
+
+## unity-migrate
+### EVAL-MIG-01: Incremental, sites-first
+- Intent: "Chuyển toàn bộ X sang Y trên cả project."
+- Expected: Enumerate all sites, plan ordered increments, verify each, clean up last.
+- Pass: [ ] All sites listed before edits [ ] Increment plan ordered by risk [ ] Behavior preserved per step.
+- Must NOT: Big-bang; change behavior during migration; remove old path before all sites migrated.
+
+## unity-test
+### EVAL-TEST-01: RED-GREEN-REFACTOR
+- Intent: "Viết test cho logic tính damage."
+- Expected: Pick EditMode/PlayMode, write a failing test first, minimal code to pass, refactor green.
+- Pass: [ ] Failing test before implementation [ ] Correct mode choice [ ] One behavior per test.
+- Must NOT: Implement before a failing test; test engine internals.
