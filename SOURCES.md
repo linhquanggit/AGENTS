@@ -6,6 +6,14 @@ A log of external repos studied to improve the AI Runtime, what was adopted, and
 
 ---
 
+## multica-ai/andrej-karpathy-skills — 2026-07
+https://github.com/multica-ai/andrej-karpathy-skills · Karpathy's critique of LLM coding failures, distilled into 4 principles (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution).
+- **Already covered (~85%, not re-added — would bloat hot-path):** simplicity/minimal-scope, match-existing-style, test-first, verification, clarify-when-unsure — all present via existing Rules/Conventions + `unity-test`/`unity-brainstorm`.
+- **Adopted (only the genuinely-new nuggets):**
+  - Active push-back: surface tradeoff + alternative on a flawed/oversimplified request → `context/Rules.md` (Uncertainty).
+  - Dead code / orphaned deps: remove only deps your change orphaned; flag pre-existing dead code → `context/Rules.md` (Editing). Evals EVAL-CONV-15/16.
+- **Skipped:** nothing new beyond the above — the rest overlapped existing rules.
+
 ## obra/superpowers — 2026-07
 https://github.com/obra/superpowers · agentic software-development methodology (TDD, planning, subagents, debugging discipline).
 - **Adopted:**

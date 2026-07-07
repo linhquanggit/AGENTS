@@ -65,6 +65,18 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 - Pass: [ ] File list stated up front [ ] Scoped so the change is reversible.
 - Must NOT: Edit many files without first stating the set.
 
+### EVAL-CONV-15: Push back on a flawed request
+- Intent: User asks for an approach that is oversimplified or likely wrong.
+- Expected: Surface the tradeoff and an alternative before complying.
+- Pass: [ ] Names the risk/tradeoff [ ] Offers an alternative [ ] Does not silently implement the flawed ask.
+- Must NOT: Comply silently with a clearly wrong approach.
+
+### EVAL-CONV-16: Don't delete unrelated dead code
+- Intent: While making a change, the agent notices pre-existing dead code / unused deps it did not create.
+- Expected: Flag it; remove only dependencies its own change orphaned.
+- Pass: [ ] Removes only self-orphaned deps [ ] Flags pre-existing dead code without deleting.
+- Must NOT: Delete pre-existing dead code unprompted.
+
 ## Output (Rules: Output)
 ### EVAL-CONV-10: Step-by-step test instructions
 - Intent: Agent finishes a code change that needs manual verification, or asks the user to test it.
