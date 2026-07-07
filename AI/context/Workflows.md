@@ -19,7 +19,8 @@ Route by intent to one skill. Natural language and the optional command shortcut
 | `learn` | "ghi nhớ", "lưu lại", record a discovered pattern/fact | `unity-learn` |
 
 ## Continuous Improvement
-After a task, if a reusable, non-obvious fact emerged (root-cause pattern, hard-to-find location, undocumented convention, or a correction), propose `unity-learn` before finishing — one line, then wait for approval. Skip trivial facts.
+- **Before acting**: scan `knowledge/learnings/INDEX.md`; read any entry relevant to the task (it holds facts already discovered — avoids rediscovery).
+- **After a task**: if a reusable, non-obvious fact emerged (root-cause pattern, hard-to-find location, undocumented convention, or a correction), propose `unity-learn` before finishing — one line, then wait for approval. Skip trivial facts.
 
 ## Built-in Command Compatibility
 Claude Code built-ins (e.g. `/review`) do NOT bypass the runtime — they still enforce [Conventions.md](Conventions.md), [Rules.md](Rules.md), this router, and skill selection.

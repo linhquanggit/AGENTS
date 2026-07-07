@@ -5,6 +5,7 @@ Add new functionality by extending existing patterns, not inventing new ones.
 ## Procedure
 1. **Scope & Acceptance**:
    - Clarify what the feature must do and its acceptance criteria. Bound it; ignore unrelated systems.
+   - If requirements are ambiguous, run `unity-brainstorm` first, then return here.
 2. **Find the Pattern to Extend**:
    - Search by symbol/reference for the closest existing system (e.g. a sibling popup extending `PopupBase`, an existing Manager). **DO NOT** scan `Assets/`.
 3. **Reuse First**:

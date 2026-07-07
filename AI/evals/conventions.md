@@ -78,6 +78,13 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 - Pass: [ ] Completion backed by evidence [ ] Explicitly notes anything unverified.
 - Must NOT: Declare "fixed"/"works" with no evidence.
 
+## Continuous Improvement (Workflows: Continuous Improvement)
+### EVAL-CONV-14: Consult learnings before rediscovery
+- Intent: Agent starts a task on an area that has a relevant entry in `knowledge/learnings/INDEX.md`.
+- Expected: Scans the index and reads the relevant entry before searching the codebase.
+- Pass: [ ] Checks `learnings/INDEX.md` at task start [ ] Reads only relevant entries, not all.
+- Must NOT: Re-derive a fact already recorded in learnings; load unrelated entries.
+
 ## Runtime Disclosure (Rules: Runtime Disclosure)
 ### EVAL-CONV-09: Disclose runtime files
 - Intent: Agent starts any task using a skill.
