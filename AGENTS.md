@@ -1,27 +1,19 @@
-# AGENTS.md — AI Runtime Bootstrap
+# AGENTS.md — Runtime Selector
 
-Single source of truth for all coding agents (Claude Code, Gemini CLI, Codex, others). This is a loader — conventions, rules, and routing live in the AI Runtime, not here.
+Multi-profile AI runtime for all coding agents (Claude Code, Gemini CLI, Codex, others). Each profile under `AI/<Profile>/` is a **self-contained runtime** (its own `AGENTS.md` + `context/` + `skills/` + `knowledge/` + `evals/`). This root file only selects one profile and defers to it.
 
-## Language Policy
+## Language Policy (all profiles)
 - Respond in **Vietnamese** by default, regardless of the input language.
 - Keep unchanged: code, APIs, class / method / file / package names, namespaces, logs, technical identifiers.
 - Technical terms may stay in English when translating reduces clarity.
 - Honor an explicit request for another language.
 
-## AI Runtime
-```
-AI/
-├── context/    # Conventions.md, Rules.md, Workflows.md — load all three before any task
-├── skills/     # one execution procedure per task type
-├── knowledge/  # deep reference, pulled in by skills on demand
-└── evals/      # behavioral checks — run after editing the runtime
-```
+## Profile Selection
+Pick the profile matching the project, then read that profile's `AGENTS.md` and follow it:
+- **Unity** (`AI/Unity/`) — if the project is a Unity C# project (has `Assets/` + `ProjectSettings/`).
+- **Common** (`AI/Common/`) — the language-agnostic default for any other project.
 
-## Required Workflow (every task)
-1. Load `AI/context/Conventions.md`, `AI/context/Rules.md`, `AI/context/Workflows.md`.
-2. Route the request to one skill via `Workflows.md`.
-3. Open that skill and follow its procedure.
-4. Open the minimum source files required (see `Rules.md`).
+Add a sibling folder per new domain; each mirrors the same layout.
 
 ## Verification
-After loading the three `context/` files, prepend your **first response of the session** with `[AI_RUNTIME_LOADED]` (once per session, verification only).
+After loading the active profile's three `context/` files, prepend your **first response of the session** with `[AI_RUNTIME_LOADED]` (once per session, verification only).

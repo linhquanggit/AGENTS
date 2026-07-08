@@ -1,5 +1,5 @@
 # CLAUDE.md — Claude Code Bootstrap
 
-Read **[AGENTS.md](AGENTS.md)** first and follow its Required Workflow before any task. It is the single source of truth for this runtime; there is no Claude-specific behavior beyond it.
+Read **[AGENTS.md](AGENTS.md)** first — it selects the runtime profile (`AI/Unity/` for Unity projects, else `AI/Common/`). Then follow that profile's `AGENTS.md` before any task. There is no Claude-specific behavior beyond it.
 
-Reminder: after loading the three `AI/context/` files, prepend your first response of the session with `[AI_RUNTIME_LOADED]`.
+Reminder: after loading the active profile's three `context/` files (e.g. `AI/Common/context/`), prepend your first response of the session with `[AI_RUNTIME_LOADED]`.
