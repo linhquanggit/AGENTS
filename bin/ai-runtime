@@ -29,6 +29,7 @@ For **every task in any project**, use the shared AI Runtime at \`$LINK\`:
 1. Read \`$LINK/AGENTS.md\` (the profile selector) and follow it.
 2. Unity project (has \`Assets/\` + \`ProjectSettings/\`) -> \`AI/Unity/\`, else \`AI/Common/\`.
 3. Load that profile's \`context/\`, then route to a skill per its \`Workflows.md\`.
+4. Prepend your first response of the session with \`[AI_RUNTIME_LOADED · global · <Profile>]\` (\`<Profile>\` = Unity or Common) — confirms the global runtime was read. Verification only.
 $END
 EOF
 }

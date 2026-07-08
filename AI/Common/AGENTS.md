@@ -18,4 +18,4 @@ Common/
 4. Open that skill and follow its procedure; open the minimum source files (see `context/Rules.md`).
 
 ## Verification
-After loading the three `context/` files, prepend your **first response of the session** with `[AI_RUNTIME_LOADED]` (once per session, verification only).
+After loading the three `context/` files, prepend your **first response of the session** with `[AI_RUNTIME_LOADED · global · Common]` (confirms the global runtime was read; once per session, verification only).

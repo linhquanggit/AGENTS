@@ -16,4 +16,4 @@ Pick the profile matching the project, then read that profile's `AGENTS.md` and 
 Add a sibling folder per new domain; each mirrors the same layout.
 
 ## Verification
-After loading the active profile's three `context/` files, prepend your **first response of the session** with `[AI_RUNTIME_LOADED]` (once per session, verification only).
+After loading the active profile's three `context/` files, prepend your **first response of the session** with `[AI_RUNTIME_LOADED · global · <Profile>]` — where `<Profile>` is `Unity` or `Common` (confirms the global runtime was read). Once per session, verification only.
