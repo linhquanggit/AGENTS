@@ -7,7 +7,7 @@ The AI Runtime installs once per machine and every agent session routes through 
 Quickest (no tap needed) — install straight from the formula URL:
 ```sh
 brew install https://raw.githubusercontent.com/linhquanggit/AGENTS/main/packaging/ai-runtime.rb
-ai-runtime install                          # wire ~/.claude (symlink + managed block)
+ai-runtime install                          # wire ~/.claude (symlink + managed block + read-scope permission)
 ```
 
 Or, once a tap exists (nicer, supports `brew upgrade`):

@@ -5,6 +5,7 @@ set -euo pipefail
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
 LINK="$CLAUDE_DIR/ai-runtime"
+SETTINGS="$CLAUDE_DIR/settings.json"
 BEGIN="# >>> ai-runtime >>>"
 END="# <<< ai-runtime <<<"
 
@@ -39,6 +40,49 @@ strip_block() { # remove an existing managed block from stdin
     $0==b {skip=1} !skip {print} $0==e {skip=0}'
 }
 
+# Add/remove the runtime paths in permissions.additionalDirectories so reading the
+# global runtime from any project never prompts. Paths are resolved for THIS machine.
+perms_wire() { # $1 = add | remove
+  local op="$1" tmp; tmp="$(mktemp)"
+  local input='{}'; [ -f "$SETTINGS" ] && input="$(cat "$SETTINGS")"
+  if command -v jq >/dev/null 2>&1; then
+    local expr
+    if [ "$op" = add ]; then
+      expr='.permissions.additionalDirectories = (((.permissions.additionalDirectories // []) + [$a,$b]) | unique)'
+    else
+      expr='.permissions.additionalDirectories = ((.permissions.additionalDirectories // []) - [$a,$b])'
+    fi
+    printf '%s' "$input" | jq --arg a "$LINK" --arg b "$HOME_DIR" "$expr" > "$tmp" 2>/dev/null \
+      || { rm -f "$tmp"; echo "  ! could not update $SETTINGS (invalid JSON?) — add read scope manually" >&2; return 1; }
+  elif command -v python3 >/dev/null 2>&1; then
+    OP="$op" A="$LINK" B="$HOME_DIR" python3 - "$SETTINGS" > "$tmp" 2>/dev/null <<'PY' \
+      || { rm -f "$tmp"; echo "  ! could not update $SETTINGS — add read scope manually" >&2; return 1; }
+import json, os, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    if not isinstance(d, dict): d = {}
+except Exception:
+    d = {}
+perm = d.setdefault("permissions", {})
+ad = perm.get("additionalDirectories") or []
+a, b, op = os.environ["A"], os.environ["B"], os.environ["OP"]
+if op == "add":
+    for x in (a, b):
+        if x not in ad: ad.append(x)
+else:
+    ad = [x for x in ad if x not in (a, b)]
+perm["additionalDirectories"] = ad
+json.dump(d, sys.stdout, indent=2)
+PY
+  else
+    rm -f "$tmp"
+    echo "  ! no jq/python3 — add to $SETTINGS manually:" >&2
+    echo "      permissions.additionalDirectories += [\"$LINK\", \"$HOME_DIR\"]" >&2
+    return 2
+  fi
+  mv "$tmp" "$SETTINGS"
+}
+
 cmd_install() {
   [ -f "$HOME_DIR/AGENTS.md" ] || { echo "runtime not found at $HOME_DIR" >&2; exit 1; }
   mkdir -p "$CLAUDE_DIR"
@@ -48,6 +92,7 @@ cmd_install() {
   { printf '%s' "$body"; [ -n "$body" ] && printf '\n\n'; block; } > "$GLOBAL_MD"
   echo "installed: $LINK -> $HOME_DIR"
   echo "updated:   $GLOBAL_MD (managed block)"
+  perms_wire add && echo "updated:   $SETTINGS (read scope: no prompts to read the runtime)" || true
 }
 
 cmd_uninstall() {
@@ -57,12 +102,14 @@ cmd_uninstall() {
     mv "$GLOBAL_MD.tmp" "$GLOBAL_MD"
     echo "removed managed block from $GLOBAL_MD"
   fi
+  [ -f "$SETTINGS" ] && perms_wire remove && echo "removed read scope from $SETTINGS" || true
 }
 
 cmd_status() {
   echo "runtime home : $HOME_DIR"
   echo "link         : $LINK -> $([ -L "$LINK" ] && readlink "$LINK" || echo '(none)')"
   echo "global md    : $([ -f "$GLOBAL_MD" ] && grep -q "$BEGIN" "$GLOBAL_MD" && echo 'wired' || echo 'not wired')"
+  echo "read scope   : $([ -f "$SETTINGS" ] && grep -q "$HOME_DIR" "$SETTINGS" && echo 'wired' || echo 'not wired')"
 }
 
 cmd_update() {
