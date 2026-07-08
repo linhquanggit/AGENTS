@@ -5,7 +5,7 @@ class AiRuntime < Formula
   desc "Multi-profile AI coding runtime for Claude Code and other agents"
   homepage "https://github.com/linhquanggit/AGENTS"
   url "https://github.com/linhquanggit/AGENTS/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "REPLACE_WITH_TARBALL_SHA256"
+  sha256 "c3a48f5655f99807cff937dd31dedb434f0190182ef5d2f14d207943fda48172"
   # license "MIT"  # add a LICENSE file to the repo, then enable this
 
   def install
