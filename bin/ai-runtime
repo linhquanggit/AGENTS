@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# ai-runtime — wire the shared AI Runtime into your global agent config (~/.claude).
+set -euo pipefail
+
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
+LINK="$CLAUDE_DIR/ai-runtime"
+BEGIN="# >>> ai-runtime >>>"
+END="# <<< ai-runtime <<<"
+
+# Resolve the runtime content root:
+#  1. $AI_RUNTIME_HOME (set by the Homebrew wrapper), else
+#  2. the repo root relative to this script (dev / git checkout).
+resolve_home() {
+  if [ -n "${AI_RUNTIME_HOME:-}" ]; then
+    echo "$AI_RUNTIME_HOME"; return
+  fi
+  local src="${BASH_SOURCE[0]}"
+  while [ -h "$src" ]; do src="$(readlink "$src")"; done
+  cd "$(dirname "$src")/.." && pwd
+}
+HOME_DIR="$(resolve_home)"
+
+block() {
+  cat <<EOF
+$BEGIN
+# Managed by \`ai-runtime\`. Do not edit between these markers.
+For **every task in any project**, use the shared AI Runtime at \`$LINK\`:
+1. Read \`$LINK/AGENTS.md\` (the profile selector) and follow it.
+2. Unity project (has \`Assets/\` + \`ProjectSettings/\`) -> \`AI/Unity/\`, else \`AI/Common/\`.
+3. Load that profile's \`context/\`, then route to a skill per its \`Workflows.md\`.
+$END
+EOF
+}
+
+strip_block() { # remove an existing managed block from stdin
+  awk -v b="$BEGIN" -v e="$END" '
+    $0==b {skip=1} !skip {print} $0==e {skip=0}'
+}
+
+cmd_install() {
+  [ -f "$HOME_DIR/AGENTS.md" ] || { echo "runtime not found at $HOME_DIR" >&2; exit 1; }
+  mkdir -p "$CLAUDE_DIR"
+  ln -sfn "$HOME_DIR" "$LINK"
+  local body=""
+  [ -f "$GLOBAL_MD" ] && body="$(strip_block < "$GLOBAL_MD")"
+  { printf '%s' "$body"; [ -n "$body" ] && printf '\n\n'; block; } > "$GLOBAL_MD"
+  echo "installed: $LINK -> $HOME_DIR"
+  echo "updated:   $GLOBAL_MD (managed block)"
+}
+
+cmd_uninstall() {
+  [ -L "$LINK" ] && rm "$LINK" && echo "removed link $LINK"
+  if [ -f "$GLOBAL_MD" ]; then
+    strip_block < "$GLOBAL_MD" | sed -e :a -e '/^\n*$/{$d;N;ba}' > "$GLOBAL_MD.tmp"
+    mv "$GLOBAL_MD.tmp" "$GLOBAL_MD"
+    echo "removed managed block from $GLOBAL_MD"
+  fi
+}
+
+cmd_status() {
+  echo "runtime home : $HOME_DIR"
+  echo "link         : $LINK -> $([ -L "$LINK" ] && readlink "$LINK" || echo '(none)')"
+  echo "global md    : $([ -f "$GLOBAL_MD" ] && grep -q "$BEGIN" "$GLOBAL_MD" && echo 'wired' || echo 'not wired')"
+}
+
+cmd_update() {
+  if [ -d "$HOME_DIR/.git" ]; then
+    git -C "$HOME_DIR" pull --ff-only && echo "updated (git pull)"
+  else
+    echo "installed via Homebrew — run: brew upgrade ai-runtime"
+  fi
+}
+
+case "${1:-}" in
+  install)   cmd_install ;;
+  uninstall) cmd_uninstall ;;
+  status)    cmd_status ;;
+  update)    cmd_update ;;
+  *) echo "usage: ai-runtime {install|uninstall|status|update}" >&2; exit 2 ;;
+esac
