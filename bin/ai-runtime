@@ -22,6 +22,13 @@ resolve_home() {
 }
 HOME_DIR="$(resolve_home)"
 
+# SessionStart hook: actively inject the routing directive into every new session so
+# the agent loads the runtime instead of relying on the model to read CLAUDE.md itself.
+# The text carries no ' or " so it embeds safely in the printf JSON literal below.
+HOOK_TEXT="ACTIVE DIRECTIVE — do this BEFORE the first task: read $LINK/AGENTS.md (profile selector) and follow it. Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load that profile context/ files, then route via its Workflows.md. Prepend your first response of the session with [AI_RUNTIME_LOADED · global · <Profile>]. This is not optional background context."
+HOOK_JSON="{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"$HOOK_TEXT\"}}"
+HOOK_CMD="printf '%s' '$HOOK_JSON'"
+
 block() {
   cat <<EOF
 $BEGIN
@@ -83,6 +90,50 @@ PY
   mv "$tmp" "$SETTINGS"
 }
 
+# Add/remove our SessionStart hook. Dedup + removal key on the AI_RUNTIME_LOADED marker
+# in the hook command, so it never duplicates and never touches other SessionStart hooks.
+hook_wire() { # $1 = add | remove
+  local op="$1" tmp; tmp="$(mktemp)"
+  local input='{}'; [ -f "$SETTINGS" ] && input="$(cat "$SETTINGS")"
+  if command -v jq >/dev/null 2>&1; then
+    local expr
+    if [ "$op" = add ]; then
+      expr='.hooks.SessionStart = ((.hooks.SessionStart // []) as $s | if ([ $s[]?.hooks[]?.command ] | any(contains("AI_RUNTIME_LOADED"))) then $s else $s + [{hooks:[{type:"command",command:$cmd}]}] end)'
+    else
+      expr='.hooks.SessionStart = ([ (.hooks.SessionStart // [])[] | select(([.hooks[]?.command] | any(contains("AI_RUNTIME_LOADED"))) | not) ])'
+    fi
+    printf '%s' "$input" | jq --arg cmd "$HOOK_CMD" "$expr" > "$tmp" 2>/dev/null \
+      || { rm -f "$tmp"; echo "  ! could not update $SETTINGS hooks (invalid JSON?) — add SessionStart hook manually" >&2; return 1; }
+  elif command -v python3 >/dev/null 2>&1; then
+    OP="$op" CMD="$HOOK_CMD" python3 - "$SETTINGS" > "$tmp" 2>/dev/null <<'PY' \
+      || { rm -f "$tmp"; echo "  ! could not update $SETTINGS hooks — add SessionStart hook manually" >&2; return 1; }
+import json, os, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    if not isinstance(d, dict): d = {}
+except Exception:
+    d = {}
+hooks = d.setdefault("hooks", {})
+ss = hooks.get("SessionStart") or []
+def has_marker(g):
+    return any("AI_RUNTIME_LOADED" in (h.get("command") or "") for h in g.get("hooks", []))
+op, cmd = os.environ["OP"], os.environ["CMD"]
+if op == "add":
+    if not any(has_marker(g) for g in ss):
+        ss.append({"hooks": [{"type": "command", "command": cmd}]})
+else:
+    ss = [g for g in ss if not has_marker(g)]
+hooks["SessionStart"] = ss
+json.dump(d, sys.stdout, indent=2)
+PY
+  else
+    rm -f "$tmp"
+    echo "  ! no jq/python3 — add a SessionStart hook to $SETTINGS manually" >&2
+    return 2
+  fi
+  mv "$tmp" "$SETTINGS"
+}
+
 cmd_install() {
   [ -f "$HOME_DIR/AGENTS.md" ] || { echo "runtime not found at $HOME_DIR" >&2; exit 1; }
   mkdir -p "$CLAUDE_DIR"
@@ -93,6 +144,7 @@ cmd_install() {
   echo "installed: $LINK -> $HOME_DIR"
   echo "updated:   $GLOBAL_MD (managed block)"
   perms_wire add && echo "updated:   $SETTINGS (read scope: no prompts to read the runtime)" || true
+  hook_wire add && echo "updated:   $SETTINGS (SessionStart hook: auto-loads runtime each session)" || true
 }
 
 cmd_uninstall() {
@@ -103,6 +155,7 @@ cmd_uninstall() {
     echo "removed managed block from $GLOBAL_MD"
   fi
   [ -f "$SETTINGS" ] && perms_wire remove && echo "removed read scope from $SETTINGS" || true
+  [ -f "$SETTINGS" ] && hook_wire remove && echo "removed SessionStart hook from $SETTINGS" || true
 }
 
 cmd_status() {
@@ -110,6 +163,7 @@ cmd_status() {
   echo "link         : $LINK -> $([ -L "$LINK" ] && readlink "$LINK" || echo '(none)')"
   echo "global md    : $([ -f "$GLOBAL_MD" ] && grep -q "$BEGIN" "$GLOBAL_MD" && echo 'wired' || echo 'not wired')"
   echo "read scope   : $([ -f "$SETTINGS" ] && grep -q "$HOME_DIR" "$SETTINGS" && echo 'wired' || echo 'not wired')"
+  echo "session hook : $([ -f "$SETTINGS" ] && grep -q "AI_RUNTIME_LOADED" "$SETTINGS" && echo 'wired' || echo 'not wired')"
 }
 
 cmd_update() {
