@@ -167,13 +167,22 @@ function Cmd-Status {
     $it = Get-Item -LiteralPath $Link -Force
     if ($it.Attributes -band [IO.FileAttributes]::ReparsePoint) { $target = "$($it.Target)" } else { $target = '(not a junction)' }
   }
-  $raw = if (Test-Path -LiteralPath $Settings) { Get-Content -Raw -LiteralPath $Settings } else { '' }
   $mdWired = (Test-Path -LiteralPath $GlobalMd) -and ((Get-Content -Raw -LiteralPath $GlobalMd) -like "*$Begin*")
+  # Parse settings.json so backslashes compare literally (raw JSON escapes \ as \\).
+  $readWired = $false; $hookWired = $false
+  $s = Read-Settings
+  if (($s.PSObject.Properties.Name -contains 'permissions') -and ($s.permissions.PSObject.Properties.Name -contains 'additionalDirectories')) {
+    $ad = @($s.permissions.additionalDirectories)
+    if (($ad -contains $HomeDir) -or ($ad -contains $Link)) { $readWired = $true }
+  }
+  if (($s.PSObject.Properties.Name -contains 'hooks') -and ($s.hooks.PSObject.Properties.Name -contains 'SessionStart')) {
+    foreach ($g in @($s.hooks.SessionStart)) { foreach ($h in @($g.hooks)) { if ("$($h.command)" -like '*ai-runtime-sessionstart*') { $hookWired = $true } } }
+  }
   Write-Host "runtime home : $HomeDir"
   Write-Host "link         : $Link -> $target"
   Write-Host "global md    : $(if ($mdWired) { 'wired' } else { 'not wired' })"
-  Write-Host "read scope   : $(if ($raw -like "*$HomeDir*") { 'wired' } else { 'not wired' })"
-  Write-Host "session hook : $(if ($raw -like '*ai-runtime-sessionstart*') { 'wired' } else { 'not wired' })"
+  Write-Host "read scope   : $(if ($readWired) { 'wired' } else { 'not wired' })"
+  Write-Host "session hook : $(if ($hookWired) { 'wired' } else { 'not wired' })"
 }
 
 function Cmd-Update {
