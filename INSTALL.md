@@ -28,6 +28,23 @@ ai-runtime install
 
 After `ai-runtime install`, open Claude Code in any project: it auto-loads `~/.claude/CLAUDE.md`, which routes through the runtime and selects a profile (Unity if `Assets/`+`ProjectSettings/`, else Common).
 
+## For Windows users — PowerShell (no Homebrew)
+
+One line (requires [git](https://git-scm.com/download/win)):
+```powershell
+irm https://raw.githubusercontent.com/linhquanggit/AGENTS/main/install.ps1 | iex
+```
+This clones the runtime into `%USERPROFILE%\.claude\ai-runtime` and wires `~/.claude` (managed block + read scope + SessionStart hook). Re-run anytime to upgrade (git pull).
+
+Step-by-step from a checkout instead:
+```powershell
+git clone https://github.com/linhquanggit/AGENTS.git
+cd AGENTS
+powershell -ExecutionPolicy Bypass -File .\bin\ai-runtime.ps1 install   # junctions %USERPROFILE%\.claude\ai-runtime -> this checkout
+powershell -ExecutionPolicy Bypass -File .\bin\ai-runtime.ps1 status
+```
+Uses a **junction** (no admin needed), not a symlink. `update` = `git pull`; `uninstall` removes everything it added.
+
 ## For developers — run from a git checkout (no Homebrew)
 ```sh
 git clone https://github.com/linhquanggit/AGENTS.git

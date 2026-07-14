@@ -10,6 +10,11 @@ curl -fsSL https://raw.githubusercontent.com/linhquanggit/AGENTS/main/install.sh
 
 That's it — one line installs the formula, wires `~/.claude`, and verifies. Open a new session in any project and you'll see the marker `[AI_RUNTIME_LOADED · global · <Profile>]` — the runtime is live. Re-run it anytime to upgrade.
 
+**Windows (PowerShell, needs [git](https://git-scm.com/download/win)):**
+```powershell
+irm https://raw.githubusercontent.com/linhquanggit/AGENTS/main/install.ps1 | iex
+```
+
 ---
 
 ## Why
