@@ -18,7 +18,10 @@ New-Item -ItemType Directory -Force -Path $ClaudeDir | Out-Null
 
 if (Test-Path -LiteralPath (Join-Path $Dest '.git')) {
   Say "ai-runtime already installed — updating to latest…"
-  git -C $Dest pull --ff-only
+  # Hard reset: this is a managed checkout, not meant to be hand-edited. A plain
+  # pull aborts if Windows line-ending normalization marked a tracked file dirty.
+  git -C $Dest fetch origin main
+  git -C $Dest reset --hard FETCH_HEAD
 } elseif (Test-Path -LiteralPath $Dest) {
   throw "$Dest exists but is not a git checkout. Run 'ai-runtime.ps1 uninstall' or remove it, then retry."
 } else {

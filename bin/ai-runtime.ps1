@@ -178,8 +178,10 @@ function Cmd-Status {
 
 function Cmd-Update {
   if (Test-Path -LiteralPath (Join-Path $HomeDir '.git')) {
-    git -C $HomeDir pull --ff-only
-    Write-Host "updated (git pull)"
+    # Hard reset — managed checkout; avoids abort when autocrlf dirties a tracked file.
+    git -C $HomeDir fetch origin main
+    git -C $HomeDir reset --hard FETCH_HEAD
+    Write-Host "updated (reset to origin/main)"
   } else {
     Write-Host "no git checkout at $HomeDir — reinstall from the repo to update"
   }
