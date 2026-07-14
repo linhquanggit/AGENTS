@@ -2,12 +2,19 @@
 
 The AI Runtime installs once per machine and every agent session routes through it.
 
-## For users — install via Homebrew
+## For users — one line
 
-Quickest (no tap needed) — install straight from the formula URL:
+```sh
+curl -fsSL https://raw.githubusercontent.com/linhquanggit/AGENTS/main/install.sh | bash
+```
+This installs the Homebrew formula, wires `~/.claude` (symlink + managed block + read scope + SessionStart hook), and prints the resulting state. Re-run it anytime to upgrade to the latest and re-wire. Requires Homebrew (macOS/Linux); Windows is not supported yet.
+
+### Or step-by-step via Homebrew
+
+Install straight from the formula URL (no tap needed):
 ```sh
 brew install https://raw.githubusercontent.com/linhquanggit/AGENTS/main/packaging/ai-runtime.rb
-ai-runtime install                          # wire ~/.claude (symlink + managed block + read-scope permission)
+ai-runtime install                          # wire ~/.claude (symlink + managed block + read scope + SessionStart hook)
 ```
 
 Or, once a tap exists (nicer, supports `brew upgrade`):

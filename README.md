@@ -5,11 +5,10 @@
 Install it once per machine and *every* agent session in *every* project auto-loads the right profile, follows your rules, and routes each request to a purpose-built skill — no per-project setup.
 
 ```sh
-brew install https://raw.githubusercontent.com/linhquanggit/AGENTS/main/packaging/ai-runtime.rb
-ai-runtime install
+curl -fsSL https://raw.githubusercontent.com/linhquanggit/AGENTS/main/install.sh | bash
 ```
 
-That's it. Open a new session in any project and you'll see the verification marker `[AI_RUNTIME_LOADED · global · <Profile>]` — the runtime is live.
+That's it — one line installs the formula, wires `~/.claude`, and verifies. Open a new session in any project and you'll see the marker `[AI_RUNTIME_LOADED · global · <Profile>]` — the runtime is live. Re-run it anytime to upgrade.
 
 ---
 
