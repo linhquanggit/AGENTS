@@ -7,6 +7,7 @@ Authoritative coding conventions. Apply on every edit. Match surrounding code fi
 - Private fields: camelCase → `itemPlayerShort`, `popupAirport`
 - Public fields / properties: PascalCase → `IsShow`, `MaxLevel`
 - `[SerializeField]` fields follow private-field camelCase (with or without explicit `private`).
+- **Public methods with `_` prefix** (e.g. `_OnClickPlay`, `_OnToggleSound`) are **UnityEvent handlers wired in the Editor** (Button.onClick, Toggle, EventTrigger, Animation Event, etc.). They usually show **no code references** because the call lives in a scene/prefab, not in C#. ⚠️ **Never rename, change the signature of, or delete them based on "0 references"** — doing so silently breaks the Editor wiring (the event resolves the handler by name and drops it). See [Rules.md](Rules.md) → Editing.
 
 ## Debug Logging
 - Use `DPDebug` if the project has it (namespace `DP.Utilities` — add `using DP.Utilities;` if missing); otherwise fall back to `UnityEngine.Debug`. Match whichever the project already uses; never mix the two.

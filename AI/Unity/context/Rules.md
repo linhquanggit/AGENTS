@@ -26,6 +26,7 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - **Bypass**: skip approvals only on explicit directive ("Do it all", "Skip approval", "Bypass modes").
 
 ## Editing
+- ⚠️ **UnityEvent handlers** — public methods with a `_` prefix (e.g. `_OnClickPlay`) are wired to UnityEvents in the Editor (Button/Toggle/EventTrigger/Animation Event). They resolve by name from scenes/prefabs, so they show **no code references**. Do NOT rename, change the signature of, or delete them because they look "unused" / "0 references" — that silently breaks the Editor wiring and loses the ref. If a rename is truly required, flag it and get approval first, then re-wire every Editor reference by hand.
 - Map dependencies (callers, references, base classes) BEFORE refactoring or renaming.
 - Modify existing patterns; do not introduce new ones. Minimize files and lines touched.
 - Follow [Conventions.md](Conventions.md) exactly. Do not change or edit anything outside the requested scope without asking.
