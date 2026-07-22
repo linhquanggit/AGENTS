@@ -33,6 +33,15 @@ Debug.Log($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");
 ```
 Wrong: `DPDebug.LogError(...)` / `Debug.LogWarning(...)` — use `.Log` + color. Wrong: value inside `[]`.
 
+## Asynchronous (Coroutines / IEnumerator)
+Default for time-based / multi-frame logic. Match surrounding code; `async`/Addressables only where already used.
+- **Handle:** store a restartable/cancelable coroutine in a `Coroutine` field; stop the old one before starting to avoid overlap → `if (h != null) StopCoroutine(h); h = StartCoroutine(...);`. Prefer `StopCoroutine(handle)` over string-name or `StopAllCoroutines()`.
+- **Lifecycle:** a coroutine dies on `SetActive(false)` / `Destroy` (code after the current `yield` never runs), but **not** on `enabled = false`. `StartCoroutine` on an inactive GameObject throws. It lives on the MonoBehaviour that started it — starting on a pooled/temp object = dead when recycled.
+- **timeScale:** use `WaitForSecondsRealtime` when `Time.timeScale = 0` (pause/popups); `WaitForSeconds` freezes.
+- **GC:** cache a reused `WaitForSeconds` in a field vs `new` in a loop; `yield return null` for next frame (never `yield return 0` — boxes). Avoid lambdas in `WaitUntil`/`WaitWhile` on hot paths.
+- **Exceptions:** an uncaught exception silently kills the coroutine (rest never runs). `yield` is illegal inside a `try` with `catch` (C# rule) — guard only synchronous lines, or split the method.
+- **Nesting:** `yield return Inner()` runs inline (stopping the outer stops it); `yield return StartCoroutine(Inner())` is a separate coroutine the outer's stop won't cancel.
+
 ## Code Generation
 - No comments unless explicitly requested.
 - No XML/`<summary>` docs unless explicitly requested.
