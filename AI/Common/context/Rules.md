@@ -24,6 +24,7 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - **Approval** (high risk): MUST ask before deleting files, modifying public APIs / shared base modules / singletons, major refactors, or running/deploying.
 - **Auto** (low risk): act autonomously for log lines, minor fixes in private/internal functions, new files within established patterns, and lint/naming fixes.
 - **Bypass**: skip approvals only on explicit directive ("Do it all", "Skip approval", "Bypass modes").
+- **One-time accept** (OFF by default — only when the user explicitly asks, e.g. "1-time accept", "hỏi 1 lần rồi tự chạy"): on entering, **first list all anticipated risks up front** (files/dirs to touch, deletes, deploys/runs, public-API/shared-module/singleton changes) so the user grants informed consent in one go; ask **once**. After the user accepts, run to completion without pausing for any further permission prompts until there is a result. Default behavior is unchanged unless requested. Re-ask only if the work expands beyond the accepted scope into a new high-risk action not covered by that initial list.
 
 ## Editing
 - Map dependencies (callers, references, base modules) BEFORE refactoring or renaming.
