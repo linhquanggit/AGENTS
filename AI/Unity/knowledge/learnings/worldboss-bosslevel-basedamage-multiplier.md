@@ -1,0 +1,8 @@
+# BossLevelData: DamageDeal tuyệt đối → BaseDamage(level) × Multiplier(phase)
+Scope: Assets/Project/WorldBoss/Use/Scripts/WorldBossSO.cs (+ 1 call site UIWorldBoss.cs)  |  Evidence: WorldBossSO.cs class BossLevelData/WorldBossPhaseProgressData, GetPhaseDamageDeal, FakeBossLevels()/FakeWorldBossData()
+
+**2026-08-06**: `WorldBossPhaseProgressData.DamageDeal` (BigDouble tuyệt đối, tự chứa mốc cộng dồn) đã bị xoá. Model mới: `BossLevelData.BaseDamage` (1 giá trị dùng chung cho cả level) × `WorldBossPhaseProgressData.Multiplier` (float, luôn ≥1) → `WorldBossSO.GetPhaseDamageDeal(levelData, phaseData) = BaseDamage × Multiplier`. Mọi nơi từng đọc `.DamageDeal` (GetProgressData, GetCurrentFightingPhaseData, GetCurrentBossLevel, GetLevelProgressPercent, GetDamageAtLevel, UIWorldBoss.ShowProgressRewards) đều phải gọi qua helper này — không còn field để đọc trực tiếp.
+
+`GetPreviousProgressData` (trả `WorldBossPhaseProgressData`) đổi thành `GetPreviousMilestoneDamage` (trả thẳng `BigDouble`) vì phase trả về có thể thuộc level khác với `BaseDamage` khác, không thể tự tính damage nếu chỉ cầm object phase — đổi an toàn vì không có caller ngoài `WorldBossSO.cs`.
+
+**Bẫy khi generate BaseDamage từ 1 mốc phase**: `BaseDamage(level)` nên neo vào **phase 1** (mốc nhỏ nhất trong level) để Multiplier các phase sau ≥1 và tăng dần. Nhưng milestone toàn cục #1 (level 1 / phase 1) bị ép cứng = 0 (auto-pass, xem `FakeWorldBossData()`) — nếu lấy thẳng nó làm BaseDamage thì chia 0, khiến Multiplier mọi phase trong level 1 đều rơi về fallback `1f` (phase 2 và phase 3 bị đè phẳng, mất tỉ lệ tăng dần thật). Fix: chỉ riêng level 1 mới fallback BaseDamage sang phase 2 khi phase 1 = 0 (`_phaseDamages[0] > 0 ? _phaseDamages[0] : _phaseDamages[1]`).

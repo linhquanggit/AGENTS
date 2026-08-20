@@ -1,0 +1,5 @@
+# Bullet mới: UbhBulletStopAndFall (2 phase move → freeze → free-fall)
+
+Scope: Assets/Project/Bullets/Scripts/UbhBulletStopAndFall.cs, catalog [05-ubh-bullet-subclasses.md](../snapshots/shoot-templates/05-ubh-bullet-subclasses.md)  |  Evidence: `UbhBulletStopAndFall.cs:1-90`
+
+Kế thừa `UbhBulletSimple`. Phase 1: `base.UpdateMove()` bình thường (rotation tự khớp hướng move vì `angle` truyền vào `Shot()` đã set rotation 1 lần, `transform.up` dùng để tính di chuyển). Sau `delayStop` giây → freeze tại chỗ `stopTime` giây. Hết freeze → free-fall: tốc độ tăng dần theo `fallGravity` mỗi frame, di theo `Vector3.down` (world space); rotation set 1 lần về 180° Z ngay lúc bắt đầu fall (không set lại mỗi frame — tránh overhead khi nhiều bullet cùng rơi). Field cấu hình: `delayStop/stopTime/fallGravity/useFallMaxSpeed/fallMaxSpeed`. Liên quan: [ubh-bullet-custom-updatemove-skip-onupdatedestroy](ubh-bullet-custom-updatemove-skip-onupdatedestroy.md), [ubh-bullet-no-rigidbody2d-dynamic](ubh-bullet-no-rigidbody2d-dynamic.md).

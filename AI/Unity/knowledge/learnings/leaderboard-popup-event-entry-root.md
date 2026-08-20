@@ -1,0 +1,4 @@
+# Hệ popup leaderboard root ở EventLeaderboardEntry (refactor 2026-07-17)
+Scope: Assets/Project/Scripts/Leaderboard* + Events  |  Evidence: LeaderboardPopupBase.cs:10, ItemTopRankBase.cs:22, LeaderBoardWorldBoss.cs:14
+
+`LeaderboardPopupBase<TEntry : EventLeaderboardEntry>`; `ItemMyRankBase`/`ItemTopRankBase`/`LeaderboardItemBase`/`LeaderboardScrollerBase` đều nhận họ `EventLeaderboardEntry` — entry module mới phải kế thừa nó (KHÔNG kế thừa `UIWeeklyEvent.LeaderboardEntry` nữa; họ UIWeekly chỉ còn cho Weekly/Tournament/AirDefense/PVP/BT cũ). Convention: **1 response class mỗi module** — `/events/connect` và `/leaderboard/event` trả cùng JSON shape; server luôn chèn entry user hiện tại (`isCurrentUser=true`) vào `leaderboard[]` kể cả ngoài top N (không cần field my_rank/my_damage). `EventConnectResponse.cs` cấm sửa (user rule).

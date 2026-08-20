@@ -1,0 +1,6 @@
+# Editor crash SIGBUS lúc recompile/Enter Play = UDP socket của com.unity.ide.visualstudio sống sót qua domain reload
+Scope: Unity Editor (crash) / package com.unity.ide.visualstudio (VS Code integration)  |  Evidence: Library/PackageCache/com.unity.ide.visualstudio@2.0.27/Editor/Messaging/Messenger.cs:60 (BeginReceiveFrom) + VisualStudioIntegration.cs RunOnShutdown móc AppDomain.DomainUnload; stack Editor-prev.log: Socket.ReceiveFrom_internal → IOSelectorJob → PerformWaitCallback
+
+Package mở UDP messager và dọn socket ở `AppDomain.DomainUnload` (quá trễ) thay vì `AssemblyReloadEvents.beforeAssemblyReload` → callback ReceiveFrom async treo trên ThreadPool của child domain đang unload → mono_domain_try_unload chờ → SIGBUS. Chỉ kích hoạt khi dùng VS Code + ms-dotnettools.csharp. Upstream Won't Fix (UUM-44192).
+FIX (đã xác nhận hết crash): Assets/Editor/VsMessagerReloadGuard.cs — [InitializeOnLoad] hook beforeAssemblyReload gọi VisualStudioIntegration.Shutdown() qua reflection (đóng socket trước reload). Editor-only, không vào build.
+LOẠI (đừng đổ nhầm): Hot Reload (không có trong project; dotnet PID = VBCSCompiler/Roslyn), Best HTTP/SocketSystem (TCP Receive, không phải UDP ReceiveFrom), native plugin. vHierarchy chỉ gây căn-giữa-text (mutate GUI.skin.label dùng chung), KHÔNG gây crash.

@@ -1,0 +1,5 @@
+# Bullet subclass tự return sớm trong UpdateMove() làm kẹt pool
+
+Scope: bullet subclass kế thừa `UbhBullet` (Assets/UniBulletHell/Script/Bullet + Assets/Project/Bullets/Scripts)  |  Evidence: `UbhBullet.UpdateMove()` gọi `OnUpdateDestroy()` đầu tiên (bounds-check kế thừa từ `Bullet.cs:224-240`); fix áp dụng ở `UbhBulletStopAndFall.cs` (nhánh `isFalling`)
+
+Subclass override `UpdateMove()` và `return` sớm ở phase custom-movement (không gọi `base.UpdateMove()`) sẽ bỏ qua luôn `OnUpdateDestroy()` — nếu phase đó có di chuyển liên tục (vd free-fall) và bullet trôi ra ngoài camera bounds, nó **không bao giờ được release về `UbhObjectPool`**, `m_shooting` kẹt `true` mãi. Lần bắn sau nếu pool tái dùng đúng object đó, `UbhBullet.Shot()` no-op vì guard `if (m_shooting) return;`. Fix: tự gọi `OnUpdateDestroy()` (rồi check lại `m_shooting`) trong mọi phase custom có di chuyển. Note: `UbhBulletStoppable` gốc asset cũng có cùng gap ở phase freeze nhưng vô hại vì vị trí đứng yên không bao giờ vi phạm bounds.
