@@ -2,6 +2,8 @@
 
 Gain a deep understanding of the project's health, assets, and dependencies using filesystem analysis.
 
+Load `../knowledge/addressables.md` when the scope involves Addressables, bundles, or build size.
+
 ## Procedure
 1. **Health Check (Filesystem)**:
    - **Meta Integrity**: Scan for missing `.meta` files or orphaned `.meta` files.

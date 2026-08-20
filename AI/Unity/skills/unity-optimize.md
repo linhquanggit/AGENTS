@@ -2,6 +2,8 @@
 
 Improve performance on an evidenced bottleneck.
 
+Load `../knowledge/addressables.md` when the target is build size, download size, or bundle loading.
+
 ## Procedure
 1. **Goal**: State the optimization target (frame time, allocations, load time, etc.).
 2. **Evidence**: Identify proof of the bottleneck (profiler data, repro, hot loop). If none, ask before proceeding.
