@@ -14,6 +14,11 @@ User requests follow [REQUEST_TEMPLATE.md](REQUEST_TEMPLATE.md) — fields `[LO�
 - A free-form request: map it to the template, state any field you had to assume, and confirm before editing code. Skip the mapping for trivial or read-only asks.
 - Never widen `[PHẠM VI]` on your own — ask first.
 
+## Flow Capture File (all profiles)
+- File cố định, dùng chung cho MỌI loại project (Unity, Common, hay bất kỳ profile nào sau này): `~/.claude/logs/flow-capture.log` (nằm ngoài mọi git repo — một file duy nhất, không phân theo project/profile).
+- Khi được yêu cầu "log để test luồng / check bug": clear (truncate) file này trước khi bắt đầu, rồi đọc lại sau khi user reproduce xong — thay vì xin log device/console/terminal.
+- Ghi gì vào file, ghi bằng cách nào là việc riêng của từng project (code do user tự viết) — quy ước này chỉ định nghĩa vị trí + vòng đời (clear-before-use) của file, không định nghĩa cơ chế viết.
+
 ## Profile Selection
 Pick the profile matching the project, then read that profile's `AGENTS.md` and follow it:
 - **Unity** (`AI/Unity/`) — if the project is a Unity C# project (has `Assets/` + `ProjectSettings/`).
