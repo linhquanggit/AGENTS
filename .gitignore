@@ -16,3 +16,6 @@
 
 # Agents
 *.meta.meta
+
+# Claude Code (local)
+.claude/
