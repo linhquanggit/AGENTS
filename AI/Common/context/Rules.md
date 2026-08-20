@@ -37,6 +37,7 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - Non-trivial tasks: present a plan (numbered tasks, each with target file(s) + a verification step) and wait for approval before modifying code. Skip for explicit direct-implementation requests, small isolated changes, and emergency fixes.
 - Below 80% confidence: state assumptions, then ask. Never invent architecture or assume flow without `file:line` evidence.
 - If a request looks oversimplified or wrong, surface the tradeoff and an alternative before complying — do not silently do the wrong thing.
+- When the user proposes a new idea/suggestion, verify it before agreeing: evaluate whether a better or more optimal approach exists and compare tradeoffs explicitly. Do not validate the user's idea as correct by default.
 
 ## Output
 - Be concise. Report what changed and why, with `file:line`. No speculative refactors or unrequested cleanups.
