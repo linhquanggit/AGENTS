@@ -33,6 +33,7 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - Follow [Conventions.md](Conventions.md) exactly. Do not change or edit anything outside the requested scope without asking.
 - Before a wide or risky change, list the files you will touch first, so the change can be reviewed and reverted.
 - Remove only dependencies your change orphaned; flag pre-existing dead code rather than deleting it.
+- **File `.md` mới trong project dùng Plastic SCM** — trước khi tạo, hỏi: "add" (theo dõi bình thường, cho tài liệu chính thức/chia sẻ team) hay "private" (không track, cho ghi chú/checkpoint cá nhân)? Nếu chọn private: kiểm tra `ignore.conf` ở root project có pattern `*.private` sẵn không — nếu có, đặt tên `<tên>.md.private` để khớp pattern có sẵn (không sửa `ignore.conf` chung); nếu chưa có, hỏi user muốn thêm pattern hay dùng cách khác.
 
 ## Planning & Uncertainty
 - Non-trivial tasks: present a plan (numbered tasks, each with target file(s) + a verification step) and wait for approval before modifying code. Skip for explicit direct-implementation requests, small isolated changes, and emergency fixes.
