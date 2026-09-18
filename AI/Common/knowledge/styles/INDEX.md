@@ -5,8 +5,9 @@ Named, reusable **UI/visual** style presets — evaluated from real projects or 
 Entry line format: `- [name](slug.md) — hook`
 
 <!-- entries below, one line each, newest first -->
+- [solar-system-orbit](solar-system-orbit.md) — sun-centered animated background, 8 real planets on elliptical orbits, self-rotating (WIP, pulled back — see file for open issues)
 - [monochrome-luxury](monochrome-luxury.md) — black/white/gold editorial: serif headings, sharp corners, hairline borders
-- [graphite-minimal](graphite-minimal.md) — near-black dev-tool minimal: hairline borders, one accent glow on the CTA only
+- [graphite-minimal](graphite-minimal.md) — near-black dev-tool minimal: hairline borders, one accent glow on the CTA only, glass surfaces over an animated drifting-blob background, macOS-Settings-style preferences panel
 - [vaporwave](vaporwave.md) — retro 80s-90s sunset gradient with glowing cyan neon accents
 - [aurora-gradient](aurora-gradient.md) — blurred mesh-gradient color blobs behind clean solid cards
 - [cyberpunk-neon](cyberpunk-neon.md) — near-black with glowing magenta/cyan neon edges and scanline texture
