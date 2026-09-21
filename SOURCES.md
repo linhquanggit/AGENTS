@@ -6,6 +6,11 @@ A log of external repos studied to improve the AI Runtime, what was adopted, and
 
 ---
 
+## Tencent-Hunyuan/Hunyuan3D-2 — 2026-09
+https://github.com/Tencent-Hunyuan/Hunyuan3D-2 · Tencent's open-source system for generating 3D textured assets from images/text (Hunyuan3D-DiT shape generation + Hunyuan3D-Paint texture synthesis + Hunyuan3D-Studio).
+- **Adopted:** không có gì mới.
+- **Skipped:** toàn bộ — đây là repo model ML nghiên cứu (research/deployment cho sinh 3D asset), không có `AGENTS.md`/`CLAUDE.md`/`CONTRIBUTING.md`, không có quy ước coding-agent, skill, hay quy trình review nào để so sánh với `AI/Common` hoặc `AI/Unity`. Không liên quan tới runtime của AI coding agent.
+
 ## multica-ai/andrej-karpathy-skills — 2026-07
 https://github.com/multica-ai/andrej-karpathy-skills · Karpathy's critique of LLM coding failures, distilled into 4 principles (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution).
 - **Already covered (~85%, not re-added — would bloat hot-path):** simplicity/minimal-scope, match-existing-style, test-first, verification, clarify-when-unsure — all present via existing Rules/Conventions + `unity-test`/`unity-brainstorm`.
