@@ -39,6 +39,12 @@ Hard constraints for every task. Token efficiency is a primary goal.
 - If a request looks oversimplified or wrong, surface the tradeoff and an alternative before complying — do not silently do the wrong thing.
 - When the user proposes a new idea/suggestion, verify it before agreeing: evaluate whether a better or more optimal approach exists and compare tradeoffs explicitly. Do not validate the user's idea as correct by default.
 
+## Preview / Diff hiển thị
+- Khi user yêu cầu preview/so sánh code trước khi apply: hiển thị **ngay trong chat**, không tạo Artifact/file riêng (tốn thao tác, không thực tế cho mỗi lần preview).
+- Format: liệt kê code bản sau (kết quả sau khi apply) theo từng dòng. Dòng KHÔNG đổi: text thường, KHÔNG bọc trong inline code (tránh nền/pill xám mặc định của code span). Dòng mới/thay đổi: bọc inline code span + **in đậm** (`` **`code`** ``) — phần này mới có nền/highlight, để nổi bật đúng chỗ thay đổi. Không dùng bảng, không dùng cột marker riêng, không hiển thị lại dòng cũ bị xoá — chỉ cần highlight phần mới. Giữ nguyên context quanh chỗ đổi (đủ đọc trọn hàm/khối liên quan). KHÔNG dùng code block ```diff` (không có màu thật, nhìn xấu).
+- Chỉ tạo Artifact (trang HTML) khi user yêu cầu riêng một bản xem trực quan dạng trang.
+- Áp dụng cho mọi lần preview/so sánh trong task, không chỉ lần đầu.
+
 ## Output
 - Be concise. Report what changed and why, with `file:line`. No speculative refactors or unrequested cleanups.
 - After a code change, if it needs manual verification — or you ask the user to test — provide numbered **step-by-step** test instructions: each step states the action and the expected result.
