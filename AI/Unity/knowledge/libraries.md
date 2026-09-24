@@ -3,6 +3,8 @@
 Usage conventions for the third-party libraries in the stack (`Conventions.md`). Pull in for tasks touching Inspector tooling or localized text.
 
 ## Odin Inspector (`Sirenix.OdinInspector`)
+> ⛔ **CẤM trong mọi project OneGame** (`companyName: OneGame` trong `ProjectSettings.asset`, không riêng product tên chứa `1941`): Odin đã bị gỡ hoàn toàn vì bản quyền — mục này KHÔNG áp dụng, xem [Conventions.md](../context/Conventions.md) → Project Stack. Chỉ áp dụng cho project khác đang có sẵn Odin.
+
 - Use `[Button]` for editor actions, `[ShowInInspector]` to surface non-serialized state, `[ReadOnly]` for debug fields.
 - Organize with `[BoxGroup]`, `[FoldoutGroup]`, `[TabGroup]` instead of many headers.
 - Editor windows/tools extend `OdinEditorWindow`.

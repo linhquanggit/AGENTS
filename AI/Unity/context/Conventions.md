@@ -50,5 +50,6 @@ Default for time-based / multi-frame logic. Match surrounding code; `async`/Addr
 - Reuse existing managers, base classes (e.g. `PopupBase`), and helpers before adding new ones.
 
 ## Project Stack (for editing decisions only)
-- Unity C#, Odin Inspector (`Sirenix.OdinInspector`), I2 Localization (`I2.Loc`).
+- ⛔ **CỰC KỲ QUAN TRỌNG — CẤM ODIN trong mọi project OneGame** (nhận diện: `ProjectSettings/ProjectSettings.asset` có `companyName: OneGame` — đây là điều kiện chính, áp dụng cho MỌI product của công ty này chứ không riêng gì product tên chứa `1941`; ví dụ đã biết: `1941 Air Attack` — gồm Events, Main, WorldBoss, ...). Odin Inspector đã bị **gỡ hoàn toàn vì vấn đề bản quyền**. KHÔNG được thêm `using Sirenix.*`, attribute Odin (`[Button]`, `[ShowIf]`, `[ShowInInspector]`, `[ReadOnly]`, `[BoxGroup]`, `[TableList]`, `[LabelText]`, ...), `OdinEditorWindow`/`SerializedMonoBehaviour`, kể cả khi code cũ, snapshot, transcript hay knowledge còn dùng — khi khôi phục/copy code cũ phải lọc bỏ Odin. Thay bằng Unity built-in: `[ContextMenu]`, `[Header]`, `[Tooltip]`, `[SerializeField]`, custom `Editor`/`EditorWindow`. Không đề xuất cài lại Odin.
+- Unity C#, I2 Localization (`I2.Loc`). Odin Inspector (`Sirenix.OdinInspector`) CHỈ dùng cho project KHÔNG thuộc OneGame và đang có sẵn Odin.
 - UI popups extend `PopupBase`.
