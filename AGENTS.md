@@ -19,6 +19,12 @@ User requests follow [REQUEST_TEMPLATE.md](REQUEST_TEMPLATE.md) — fields `[LO�
 - Khi được yêu cầu "log để test luồng / check bug": clear (truncate) file này trước khi bắt đầu, rồi đọc lại sau khi user reproduce xong — thay vì xin log device/console/terminal.
 - Ghi gì vào file, ghi bằng cách nào là việc riêng của từng project (code do user tự viết) — quy ước này chỉ định nghĩa vị trí + vòng đời (clear-before-use) của file, không định nghĩa cơ chế viết.
 
+## Reports Folder (all profiles)
+- Thư mục cố định, dùng chung cho MỌI project, nằm trong repo AGENTS này (KHÔNG nằm trong SCM riêng của từng project) — dùng khi project đó có connect SCM và không muốn người khác đọc được tiến trình/báo cáo công việc: [Reports/](Reports/INDEX.md), tổ chức theo `Reports/<tên-project>/`.
+- `<tên-project>` = tên thư mục gốc của project đang làm việc (basename của working directory), tự suy ra, không hỏi lại trừ khi không xác định được.
+- Khi được yêu cầu "lưu báo cáo / ghi lại tiến trình đã làm" cho project đó: tạo file `Reports/<tên-project>/<YYYY-MM-DD>-<slug>.md` tóm tắt phần đã làm — không viết report này vào trong chính project đó.
+- Sau khi tạo, thêm 1 dòng trỏ tới file mới vào `Reports/INDEX.md` (cùng format với các INDEX khác trong repo: `- [title](path) — hook`).
+
 ## Profile Selection
 Pick the profile matching the project, then read that profile's `AGENTS.md` and follow it:
 - **Unity** (`AI/Unity/`) — if the project is a Unity C# project (has `Assets/` + `ProjectSettings/`).
