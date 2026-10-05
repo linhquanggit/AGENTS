@@ -18,7 +18,7 @@ The model already reasons well on its own. These rules only define **process gat
 - Search first, then read only the relevant span. Batch independent searches. Scope to the smallest plausible folder.
 - No repo-wide scans unless a targeted search failed. Never read build/generated/vendor folders.
 - Soft budget: ~5 files to diagnose, ~10 to fix. Going beyond → say which files and why.
-- Before acting on a task, **grep** the profile's `knowledge/learnings/INDEX.md` for the task's keywords (system/class names); open only matching entries. Don't read the whole index.
+- Before acting on a task, **grep** the profile's `knowledge/learnings/INDEX.md` (and `snapshots/INDEX.md` if present) for the task's keywords (system/class names); open only matching entries. Don't read the whole index.
 
 ## 3. Scope
 - Answer exactly what was asked. A narrow question gets a narrow trace — stop at the first authoritative `file:line`.

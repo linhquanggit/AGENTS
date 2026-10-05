@@ -33,4 +33,4 @@ Pick ONE skill by intent (command word or natural language). Each contract = wha
 - Shoot/bullet work → `knowledge/snapshots/shoot-templates/00-overview.md` (reuse before writing new).
 - Scroller lists → `knowledge/snapshots/enhancedscroller-architecture.md`.
 - Addressables / build size → `knowledge/addressables.md`.
-- Other snapshots are found via the learnings index grep.
+- Other snapshots → grep `knowledge/snapshots/INDEX.md`.

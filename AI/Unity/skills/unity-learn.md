@@ -17,4 +17,4 @@ Scope: <system/folder> | Evidence: <file:line>
 <fact, 1–3 lines; link related entries>
 ```
 INDEX line (keep hook ≤ ~120 chars, it is grepped every task): `- [<title>](<slug>.md) — <hook> (<scope>)`
-Large multi-section captures go to `../knowledge/snapshots/`, still with one INDEX line.
+Large multi-section captures go to `../knowledge/snapshots/`, with one line in `snapshots/INDEX.md`.
