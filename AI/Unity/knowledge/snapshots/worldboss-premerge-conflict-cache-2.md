@@ -9,6 +9,8 @@
 - File 2 (Firebase_Analytics.cs) — **`isWorldBossUnlock` mất sạch cả 4 vị trí** (field/default/fetch/debug-log) — đã restore lại đúng nguyên văn baseline (đặt cạnh `isTournamentUnlock`). Đây là compile-blocker vì `UISelectMode.cs:45,271` gọi field này.
 - File 6 (UIGamePlay.prefab) — **XÁC NHẬN MẤT THẬT**: field `popupWB` trên component `UIGamePlay` biến mất, nested prefab instance `Popup-WB-GamePlay` cũng biến mất hoàn toàn khỏi hierarchy (các popup lân cận Noel/AirDefense/BossFight/Endless vẫn còn nguyên, chỉ riêng WB bị rớt). **CHƯA restore được** — cần thao tác tay trong Unity Editor (kéo lại `Assets/Project/WorldBoss/Use/UI/Prefabs/Popup-WB-GamePlay.prefab` vào đúng vị trí cha, gán lại field `popupWB`), không sửa an toàn qua YAML text vì rủi ro sai fileID/guid. `UIGamePlay.cs` (file 7) vẫn nguyên vẹn về code nhưng sẽ NPE khi gọi các method forward tới `popupWB` cho tới khi fix xong file 6.
 
+**Cập nhật 2026-09-28 (trước merge lần 3):** re-verify file 1/2/4/5/7 nguyên vẹn; file 6 (`popupWB`) VẪN MẤT. Checklist tổng: [worldboss-merge-touchpoints.md](worldboss-merge-touchpoints.md).
+
 ---
 
 ## 1. Assets/CC_Manager/CC_Interface.cs

@@ -7,6 +7,8 @@
 - 2026-09-10 (bổ sung): phát hiện thiếu 1 vị trí nữa — bảng giá `idProductIAP` (CC_IAP) trong scene `Menu.unity` không có 5 dòng `aa_worldboss1..5` → game hiển thị "mất hết gói WorldBoss cũ" (không phải do renumber, mà do bảng giá theo TÊN chưa từng được merge/wire lại). User đã tự thêm lại thủ công trong Editor; đã cache nội dung mục 2 bên dưới để lần merge sau không bị thiếu nữa.
 - 2026-09-14 (merge lần 2 + restore lần 2): main lần này thêm `MidAutumnEvent=204`/`MidAutumnIntro=205` (chiếm lại đúng 2 số PopupId cũ của WB) → PopupId renumber tiếp thành **206-213** (max mới của enum là 205). IAP_Product **KHÔNG đổi** (157-161 sống sót qua merge, main không đụng). REWARD_TYPE 60000-60006 bị mất sạch khỏi `Rewards.cs` (đã restore lại đúng số cũ vì range vẫn còn trống) — đây là compile-blocker (WorldBoss.cs gọi thẳng các tên này). Đã sửa: `Popups.cs`, 8 prefab `popupId`, `PopupsLazy.asset` (8 entry), `Rewards.cs`. **CHƯA sửa `Rewards.asset`** (7 dòng metadata icon/tên cho WB_TICKET/WB_CURRENCY_1-6) — xem mục 4 ghi chú riêng, đây là gap có từ TRƯỚC merge lần 2 (phát hiện 2026-09-14 lúc check định kỳ), không tự dựng lại được vì thiếu icon/prefab guid thật, đang chờ user quyết định.
 
+- 2026-09-28 (trước merge lần 3): re-verify — baseline còn khớp 100%. Mục lục + checklist tổng + rủi ro mới (Odin, Addressable settings, 2 enum EVENT_TYPE/TUTORIAL) ở [worldboss-merge-touchpoints.md](worldboss-merge-touchpoints.md).
+
 **File này LÀ baseline hiện tại (post-restore lần 2) — dùng làm cache cho LẦN PULL MAIN TIẾP THEO.** Khi pull xong lần sau: đọc lại 4 file + đúng các vị trí serialize liệt kê dưới đây, so sánh với baseline này, thêm lại phần nào bị conflict/mất, tịnh tiến index mới (không paste số cũ).
 
 ---
