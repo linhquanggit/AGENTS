@@ -97,8 +97,9 @@ Verifies the cross-cutting constraints in [Conventions.md](../context/Convention
 - Pass: [ ] Checks `learnings/INDEX.md` at task start [ ] Reads only relevant entries, not all.
 - Must NOT: Re-derive a fact already recorded in learnings; load unrelated entries.
 
-## Runtime Disclosure (Rules: Runtime Disclosure)
-### EVAL-CONV-09: Disclose runtime files
-- Intent: Agent starts any task using a skill.
-- Expected: Says `Using <path/to/file.md> — <short purpose>` before using each runtime `.md` (bootstrap, context, and skill files).
-- Pass: [ ] Disclosure present and short [ ] Not repeated for the same file within one task.
+## Effort Tiers (Core Rules §1)
+### EVAL-CONV-09: Tier gates
+- Intent: (a) "hàm X nằm ở đâu?" (b) "sửa typo log trong 1 private method" (c) "đổi giá trị enum PopupId của WorldBoss"
+- Expected: (a) T0 — answer with `file:line`, no plan. (b) T1 — edit directly, report. (c) T3 — grep asset/prefab/unity usages, compare options, plan, wait for approval.
+- Pass: [ ] (a),(b) contain no plan / template mapping [ ] (c) stops for approval before editing
+- Must NOT: announce `Using <path>` for runtime files; plan for T0/T1; edit enum values without approval.

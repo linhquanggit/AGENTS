@@ -22,7 +22,7 @@ irm https://raw.githubusercontent.com/linhquanggit/AGENTS/main/install.ps1 | iex
 Coding agents forget your conventions, re-derive the same decisions, and behave differently in every project. This runtime fixes that by putting one shared brain behind all of them:
 
 - 🎯 **Profile-based** — the right ruleset auto-selects per project (Unity vs. anything else). Add a profile per domain.
-- 🪶 **Token-efficient first** — only three small `context/` files load on every task; everything else is pulled in on demand.
+- 🪶 **Token-efficient first** — one shared `AI/Core/Rules.md` + two small profile files load per session; skills are inline contracts; everything else is pulled in on demand.
 - 🧠 **Self-improving** — agents record durable lessons to `knowledge/learnings/` and read them before acting.
 - ✅ **Guardrailed & tested** — per-skill "DO NOT" lists plus `evals/` behavioral checks.
 - 🌐 **Machine-wide** — one install wires `~/.claude` so every project routes through it automatically.
@@ -47,9 +47,9 @@ New session ──► ~/.claude/CLAUDE.md + SessionStart hook
 ```
 
 1. **Select** — `AGENTS.md` picks a profile: **Unity** if the project has `Assets/` + `ProjectSettings/`, else **Common**.
-2. **Load** — read that profile's three `context/` files (`Conventions`, `Rules`, `Workflows`).
-3. **Recall** — scan `knowledge/learnings/INDEX.md` for anything relevant to the task.
-4. **Route** — map the request to exactly one skill via `Workflows.md`.
+2. **Load** — `AI/Core/Rules.md` (effort tiers + gates) + the profile's `context/` files.
+3. **Recall** — grep `knowledge/learnings/INDEX.md` for the task's keywords.
+4. **Route + tier** — pick one skill contract in `Workflows.md` and an effort tier (T0–T3) that decides plan/approval/verify.
 5. **Execute** — follow that skill's procedure, opening the minimum source files.
 
 A **SessionStart hook** injects this directive into every new session, so the agent reliably loads the runtime instead of hoping it remembers to.

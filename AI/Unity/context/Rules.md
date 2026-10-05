@@ -1,47 +1,8 @@
-# Rules
+# Unity Rules (deltas on top of ../../Core/Rules.md)
 
-Hard constraints for every task. Token efficiency is a primary goal.
-
-## Reading & Searching
-- Read the minimum to act; stop when you can act. Budget: ≤ 5 files before a diagnosis, ≤ 10 before a fix — to exceed, name the extra files and why.
-- Investigation order: symbol → references → callers → callees → open source. Open source last.
-- Prefer search over opening files; then read only the relevant span (offset + limit).
-- Scope searches to the smallest plausible directory. Batch independent searches/reads in one step.
-- Do NOT scan the repo (`find` / recursive `grep` over `Assets/`) unless a targeted search failed.
-- Never read `Library/`, `Temp/`, `Logs/`, `obj/`, `.meta`, or generated folders.
-
-## Runtime Disclosure
-- Before using any runtime `.md` (bootstrap, context, skill), say `Using <path> — <short purpose>` in chat — short and status-like.
-- Do not repeat the disclosure for the same file within one task unless it is read again.
-
-## Scope Discipline
-- Answer ONLY the exact question. Do not expand to full flow, callers, side-effects, save/event/UI, or "related" aspects unless asked.
-- A narrow question gets a narrow trace — stop at the first authoritative `file:line` that answers it.
-- A sub-agent's sub-task must be as narrow as the user's question.
-- After answering, OFFER to go deeper in one line; do not pre-emptively investigate.
-
-## Permission Modes
-- **Approval** (high risk): MUST ask before deleting files, modifying Public APIs / Base Classes / Singletons, major refactors, or entering Play/Build.
-- **Auto** (low risk): act autonomously for log lines, minor fixes in private/protected methods, new files within established patterns, and lint/naming fixes.
-- **Bypass**: skip approvals only on explicit directive ("Do it all", "Skip approval", "Bypass modes").
-- **One-time accept** (OFF by default — only when the user explicitly asks, e.g. "1-time accept", "hỏi 1 lần rồi tự chạy"): on entering, **first list all anticipated risks up front** (files/dirs to touch, deletes, deploys/Play-Build, public-API/base-class/singleton changes) so the user grants informed consent in one go; ask **once**. After the user accepts, run to completion without pausing for any further permission prompts until there is a result. Default behavior is unchanged unless requested. Re-ask only if the work expands beyond the accepted scope into a new high-risk action not covered by that initial list.
-
-## Editing
-- ⚠️ **UnityEvent handlers** — public methods with a `_` prefix (e.g. `_OnClickPlay`) are wired to UnityEvents in the Editor (Button/Toggle/EventTrigger/Animation Event). They resolve by name from scenes/prefabs, so they show **no code references**. Do NOT rename, change the signature of, or delete them because they look "unused" / "0 references" — that silently breaks the Editor wiring and loses the ref. If a rename is truly required, flag it and get approval first, then re-wire every Editor reference by hand.
-- Map dependencies (callers, references, base classes) BEFORE refactoring or renaming.
-- Modify existing patterns; do not introduce new ones. Minimize files and lines touched.
-- Follow [Conventions.md](Conventions.md) exactly. Do not change or edit anything outside the requested scope without asking.
-- Before a wide or risky change, list the files you will touch first, so the change can be reviewed and reverted.
-- Remove only dependencies your change orphaned; flag pre-existing dead code rather than deleting it.
-- **File `.md` mới trong project dùng Plastic SCM** — trước khi tạo, hỏi: "add" (theo dõi bình thường, cho tài liệu chính thức/chia sẻ team) hay "private" (không track, cho ghi chú/checkpoint cá nhân)? Nếu chọn private: kiểm tra `ignore.conf` ở root project có pattern `*.private` sẵn không — nếu có, đặt tên `<tên>.md.private` để khớp pattern có sẵn (không sửa `ignore.conf` chung); nếu chưa có, hỏi user muốn thêm pattern hay dùng cách khác.
-
-## Planning & Uncertainty
-- Non-trivial tasks: present a plan (numbered tasks, each with target file(s) + a verification step) and wait for approval before modifying code. Skip for explicit direct-implementation requests, small isolated changes, and emergency fixes.
-- Below 80% confidence: state assumptions, then ask. Never invent architecture or assume flow without `file:line` evidence.
-- If a request looks oversimplified or wrong, surface the tradeoff and an alternative before complying — do not silently do the wrong thing.
-- When the user proposes a new idea/suggestion, verify it before agreeing: evaluate whether a better or more optimal approach exists and compare tradeoffs explicitly. Do not validate the user's idea as correct by default.
-
-## Output
-- Be concise. Report what changed and why, with `file:line`. No speculative refactors or unrequested cleanups.
-- After a code change, if it needs manual verification — or you ask the user to test — provide numbered **step-by-step** test instructions: each step states the action (Editor/Play Mode steps, fields to wire) and the expected result.
-- Do NOT claim "done" / "fixed" without evidence it works — a passing test, a reproduced fix, or the verify steps above. State what was and wasn't verified.
+- Never read `Library/`, `Temp/`, `Logs/`, `obj/`, `.meta` (except to get a GUID), generated folders. Don't recursively grep all of `Assets/` unless a targeted search failed.
+- Approval-class additionally: entering Play Mode / Build; renaming `[SerializeField]` fields (breaks serialized data).
+- ⚠️ **UnityEvent handlers** (`public void _OnClickX`) resolve by name from scenes/prefabs → "0 references" in code is normal. Never rename/re-sign/delete them as unused. A required rename needs approval + manual re-wiring of every Editor reference.
+- Serialized contracts (enum values, `Type:` fields, PopupId, IAP ids): before changing a number, grep `*.asset`, `*.prefab` **and** `*.unity` for usages. Treat as T3.
+- New `.md` in a **Plastic SCM** project: ask "add" (tracked) or "private". Private → if root `ignore.conf` already has `*.private`, name it `<name>.md.private`; otherwise ask before editing `ignore.conf`.
+- After a code change that needs Editor/Play verification: numbered steps incl. fields to wire in the Inspector.

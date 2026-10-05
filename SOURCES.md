@@ -17,21 +17,21 @@ https://github.com/multica-ai/andrej-karpathy-skills · Karpathy's critique of L
 ## obra/superpowers — 2026-07
 https://github.com/obra/superpowers · agentic software-development methodology (TDD, planning, subagents, debugging discipline).
 - **Adopted:**
-  - Systematic 4-phase debugging (reproduce → hypothesis → root cause → fix + defend) → `skills/unity-investigate.md`.
+  - Systematic 4-phase debugging (reproduce → hypothesis → root cause → fix + defend) → `context/Workflows.md` (contract `investigate`).
   - `verification-before-completion` (no "done" without evidence) → `context/Rules.md`.
-  - Brainstorming (Socratic clarify before building) → `skills/unity-brainstorm.md`.
-  - TDD (RED-GREEN-REFACTOR) → `skills/unity-test.md`.
+  - Brainstorming (Socratic clarify before building) → `context/Workflows.md` (contract `brainstorm`).
+  - TDD (RED-GREEN-REFACTOR) → `context/Workflows.md` (contract `test`).
   - `writing-skills` (how to author a skill) → `knowledge/authoring-skills.md`.
   - Plan format (numbered tasks + file paths + verify step) → `context/Rules.md`.
-  - Actionable code-review findings → `skills/unity-review.md`.
+  - Actionable code-review findings → `context/Workflows.md` (contract `review`).
 - **Skipped (too heavy for a lean single-project runtime):** subagent-driven-development, dispatching-parallel-agents, git-worktrees, batch executing-plans.
 
 ## jahro-console/unity-agent-skills — 2026-07
 https://github.com/jahro-console/unity-agent-skills · skills for the Jahro debug console.
 - **Adopted:**
   - Evals concept (behavioral test cases) → `evals/`.
-  - Migration skill (incremental conversion) → `skills/unity-migrate.md`.
-  - Troubleshooting decision-tree thinking → enriched `skills/unity-investigate.md`.
+  - Migration skill (incremental conversion) → `context/Workflows.md` (contract `migrate`).
+  - Troubleshooting decision-tree thinking → enriched `context/Workflows.md` (contract `investigate`).
   - Logging severity classification → `context/Conventions.md`.
   - Production-safety discipline (define symbols, no stray debug) → `context/Rules.md`.
 - **Skipped:** Jahro-product-specific skills (setup/watcher/snapshots) — not relevant to this project.
@@ -39,7 +39,7 @@ https://github.com/jahro-console/unity-agent-skills · skills for the Jahro debu
 ## Besty0728/Unity-Skills — 2026-07
 https://github.com/Besty0728/Unity-Skills · REST-API engine + 750 skills to control the Unity Editor live.
 - **Adopted (patterns, not the engine):**
-  - Anti-hallucination `DO NOT` lists per skill → all `skills/*.md`.
+  - Anti-hallucination `DO NOT` lists per skill → per-skill contracts in `context/Workflows.md`.
   - Anti-patterns catalog idea → `knowledge/anti-patterns.md`.
   - Checkpoint-before-wide-change discipline → `context/Rules.md`.
 - **Skipped:** the C#/Python control engine and 750 executable skills — different category (live Editor control), would break this markdown runtime's leanness.

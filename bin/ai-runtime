@@ -25,7 +25,7 @@ HOME_DIR="$(resolve_home)"
 # SessionStart hook: actively inject the routing directive into every new session so
 # the agent loads the runtime instead of relying on the model to read CLAUDE.md itself.
 # The text carries no ' or " so it embeds safely in the printf JSON literal below.
-HOOK_TEXT="ACTIVE DIRECTIVE — do this BEFORE the first task: read $LINK/AGENTS.md (profile selector) and follow it. Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load that profile context/ files, then route via its Workflows.md. Prepend your first response of the session with [AI_RUNTIME_LOADED · global · <Profile>]. This is not optional background context."
+HOOK_TEXT="ACTIVE DIRECTIVE — do this BEFORE the first task: read $LINK/AGENTS.md (profile selector) and follow it. Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load AI/Core/Rules.md plus that profile context/ files, then route via its Workflows.md. Prepend your first response of the session with [AI_RUNTIME_LOADED · global · <Profile>]. This is not optional background context."
 HOOK_JSON="{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"$HOOK_TEXT\"}}"
 HOOK_CMD="printf '%s' '$HOOK_JSON'"
 

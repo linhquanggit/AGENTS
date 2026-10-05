@@ -25,7 +25,7 @@ $HookCmd = "powershell -NoProfile -Command `"Get-Content -Raw -Encoding UTF8 -Li
 function Get-Directive {
   # Path uses backslashes; the model reads either separator. No ' or " so it embeds cleanly.
   "ACTIVE DIRECTIVE - do this BEFORE the first task: read $Link\AGENTS.md (profile selector) and follow it. " +
-  "Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load that profile context/ files, " +
+  "Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load AI/Core/Rules.md plus that profile context/ files, " +
   "then route via its Workflows.md. Prepend your first response of the session with [AI_RUNTIME_LOADED " +
   [char]0x00B7 + " global " + [char]0x00B7 + " <Profile>]. This is not optional background context."
 }
