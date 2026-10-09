@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+"""muse-ask — Claude gửi việc cho Muse và chờ reply có tag.
+
+  muse-ask "nội dung"                    gửi task (id tự sinh C01, C02…), chờ tối đa 540s
+  muse-ask "nội dung" --id C07 --timeout 300
+  muse-ask --bug C07 "mô tả lỗi + log"   gửi [BUG-C07], chờ [DONE-C07]
+  muse-ask --reply C07 "trả lời"         trả lời một [ASK-CLAUDE-C07] của Muse, chờ tiếp
+  muse-ask --wait C07 --since 5123       chờ tiếp (khi lần trước TIMEOUT)
+  muse-ask --history 10                  xem 10 tin gần nhất
+  muse-ask --plan P --show               in plan + trạng thái từng task
+  muse-ask --plan P --task T2 --status doing|done|blocked|todo "ghi chú"
+  muse-ask --log "Tạo Animator Player.controller" [--id C07] [--kind unity]
+                                         ghi bước Claude tự làm vào tab Hoạt động
+
+Kết quả in ra: dòng đầu STATUS: DONE | BLOCKED | ASK_CLAUDE | TIMEOUT, rồi nội dung reply.
+Exit: 0 DONE, 1 BLOCKED, 3 ASK_CLAUDE, 2 TIMEOUT, 4 lỗi.
+"""
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+from datetime import datetime
+
+ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+CFG = {"claude_workdir": "~/wkspaces/WB", "muse_cli": "muse-cli", "thread_id": "", "repo_path": "", "agent_dir": "", "send_wait_seconds": 20}
+if os.path.exists(os.path.join(ROOT, "config.json")):
+    CFG.update(json.load(open(os.path.join(ROOT, "config.json"), encoding="utf-8")))
+
+FOOTER = (
+    "---\n(Tin từ Claude Code — đồng nghiệp điều phối, không phải Linh.)\n"
+    "Project: {project}\n"
+    "Sửa/tạo file TRỰC TIẾP trong project trên (không dán code vào reply). Task có outputs thì ghi đúng đường dẫn/định dạng đó.\n"
+    "Kiến thức Unity: /Users/mobione/AGENTS/AI/Unity/knowledge/ (đọc INDEX.md, chỉ mở file liên quan).\n"
+    "Chỉ đụng các file trong phạm vi task. Không xoá file, không sửa scene/prefab dùng chung trừ khi task ghi rõ.\n"
+    "Reply dòng đầu ĐÚNG 1 trong các format:\n"
+    "[DONE-{id}] <tóm tắt, tạo bằng cách nào> | files: <danh sách đường dẫn đã tạo/sửa>\n"
+    "[BLOCKED-{id}] <lý do / cần gì>\n"
+    "[ASK-CLAUDE-{id}] <việc cần Claude làm trong Unity Editor trước>"
+)
+
+def find_project(explicit=None):
+    """Thứ tự: --project / MUSE_PROJECT → thư mục Unity chứa cwd → claude_workdir trong config."""
+    cand = explicit or os.environ.get("MUSE_PROJECT")
+    if cand:
+        return os.path.abspath(os.path.expanduser(cand))
+    d = os.getcwd()
+    while True:
+        if os.path.isdir(os.path.join(d, "Assets")) and os.path.isdir(os.path.join(d, "ProjectSettings")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return os.path.abspath(os.path.expanduser(CFG.get("claude_workdir") or "~"))
+
+
+def footer(tid):
+    return FOOTER.replace("{id}", tid).replace("{project}", PROJECT)
+
+
+PROJECT = ""
+
+TAG = re.compile(r"\[(DONE|BLOCKED|ASK-CLAUDE)-([A-Za-z0-9_.-]+)\]")
+
+
+def agent_dir():
+    if CFG.get("agent_dir"):
+        return os.path.expanduser(CFG["agent_dir"])
+    if CFG.get("repo_path"):
+        return os.path.join(os.path.expanduser(CFG["repo_path"]), ".agent")
+    return os.path.join(ROOT, ".agent")
+
+
+def log(kind, task, text, **kw):
+    os.makedirs(agent_dir(), exist_ok=True)
+    ev = {"at": datetime.now().isoformat(timespec="seconds"), "task": task, "kind": kind,
+          "text": text[:4000], "by": "claude"}
+    ev.update(kw)
+    with open(os.path.join(agent_dir(), "events.jsonl"), "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(ev, ensure_ascii=False) + "\n")
+
+
+def die(msg):
+    print("STATUS: ERROR\n" + msg)
+    sys.exit(4)
+
+
+def muse(args, timeout=120):
+    try:
+        r = subprocess.run([os.path.expanduser(CFG["muse_cli"])] + args, capture_output=True,
+                           text=True, timeout=timeout)
+    except FileNotFoundError:
+        die("không tìm thấy muse-cli: " + CFG["muse_cli"])
+    except subprocess.TimeoutExpired:
+        die("muse-cli timeout")
+    if r.returncode != 0:
+        die((r.stderr or r.stdout).strip()[:800])
+    try:
+        return json.loads(r.stdout) if r.stdout.strip() else {}
+    except json.JSONDecodeError:
+        return {"raw": r.stdout}
+
+
+def history(limit):
+    h = muse(["history", "--thread", CFG["thread_id"], "--limit", str(limit)], timeout=90)
+    return sorted(h if isinstance(h, list) else [], key=lambda m: m.get("seq") or 0)
+
+
+def is_user(m):
+    return "user" in str(m.get("role") or "").lower()
+
+
+def next_id():
+    path = os.path.join(agent_dir(), "muse_ask_counter")
+    os.makedirs(agent_dir(), exist_ok=True)
+    n = int(open(path).read().strip() or 0) + 1 if os.path.exists(path) else 1
+    open(path, "w").write(str(n))
+    return "C%02d" % n
+
+
+def send(text):
+    wait = str(max(5, int(CFG.get("send_wait_seconds", 20))))
+    return muse(["send", text, "--thread", CFG["thread_id"], "--wait", wait], timeout=int(wait) + 60)
+
+
+def mark_waiting(tid, kind):
+    """Ghi .agent/waiting/<id>.json để Muse Bridge biết Muse đang làm; tự xoá khi thoát."""
+    import atexit
+    d = os.path.join(agent_dir(), "waiting")
+    os.makedirs(d, exist_ok=True)
+    path = os.path.join(d, re.sub(r"[^A-Za-z0-9_.-]", "_", tid) + ".json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"id": tid, "kind": kind, "pid": os.getpid(), "since": time.time(),
+                   "plan": os.environ.get("MUSE_PLAN", ""), "thread": CFG.get("thread_id", "")}, fh)
+
+    def cleanup():
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+    atexit.register(cleanup)
+
+
+def wait_for(tid, since, timeout, poll):
+    deadline = time.time() + timeout
+    seen_other = []
+    while True:
+        for m in history(30):
+            seq = m.get("seq") or 0
+            if seq <= since or is_user(m):
+                continue
+            text = m.get("text") or ""
+            hits = [k for k, i in TAG.findall(text) if i == tid]
+            if hits:
+                kind = hits[0]
+                status = {"DONE": "DONE", "BLOCKED": "BLOCKED", "ASK-CLAUDE": "ASK_CLAUDE"}[kind]
+                sha = re.search(r"commit\s+([0-9a-f]{7,40})", text, re.I)
+                log("muse_" + status.lower(), tid, text, seq=seq)
+                print("STATUS: %s\nID: %s\nSEQ: %s%s\n\n%s" % (
+                    status, tid, seq, ("\nCOMMIT: " + sha.group(1)) if sha else "", text))
+                sys.exit({"DONE": 0, "BLOCKED": 1, "ASK_CLAUDE": 3}[status])
+            if seq not in [s for s, _ in seen_other]:
+                seen_other.append((seq, text))
+        if time.time() >= deadline:
+            last = max([since] + [s for s, _ in seen_other])
+            print("STATUS: TIMEOUT\nID: %s\nSEQ: %s\nChờ tiếp: muse-ask --wait %s --since %s" % (tid, since, tid, since))
+            if seen_other:
+                print("\nMuse đã nói (chưa có tag):")
+                for s, t in seen_other[-3:]:
+                    print("--- #%s\n%s" % (s, t[:1500]))
+            log("muse_timeout", tid, "timeout", last_seq=last)
+            sys.exit(2)
+        time.sleep(poll)
+
+
+def baseline():
+    h = history(1)
+    return max([m.get("seq") or 0 for m in h] + [0])
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Claude ↔ Muse")
+    ap.add_argument("text", nargs="?")
+    ap.add_argument("--id")
+    ap.add_argument("--bug", metavar="ID")
+    ap.add_argument("--reply", metavar="ID")
+    ap.add_argument("--wait", metavar="ID")
+    ap.add_argument("--since", type=int, default=None)
+    ap.add_argument("--history", type=int, metavar="N")
+    ap.add_argument("--log", metavar="TEXT")
+    ap.add_argument("--plan")
+    ap.add_argument("--task")
+    ap.add_argument("--status", choices=["todo", "doing", "done", "blocked"])
+    ap.add_argument("--show", action="store_true")
+    ap.add_argument("--project", help="đường dẫn project Muse được ghi (mặc định: project Unity chứa thư mục hiện tại)")
+    ap.add_argument("--kind", default="step")
+    ap.add_argument("--timeout", type=int, default=540)
+    ap.add_argument("--poll", type=int, default=5)
+    a = ap.parse_args()
+    global PROJECT
+    PROJECT = find_project(a.project)
+    if a.plan:
+        pdir = os.path.join(ROOT, "plans")
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", a.plan) or not os.path.exists(os.path.join(pdir, a.plan + ".md")):
+            die("không có plan %s trong %s" % (a.plan, pdir))
+        spath = os.path.join(pdir, a.plan + ".status.json")
+        st = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
+        if a.show or not a.task:
+            print(open(os.path.join(pdir, a.plan + ".md"), encoding="utf-8").read())
+            print("\n=== TRẠNG THÁI ===")
+            for k, v in sorted(st.items()):
+                print("%s: %s — %s" % (k, v.get("status"), v.get("note", "")))
+            if not st:
+                print("(chưa task nào bắt đầu)")
+            return
+        if not a.status:
+            die("thiếu --status")
+        st[a.task] = {"status": a.status, "note": (a.text or "").strip(), "at": datetime.now().isoformat(timespec="seconds")}
+        tmp = spath + ".tmp"
+        json.dump(st, open(tmp, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        os.replace(tmp, spath)
+        log("plan_" + a.status, "%s/%s" % (a.plan, a.task), (a.text or a.status).strip())
+        print("ok %s/%s = %s" % (a.plan, a.task, a.status))
+        return
+    if a.log:
+        log("claude_" + a.kind, a.id or "-", a.log)
+        print("logged")
+        return
+    th = os.environ.get("MUSE_THREAD") or ""
+    if not th and a.plan:
+        tf = os.path.join(ROOT, "plans", a.plan + ".thread.json")
+        if os.path.exists(tf):
+            th = json.load(open(tf, encoding="utf-8")).get("thread_id", "")
+    if th:
+        CFG["thread_id"] = th
+    if not CFG.get("thread_id"):
+        die("chưa có thread_id trong %s/config.json (mở Muse Bridge → Cài đặt → Tạo side chat)" % ROOT)
+
+    if a.history:
+        for m in history(a.history):
+            print("--- #%s %s\n%s" % (m.get("seq"), "Linh/Claude" if is_user(m) else "Muse", m.get("text")))
+        return
+    if a.wait:
+        since = a.since if a.since is not None else baseline()
+        mark_waiting(a.wait, "WAIT")
+        return wait_for(a.wait, since, a.timeout, a.poll)
+
+    if a.bug:
+        tid, kind = a.bug, "BUG"
+        if not a.text:
+            die("thiếu mô tả bug")
+        msg = "[BUG-%s] %s\n\n%s" % (tid, a.text.strip(), footer(tid))
+    elif a.reply:
+        tid, kind = a.reply, "REPLY"
+        if not a.text:
+            die("thiếu nội dung trả lời")
+        msg = "[CLAUDE-%s] %s\n\n%s" % (tid, a.text.strip(), footer(tid))
+    else:
+        if not a.text:
+            ap.print_help()
+            sys.exit(4)
+        tid, kind = (a.id or next_id()), "TASK"
+        msg = "[TASK-%s] %s\n\n%s" % (tid, a.text.strip(), footer(tid))
+
+    since = baseline()
+    mark_waiting(tid, kind)
+    send(msg)
+    log("claude_" + kind.lower(), tid, a.text.strip(), project=PROJECT)
+    print("Đã gửi %s-%s → project %s (seq trước khi gửi: %s). Đang chờ Muse…" % (kind, tid, PROJECT, since), flush=True)
+    wait_for(tid, since, a.timeout, a.poll)
+
+
+if __name__ == "__main__":
+    main()

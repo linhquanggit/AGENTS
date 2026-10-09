@@ -1,0 +1,7 @@
+.venv/
+app.log
+config.json
+.agent/
+trash/
+__pycache__/
+*.before-*

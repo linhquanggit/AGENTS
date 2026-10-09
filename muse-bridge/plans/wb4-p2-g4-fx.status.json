@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse tạo Assets/Project/WorldBoss/Use/Scripts/Enemies/WorldBoss-4/DelayedActivateFX.cs đúng spec. Claude verify: refresh force + compile, MonoScript load được class DelayedActivateFX, console 0 error. Lưu ý: file mới chưa có .meta khi Muse ghi (Unity tự tạo), style LF thay vì CRLF.",
+  "at": "2026-10-09T09:34:46"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Prefab EnemyWB4_P2_A: playOnAwake=false cho Fx_gunshoot + 3 con; ueStartShot của RandomSpreadShot có 1 persistent call ParticleSystem.Play(true) (mode Bool, state RuntimeOnly). Readback fresh-load OK, console 0 error. Chưa Play-test (T4).",
+  "at": "2026-10-09T09:33:06"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Prefab EnemyWB4_P2_A: DelayedActivateFX gắn trên G4-RingConvert (target Hold_Rocket, delay 0.65); Hold_Rocket activeSelf=false; RandomSpreadShot.ueEndShot có 1 call DelayedActivateFX.Play(); UbhRingConvergeShot.holdFX=None. Readback fresh-load OK; console 0 error. Chưa Play-test (T4 cần Linh duyệt).",
+  "at": "2026-10-09T09:35:05"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Chu kỳ 1 (game time, t0 = RSS start): Fx bật +0.00; RSS end +1.00; Hold_Rocket bật +1.65 (= ueEnd + 0.65); vòng bắn +2.00 → Hold 0.35s trước vòng, sớm hơn 1.0s so với trước (cũ +2.65). Cấu hình thật chạy 3 chu kỳ, RSS start cách nhau 6.0s. Lưu ý: kỳ vọng tuyệt đối trong plan (t0+0.75/1.1/2.1) sai vì plan giả định RSS end ở +0.1; thực tế +1.0. Lỗi kẹt chu kỳ 2 xuất hiện 1 lần trong lần chạy có destroy boss trước đó cùng frame; không tái hiện trong 3 lần chạy sạch. Console 0 error. Đã Stop Play, khôi phục spritePackerMode, không lưu scene.",
+  "at": "2026-10-09T09:48:37"
+ }
+}

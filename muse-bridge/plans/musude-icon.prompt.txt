@@ -1,0 +1,6 @@
+Dùng skill muse-collab. Thực hiện plan trong file /Users/mobione/AGENTS/muse-bridge/plans/musude-icon.md (plan id: musude-icon). Project: thư mục hiện tại.
+1. Đọc plan + trạng thái hiện tại: muse-ask --plan musude-icon --show
+2. Làm các task chưa done theo thứ tự phụ thuộc. Tự quyết việc nào tự làm qua Unity MCP, việc nào nhờ Muse (muse-ask) — owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task.
+3. Mỗi task: bắt đầu → muse-ask --plan musude-icon --task <Tn> --status doing "..."; xong và đã verify → --status done "kết quả"; vướng → --status blocked "lý do".
+4. Tuân thủ điểm dừng của skill (xoá file, scene chính, Play/Build… thì hỏi Linh).
+5. Kết thúc: báo ngắn task nào xong, Claude làm gì, Muse làm gì, còn gì chưa verify.

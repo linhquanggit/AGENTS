@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "SVG đúng viewBox 1024, render 1024 kiểm tra bằng mắt: squircle, 2 nút + nhịp cầu, đúng bảng màu. Kiểm 32px sẽ làm ở T2.",
+  "at": "2026-10-09T08:29:18"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Musude.icns: Mac OS X icon; Musude.iconset đủ 10 PNG (16–512 @1x/@2x, render từ master 1024 có nền trong suốt); favicon.png 64px. Đã xem 32px: đọc được.",
+  "at": "2026-10-09T08:29:34"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Musude.app: CFBundleIconFile=Musude, Resources/Musude.icns (ic12 OK). app.py: set_dock_icon() đặt icon Dock lúc chạy qua AppKit (py_compile OK). Linh xác nhận app đã có icon.",
+  "at": "2026-10-09T08:39:55"
+ },
+ "T4": {
+  "status": "done",
+  "note": "index.html:7 <link rel=\"icon\" type=\"image/png\" href=\"/assets/favicon.png\"> (Claude chèn lại, grep xác nhận). server.py /assets/ đã có từ trước.",
+  "at": "2026-10-09T08:39:55"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Linh mở Musude.app và xác nhận đạt (icon + favicon).",
+  "at": "2026-10-09T08:40:38"
+ }
+}

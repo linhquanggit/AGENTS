@@ -18,3 +18,6 @@ Reply in **Vietnamese** by default. Keep code, identifiers, APIs, file names, lo
 ## Shared locations (all projects)
 - **Flow capture log**: `~/.claude/logs/flow-capture.log`. For "log để test luồng / check bug": truncate it first, have the user reproduce, then read it — instead of asking for console/device logs. Writing to it is the project's own code.
 - **Reports**: `Reports/<project-basename>/<YYYY-MM-DD>-<slug>.md` in THIS repo (never inside the project's SCM). On "lưu báo cáo / ghi tiến trình": write it, then add one line to `Reports/INDEX.md` (`- [title](path) — hook`).
+
+## Project entry points
+- **WB / World Boss / project "1941"** (`~/wkspaces/WB`): read `~/wkspaces/Brain/BR_WorldBoss/AGENT.md` FIRST — it is the map for the whole module. Follow its reading order (brief → library sections → design rows R… → Figma tiles). Do not scan WB code beyond what the brief/library points to; widen only when they don't cover the task, and say so.

@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Claude tạo BulletPenetrationE.cs (CRLF) + .meta guid 846bd212f895452a81a26db6e942163c. Verify: compile 0 error, type base=Bullet, không DestroyDefault. Muse BLOCKED C02 (không truy cập filesystem Mac).",
+  "at": "2026-10-09T11:01:09"
+ },
+ "T2": {
+  "status": "done",
+  "note": "BulletWB4_P3_G2: Bullet→BulletPenetrationE, giữ đủ field (JSON diff khớp). EnemyWB4_P3_A.DirectionShotE.bulletPrefab = BulletPenetrationE (đọc lại sau save: không None). Console 0 error.",
+  "at": "2026-10-09T11:04:35"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Verify Play: lửa dọc trục bắn (lệch ngang ~1e-6), đầu gần s=0.02–0.13 từ đầu súng, đầu xa s=17.5–17.6 > mép màn. Radius 5.1 đúng; mép trên dính đầu súng (≤0.13).",
+  "at": "2026-10-09T11:24:25"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play test (Menu.unity, không lưu). Case A: đạn qua fighter (Fighter1, tag Player, HP 1000→950 đúng 1 lần), không tự huỷ, bay tới mép y −7.10 rồi về pool. Hit VFX chưa xác minh (ngẫu nhiên hitPercent 50). Case B: RAF pause khi bắn, đạn lệch 0° so với trục DS; lửa lệch ngang ~0; đầu xa vượt mép. Case C: player trong vùng lửa, HP không đổi (1000) — TriggerModule của Gun_Wave_R enabled=0 cả trong source Effect_1945 và prefab boss, nên FireBreath không gây damage trước và sau thay đổi (không phải do thay đổi này). Mọi object TEST_ và clone mất khi thoát Play.",
+  "at": "2026-10-09T11:24:25"
+ }
+}

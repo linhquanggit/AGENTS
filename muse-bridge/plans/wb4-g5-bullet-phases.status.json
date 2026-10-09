@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Sửa lần 2 theo Linh: nháy = VFX Fx. BulletStopAndFall: flashFx (ParticleSystem) thay sprite color; Muse ghi WB4T1B; Claude compile 0 error.",
+  "at": "2026-10-09T09:16:15"
+ },
+ "T2": {
+  "status": "done",
+  "note": "flashFx=Fx, objRise=P1, objFall=P2, Fx playOnAwake=false, objVFXList=[Trail]. Verify đọc lại prefab OK.",
+  "at": "2026-10-09T09:16:16"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Play Súng 5 (G5-RandomSpread-L): bay lên P1 bật/P2 tắt; đứng yên Fx phát (fxPlaying=True) đúng pha đứng; rơi: P2 bật, rotZ=180, Fx không phát; VFX tắt vẫn hiện thân (9/14 viên). Chưa xác nhận hướng P2 bằng hình (plan cấm chụp). Dọn xong: weapon trả G7, instance tạm xoá, packer AlwaysOnAtlas, 0 spriteatlas đổi, scene không lưu.",
+  "at": "2026-10-09T09:16:16"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Library đã cập nhật. Regression G7 (BulletWB5_P3_G7, FanFallShotWB5) Play-test OK: 7 viên, rơi lần lượt theo stopTimeOverride 0–0.6s, rZ=180, không lỗi từ BulletStopAndFall. Có NullReferenceException ở Bullet.OnEnable:55 (GamePlayController.Instance null trong MakeAll) — lỗi có sẵn ở class gốc, không do thay đổi này.",
+  "at": "2026-10-09T09:19:59"
+ }
+}

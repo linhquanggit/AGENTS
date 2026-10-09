@@ -1,0 +1,12 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Prefab EnemyWB4_P3_A đã sửa & save: shotSteps[0].fxBefore=Hold_Energy (inactive), timeFxBefore=2; DirectionShotE thêm RotationAimFighter (speed 20, offsetAngle 90 tính từ công thức AutoRotationTarget + rot 180 của FireDirection), ueBeforeShot → RotationAimFighter.Play, G8-Dir.rotate = aim; DirectionShotE.bulletSpeed 5→20. Verify: mở lại prefab đọc đúng giá trị; console 0 error. Chưa verify hướng bắn thực tế (cần Play ở T2).",
+  "at": "2026-10-09T10:23:04"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Test runtime (GamePlayFake, spawn prefab trong Play, không lưu scene): hold 2.0s (STEP0→SHOT), aimErr 0.0° lúc bắn khi player đứng yên, và sau khi đổi player (3,-3) ở chu kỳ kế tiếp vẫn 0.0°; đạn BulletWB4_P3_G2 bay đúng hướng tới player (lệch <1°), tốc độ ~20 (serialized). Phát hiện: GamePlayFake không có MyPoolManager → shot throw lần đầu (môi trường test, đã thêm pool tạm lúc Play). Chưa đo: Play/bố cục thật trong scene gameplay chính.",
+  "at": "2026-10-09T10:30:01"
+ }
+}

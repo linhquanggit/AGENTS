@@ -1,0 +1,24 @@
+#!/bin/bash
+# Launcher: tìm thư mục muse-bridge, lấy PATH của shell đăng nhập, tạo venv lần đầu, chạy app.py
+APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(dirname "$APP_DIR")"
+[ -f "$ROOT/server.py" ] || ROOT="$HOME/AGENTS/muse-bridge"
+LOG="$ROOT/app.log"
+exec >>"$LOG" 2>&1
+echo "=== $(date) start"
+
+LOGIN_PATH="$(/bin/zsh -ilc 'echo "__P__$PATH"' 2>/dev/null | grep '^__P__' | tail -1 | sed 's/^__P__//')"
+export PATH="${LOGIN_PATH:-$PATH}:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$HOME/.homebrew/bin"
+
+notify() { /usr/bin/osascript -e "display notification \"$1\" with title \"Musude\"" >/dev/null 2>&1; }
+fail() { /usr/bin/osascript -e "display alert \"Musude\" message \"$1\n\nChi tiết: $LOG\"" >/dev/null 2>&1; exit 1; }
+
+[ -f "$ROOT/server.py" ] || fail "Không tìm thấy server.py (cần nằm cạnh app, hoặc ở ~/AGENTS/muse-bridge)."
+VENV="$ROOT/.venv"
+if ! "$VENV/bin/python" -c "import webview" 2>/dev/null; then
+  notify "Lần đầu chạy: đang cài pywebview (~1 phút)…"
+  python3 -m venv "$VENV" || fail "Không tạo được venv (python3 chưa có? chạy: xcode-select --install)."
+  "$VENV/bin/pip" install -q --upgrade pip
+  "$VENV/bin/pip" install -q pywebview || fail "Cài pywebview thất bại."
+fi
+cd "$ROOT" && exec "$VENV/bin/python" "$ROOT/app.py"
