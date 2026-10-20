@@ -43,7 +43,7 @@ Default for time-based / multi-frame logic. Match surrounding code; `async`/Addr
 - **Nesting:** `yield return Inner()` runs inline (stopping the outer stops it); `yield return StartCoroutine(Inner())` is a separate coroutine the outer's stop won't cancel.
 
 ## Code Generation
-- No comments unless explicitly requested.
+- No comments unless explicitly requested. Áp dụng cho MỌI dạng: `//`, `/* */`, `/// <summary>`, `[Tooltip]`, `[Header]` mô tả, đánh dấu kiểu `// [G8]`, `// TEMP`. Khi viết lại/đổi tên file thì bỏ luôn comment/tooltip cũ trong phần mình viết lại. Plan/prompt giao việc cũng không được yêu cầu thêm comment/tooltip (Linh chốt 2026-10-16).
 - No XML/`<summary>` docs unless explicitly requested.
 - Prefer modifying existing architecture over introducing new patterns.
 - Minimize the number of files touched and lines changed.

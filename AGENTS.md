@@ -21,3 +21,6 @@ Reply in **Vietnamese** by default. Keep code, identifiers, APIs, file names, lo
 
 ## Project entry points
 - **WB / World Boss / project "1941"** (`~/wkspaces/WB`): read `~/wkspaces/Brain/BR_WorldBoss/AGENT.md` FIRST — it is the map for the whole module. Follow its reading order (brief → library sections → design rows R… → Figma tiles). Do not scan WB code beyond what the brief/library points to; widen only when they don't cover the task, and say so.
+
+## Muse (muse.ai)
+- Claude Code: skill `muse-collab`. Antigravity: skill `~/.gemini/antigravity/skills/muse-collab` (nguồn `muse-bridge/skill/muse-collab-antigravity/`), gọi `muse-bridge/bin/muse-ask --agent antigravity`.
