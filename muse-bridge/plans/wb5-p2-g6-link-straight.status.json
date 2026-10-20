@@ -1,0 +1,12 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse viết code; compile 0 error; Play: gap 2.05→3.50 trong linkDelay rồi giữ 3.50, volley end khi cọc ra màn, console 0 error",
+  "at": "2026-10-14T14:58:15"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Prefab ElectricLinkShot lưu linkWidth=3.5, linkUntilOutScreen=1 (đã grep xác nhận); Play test OK, bulletTimeLive 10 đủ",
+  "at": "2026-10-14T14:58:15"
+ }
+}

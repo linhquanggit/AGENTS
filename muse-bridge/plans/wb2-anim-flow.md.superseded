@@ -1,0 +1,84 @@
+# WB2 — dựng SpineAnimFlow cho súng 3 phase (quy ước Swap / In / Out)
+goal: Gắn SpineAnimFlow + flow cho mọi súng của EnemyWB2_P1_A / P2_A / P3_A trong MakeAll.unity theo quy ước anim riêng của WB2 (súng swap chuyển trạng thái, súng OnlyAnim đóng lại), để các mission dựng shot sau chỉ việc gắn ShotE. Chưa dựng shot/đạn.
+project: ~/wkspaces/WB
+source: Project 1941 — worldboss-boss-library.md (mục 7, 12, 18.2), BR_WorldBoss/briefs/WB2_PLAN.md, WB2_P1..P3.md + ghi chú Linh 2026-10-15
+
+## Quy ước anim WB2 (Linh, 2026-10-15) — áp cho mọi task
+- Anim mở = `In_...`, trạng thái đóng = `Out_...` / close. **Anim close đang chờ art sửa** → dùng tạm anim hiện có, ghi TODO, không chỉnh timing.
+- 3 skeleton dùng chung nhiều phase: `Gun1_Swap2`, `Gun3_Swap5`, `Gun4_Swap7`.
+- Súng swap khi vào phase mới: trạng thái init = **trạng thái mở của phase cũ** → rồi chạy anim mix sang súng mới. VD Gun1_Swap2 ở P2: init `Idle_Gun1` → `Gun1_Mix_Gun2` → `Idle_Gun2`.
+- Súng `(OnlyAnim)` (vị trí không còn dùng): vào phase chạy anim Out 1 lần, **không loop**, giữ frame cuối (Spine giữ pose cuối khi entry non-loop hết). Có thể làm 1 flow: Out (loop=false) rồi action cuối là pose close loop.
+  - P2: 2 `G1-(OnlyAnim)` chạy `Out_gun1`.
+  - P3: 4 `G2-(OnlyAnim)` chạy `Out_Gun2`.
+- Không scene save khi Linh chưa đồng ý (MakeAll dùng chung). Không tạo prefab boss/Node/SO.
+
+## T1 — P1: flow cho G1 ×4 + Rocket-L/R
+owner: claude
+depends: -
+context:
+P1 = tên lửa đặc biệt (2 bên bụng) + Súng 1 (4 khẩu, 2 bên × 2). Thân Idle1.
+Gun1_Swap2 anims: In_Gun1(2.00) Idle_Gun1(0.13) Attack_Gun1(0.40) Out_gun1(3.00) Gun1_Mix_Gun2(3.87) Idle_Gun2 Attack_Gun2 Out_Gun2(2.00). Rocket: chỉ Idle(0.13).
+verified:
+MakeAll.unity: EnemyWB2_P1_A (đang off) → Animation [World_Boss2, Idle1 loop] + G1- ×4 (BoneFollower Gun1_1..Gun1_4) mỗi cái có child Animation (SkeletonAnimation Gun1_Swap2, AnimationName rỗng, CHƯA có SpineAnimFlow) + Rocket-L/R (Rocket_SkeletonData).
+Rocket-L bone=Gun1_1, Rocket-R bone=Gun1_4 — Linh: giữ nguyên, không đổi.
+WorldBossWeapon.cs:38-41 field `anim` (SpineAnimFlow, auto GetComponentInChildren dòng 77) + flowIdle/flowOpen/flowCloseInit/flowAttack/flowStop/flowCharge; WorldBossWeapon.cs:93 Init() gọi `anim.PlayFlow(flowCloseInit)`.
+SpineAnimFlow.cs:32 (Assets/Spine/SpineTools) [RequireComponent SkeletonAnimation]; AnimFlow{Name, List<AnimAction>}; AnimAction{AnimationName, Loop, Delay, TrackIndex, NewDuration}; PlayFlow(name, onCompleted) dòng 100.
+refs: /Users/mobione/wkspaces/Brain/BR_WorldBoss/briefs/WB2_P1.md
+files: Assets/Project/Scenes/MakeAll.unity (EnemyWB2_P1_A/G1-*, Rocket-*)
+done_when: 4 G1 có SpineAnimFlow với flow CloseInit(rỗng/Out pose), Open(In_Gun1 → Idle_Gun1 loop), Attack(Attack_Gun1 → Idle_Gun1 loop), Idle; Rocket Idle loop. Đặt tên G1-L1/L2/R1/R2. Play thử từng flow không lỗi Console.
+
+## T2 — P2: swap G2-L/R, OnlyAnim G1, G3, G4
+owner: claude
+depends: T1
+context:
+P2 = Súng 2 (2 cánh, từ Gun1_Swap2), Súng 3 (ụ giữa, Gun3_Swap5), Súng 4 (anten, Gun4_Swap7). Thân Idle1_to_2(4.00) → Idle2.
+Gun3_Swap5: In_Gun3(4.17) Idle_Gun3(8.00) Attack_Gun3(0.60) Gun3_mix_Gun5(6.83) Idle_Gun5 Attack_Gun5(0.43).
+Gun4_Swap7: In_Gun4(2.37) Idle_Gun4 Attack_Gun4(1.00) Gun4_Mix_Gun7(3.00) Idle_Gun7 Attack_Gun7(4.00).
+verified:
+EnemyWB2_P2_A: G2-L(bone Gun1_1), G2-R(Gun1_4) Gun1_Swap2 anim=Idle_Gun2; G1-(OnlyAnim) ×2 (Gun1_2, Gun1_3) anim=Idle_Gun2; G3 (boneName Linh đã gán 2026-10-15) Gun3_Swap5 anim=Attack_Gun3; G4 (bone Gun4) Gun4_Swap7 anim=Idle_Gun4. Chưa có SpineAnimFlow ở súng.
+refs: /Users/mobione/wkspaces/Brain/BR_WorldBoss/briefs/WB2_P2.md
+files: MakeAll.unity (EnemyWB2_P2_A/*)
+done_when:
+- G2-L/R: CloseInit = Idle_Gun1 (pose mở P1); Open = Gun1_Mix_Gun2 → Idle_Gun2 loop; Attack = Attack_Gun2 → Idle_Gun2.
+- G1-(OnlyAnim) ×2: KHÔNG gắn WorldBossWeapon/SpineAnimFlow. Chỉ đặt trên SkeletonAnimation: AnimationName = `Out_gun1`, loop = false → tự chạy khi boss enable, hết anim giữ frame cuối (đóng).
+- G3: Open = In_Gun3 → Idle_Gun3 loop; Attack = Attack_Gun3. G4: Open = In_Gun4 → Idle_Gun4; Attack = Attack_Gun4.
+- Console sạch.
+
+## T3 — P3: swap G5, G7, OnlyAnim G2 ×4, G6
+owner: claude
+depends: T2
+context:
+P3 = Súng 5 (từ Gun3_Swap5), Súng 6 (Gun6, ở mũi, Puzzle + laser vùng đỏ — S8 đã bỏ), Súng 7 (cọc, từ Gun4_Swap7). Thân Idle2_to_3(4.00) → Idle3.
+Gun6: In(3.33) Idle(0.13) Attack(1.00).
+verified:
+EnemyWB2_P3_A (off): thân Animation đang anim=Idle2 → Linh xác nhận đổi sang Idle3 (dùng Idle2_to_3 làm appear); G2-(OnlyAnim) ×4 (Gun1_1..4) Gun1_Swap2 anim=Idle_Gun2; G5 (boneName Linh đã gán 2026-10-15) Gun3_Swap5 Idle_Gun5; G6 (bone Gun6) Gun6 Idle; G7 (bone Gun4) Gun4_Swap7 Idle_Gun7.
+refs: /Users/mobione/wkspaces/Brain/BR_WorldBoss/briefs/WB2_P3.md
+files: MakeAll.unity (EnemyWB2_P3_A/*)
+done_when:
+- G5: CloseInit = Idle_Gun3; Open = Gun3_mix_Gun5 → Idle_Gun5; Attack = Attack_Gun5.
+- G7: CloseInit = Idle_Gun4; Open = Gun4_Mix_Gun7 → Idle_Gun7; Attack = Attack_Gun7.
+- G2-(OnlyAnim) ×4: như P2 — SkeletonAnimation AnimationName = `Out_Gun2`, loop = false, không weapon/flow.
+- G6: Open = In → Idle loop; Attack = Attack.
+- Thân P3: SpineAnimFlow có flow `Appear` = Idle2_to_3 (loop false) → Idle3 (loop); `EnemyWorldBoss.AutoWireFlowAppear` tự điền flowAppear + delayActionAppear (EnemyWorldBoss.cs:39-45). Tương tự P2: flow `Appear` = Idle1_to_2 → Idle2. Console sạch.
+
+## T4 — Test chuyển phase + báo cáo
+owner: claude
+depends: T3
+context:
+Test bằng WB-Shooter / bật lần lượt P1→P2→P3 (tắt phase khác, bật lại sau). Không lưu scene khi chưa hỏi Linh.
+verified:
+—
+refs: /Users/mobione/wkspaces/Brain/BR_WorldBoss/AGENT.md (mục 3–5)
+files: BR_WorldBoss/library/worldboss-boss-library.md (mục 7: bảng flow WB2), briefs/WB2_P*.md
+done_when: mỗi phase vào đúng pose init → mix/In → Idle, OnlyAnim đóng và đứng yên; bảng flow ghi vào library + TODO "close anim chờ art"; hỏi Linh trước khi save MakeAll.
+
+## Quyết định (Linh duyệt 2026-10-15)
+- Rocket giữ bone hiện tại. G3/G5 bone đã gán. Thân P3 dùng Idle3 + appear Idle2_to_3.
+- Súng OnlyAnim chỉ là hình: không WorldBossWeapon (tránh bẫy chain/OnCycleDone, không chiếm slot weapon của EnemyWorldBoss), không code mới — SkeletonAnimation start anim `Out_*` loop=false.
+- Anim `null/*` (thư mục nháp của art) — KHÔNG dùng:
+  - Gun1_Swap2 `null/In_Gun2`: bản nháp, đã có `Gun1_Mix_Gun2`.
+  - Gun4_Swap7 `null/In_Gun7`: đã có `Gun4_Mix_Gun7`; `null/Attack_Gun8`: thuộc Súng 8 (đã bỏ); `null/Out` + `null/vfx`: key slot S4.x (đóng/vfx anten S4) — để ý nếu art chuyển ra ngoài thư mục null thì dùng cho S4.
+  - World_Boss2 `null/null…3`: key bone g1.x/s6.3, nháp.
+
+## Câu hỏi mở
+- Anim close (Out_*) đang chờ art sửa → giữ tên, chỉ thay file Spine khi art giao.

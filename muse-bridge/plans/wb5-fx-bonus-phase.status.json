@@ -1,0 +1,17 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse thêm fxOnPlaying + SetFxOnPlaying; compile 0 error",
+  "at": "2026-10-14T10:10:33"
+ },
+ "T2": {
+  "status": "done",
+  "note": "P1: 2 Fire_Engine_MB35 inactive; P2/P3: Fx_bonus + 2 Fire_Engine inactive; đã lưu",
+  "at": "2026-10-14T10:10:50"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Gán fxOnPlaying 3 prefab (P1:2, P2/P3:3), sync delay P2=8/P3=2.67. Play test (instance, gọi ChangeToPlayingMode): FX inactive lúc đầu -> active + particle playing sau ChangeToPlayingMode ở cả 3. Chưa chạy full flow level thật (Init cần path).",
+  "at": "2026-10-14T10:11:17"
+ }
+}

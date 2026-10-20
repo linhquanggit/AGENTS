@@ -1,0 +1,12 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Cập nhật theo Linh: PolygonCollider2D (trigger, layer 6/tag Enemies) dò viền đầy đủ silhouette thân Spine (Moore contour, ~60 điểm, bỏ phần lấp khe cánh–mũi). Kiểm: notch ngoài, đầu cánh/đuôi trong; ảnh Captures/wb2_p1_poly2.png. CHƯA test bắn trúng bằng Play thật.",
+  "at": "2026-10-16T13:51:12"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Thêm OnlyAnimGunWB2.cs (Out_gun1 loop=false -> Close) gắn 2 SkeletonAnimation G1-(OnlyAnim) P2, xoá startingAnimation, đổi tên G1-L-(OnlyAnim)/G1-R-(OnlyAnim). Mô phỏng edit-mode: Out_gun1 3.0s -> Close, pose cuối đóng (Captures/wb2_p2_g1_final4.png). CHƯA test trong Play thật; trigger = OnEnable (spawn/Init P2) — giả định.",
+  "at": "2026-10-16T13:51:12"
+ }
+}

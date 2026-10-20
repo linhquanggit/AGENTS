@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Prefab Assets/Project/FX_Test/Muzzle/FX_Muzzle_A.prefab tạo qua ParticleSystem mới (Flash: 1 burst/chu kỳ 0.15s, lifetime 0.1, size 0.9→0; Sparks: cone 10°, rotation (-90,0,0) để bắn +Y, 8 hạt/burst, speed 4–7, lifetime 0.08–0.15, fade alpha + shrink; Loop + Play On Awake; material Sprites/Default + glow texture procedural 64px FX_Muzzle_A_Glow.png). Verify: prefab tồn tại (get_info OK), console 0 error mới. Chưa test visual (không Play).",
+  "at": "2026-10-12T10:51:16"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Prefab Assets/Project/FX_Test/Muzzle/FX_Muzzle_B.prefab. Học từ: GunShoot/gunshoot_1.prefab (emitter xoay (-90,0,0) để bắn +Y, startSpeed 0 flash, sortingOrder 2, Billboard, lengthInSec 0.2 scale, sizeOverLifetime co dần), Gunshoot_2.mat dùng texture Muzzle2.png (128px, RGBA) → copy material thành FX_Muzzle_B_Mat.mat (giữ shader + texture gốc). Kết hợp: flash 1 hạt/chu kỳ 0.2s size 0.9–1.15 fade; sparks cone 12° +Y, 6 hạt/burst, speed 5–9, lifetime 0.15–0.25, size 0.05–0.12 màu cam-vàng, shrink+fade. Loop + Play On Awake. Verify: prefab tồn tại, console 0 error. Chưa test visual.",
+  "at": "2026-10-12T10:52:05"
+ },
+ "T3": {
+  "status": "done",
+  "note": "MakeAll: GameObject FX_Test_Muzzle ở root, con FX_Muzzle_A (-2,-1,0) và FX_Muzzle_B (2,-1,0) là prefab instance. Camera ortho size 5 nên 2 FX nằm trong vùng nhìn. Scene đã save (Assets/Project/Scenes/MakeAll.unity), không sửa object khác. Verify: find FX_Test_Muzzle thấy 1 object, children=2, console 0 error. KHÔNG Play.",
+  "at": "2026-10-12T10:52:50"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Báo DONE đã gửi trong phần kết thúc plan.",
+  "at": "2026-10-12T10:52:50"
+ }
+}

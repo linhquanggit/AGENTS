@@ -1,0 +1,32 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse: GetOffscreenPoint, exitSpeed, enterTime 0.3; compile 0 error",
+  "at": "2026-10-19T17:45:22"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse: DirectionShotE hook + GunSweepAimWB2; compile 0 error",
+  "at": "2026-10-19T17:45:22"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Muse: RotatingLinkFieldWB2 viết lại; compile 0 error",
+  "at": "2026-10-19T17:45:22"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Muse: delayS6ToS7; compile 0 error",
+  "at": "2026-10-19T17:45:22"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play MakeAll: (1) nhảy góc khi đã khuất hẳn, enter 0.3s, spline1 x2 (2) G5 xoay theo viên, muzzle spawn, quạt x2, speed x2, anim Attack_Gun5 chạy (3) nghỉ 1.0s (4) S7 cặp drone+laser+bullets, 0 error. CHƯA verify: turret aim Fighter (Fighter dummy), đếm 1 viên/s. Prefab đã save; MakeAll CHƯA save. ảnh: .agent/shots/wb2_k1_d/e, wb2_s7_a/b",
+  "at": "2026-10-19T17:59:50"
+ },
+ "T6": {
+  "status": "done",
+  "note": "Đã ghi brief WB2_P3 (Fix round 2) + library mục 7",
+  "at": "2026-10-19T17:59:50"
+ }
+}

@@ -22,6 +22,7 @@ CONFIG_PATH = os.path.join(HERE, "config.json")
 
 DEFAULT_CONFIG = {
     "port": 8765,
+    "lang": "en",
     "muse_cli": "muse-cli",
     "thread_id": "",
     "repo_path": "",
@@ -34,12 +35,12 @@ DEFAULT_CONFIG = {
     "claude_allowed_tools": ["Read", "Grep", "Glob", "Bash(git:*)", "mcp__UnityMCP"],
     # Plan chạy trong terminal của app: tool được tự cho phép (không hỏi) + chế độ quyền
     "plan_allowed_tools": ["Read", "Grep", "Glob", "Edit", "Write", "MultiEdit", "TodoWrite",
-                           "Bash(muse-ask:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)",
+                           "Bash(muse-ask:*)", "Bash(gemini-ask:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)",
                            "Bash(ls:*)", "Bash(cat:*)", "Bash(grep:*)", "Bash(find:*)",
                            "mcp__unityMCP", "mcp__UnityMCP"],
     "plan_permission_mode": "acceptEdits",
     "plan_autonomous": True,
-    "idle_alert_seconds": 8,
+    "idle_alert_seconds": 30,
     "claude_timeout_seconds": 900,
     "claude_workdir": "~/wkspaces/WB",
     "trash_days": 3,
@@ -49,6 +50,23 @@ DEFAULT_CONFIG = {
         "Kiến thức: /Users/mobione/AGENTS/AI/Unity/knowledge/ (INDEX.md trước).\n"
         "Xong reply ĐÚNG format dòng đầu: [DONE-{id}] <tóm tắt> | files: <đường dẫn>\n"
         "Nếu vướng: [BLOCKED-{id}] <lý do>"
+    ),
+    "task_footer_generic": (
+        "---\nProject: {project}\nSửa/tạo file TRỰC TIẾP trong project trên (không dán code vào reply).\n"
+        "Project KHÔNG phải Unity: không dùng Unity Editor/Unity MCP/knowledge Unity. Kiểm chứng bằng công cụ của chính project (node/npm test, chạy app, mở trang).\n"
+        "Xong reply ĐÚNG format dòng đầu: [DONE-{id}] <tóm tắt> | files: <đường dẫn>\n"
+        "Nếu vướng: [BLOCKED-{id}] <lý do>"
+    ),
+    "review_prompt_generic": (
+        "Bạn là QA cho project ở thư mục hiện tại (KHÔNG phải Unity — không dùng Unity MCP).\n"
+        "Task {id}: {body}\n\n"
+        "Coding agent (Muse) báo xong: {summary}\nCommit: {sha}\n\n"
+        "Việc cần làm:\n"
+        "1. Xem thay đổi: git show --stat {sha} rồi git show {sha}.\n"
+        "2. Chạy kiểm tra của project: đọc package.json/README; chạy test (vd npm test), lint/build nếu có; chạy thử theo done_when.\n"
+        "3. Đối chiếu với yêu cầu task và done_when.\n"
+        "Không sửa code. Kết thúc bằng đúng 1 dòng: VERDICT: PASS hoặc VERDICT: FAIL.\n"
+        "Nếu FAIL, thêm sau đó một mục bắt đầu bằng 'BUG:' mô tả lỗi + log ngắn gọn để gửi cho coding agent."
     ),
     "review_prompt": (
         "Bạn là QA cho Unity project ở thư mục hiện tại.\n"
@@ -97,6 +115,19 @@ def save_config():
 
 def default_project():
     return os.path.abspath(os.path.expanduser(CFG.get("claude_workdir") or "~"))
+
+
+def is_unity(path):
+    p = os.path.abspath(os.path.expanduser(path or ""))
+    return os.path.isdir(os.path.join(p, "Assets")) and os.path.isdir(os.path.join(p, "ProjectSettings"))
+
+
+def project_kind(path, explicit=""):
+    """kind: dòng `kind:` của plan (unity|web|node|…) thắng; không có thì tự nhận theo thư mục."""
+    k = (explicit or "").strip().lower()
+    if k:
+        return "unity" if k == "unity" else k
+    return "unity" if is_unity(path) else "generic"
 
 
 def agent_dir():
@@ -184,6 +215,52 @@ def find_key(obj, key):
     return None
 
 
+# ---------------------------------------------------------------- cookie hatch_sess
+MUSE_CFG_DIR = os.path.expanduser("~/.config/muse-cli")
+
+
+def set_hatch_cookie(value):
+    """Ghi đè giá trị cookie hatch_sess trong các file của muse-cli (backup .bak trước)."""
+    value = value.strip()
+    if value.lower().startswith("hatch_sess="):
+        value = value.split("=", 1)[1]
+    value = value.split(";", 1)[0].strip().strip('"')
+    if not value or re.search(r"\s", value):
+        raise RuntimeError("giá trị cookie không hợp lệ")
+    pats = [
+        (r'("name"\s*:\s*"hatch_sess"[^{}]*?"value"\s*:\s*")[^"]*(")', r"\g<1>%s\g<2>"),
+        (r'("value"\s*:\s*")[^"]*("[^{}]*?"name"\s*:\s*"hatch_sess")', r"\g<1>%s\g<2>"),
+        (r'("hatch_sess"\s*:\s*")[^"]*(")', r"\g<1>%s\g<2>"),
+        (r"(hatch_sess=)[^;\s\"']+", r"\g<1>%s"),
+        (r"(\thatch_sess\t)[^\t\r\n]+", r"\g<1>%s"),
+    ]
+    changed = []
+    if not os.path.isdir(MUSE_CFG_DIR):
+        raise RuntimeError("không thấy " + MUSE_CFG_DIR + " — chạy muse-cli auth export một lần trước")
+    for root, _dirs, files in os.walk(MUSE_CFG_DIR):
+        for fn in files:
+            if fn.endswith(".bak"):
+                continue
+            fp = os.path.join(root, fn)
+            try:
+                txt = open(fp, encoding="utf-8").read()
+            except (UnicodeDecodeError, OSError):
+                continue
+            if "hatch_sess" not in txt:
+                continue
+            new = txt
+            for pat, rep in pats:
+                new = re.sub(pat, rep % value.replace("\\", "\\\\"), new)
+            if new != txt:
+                shutil.copy2(fp, fp + ".bak")
+                with open(fp, "w", encoding="utf-8") as f:
+                    f.write(new)
+                changed.append(fp)
+    if not changed:
+        raise RuntimeError("không tìm thấy hatch_sess trong " + MUSE_CFG_DIR)
+    return changed
+
+
 # ---------------------------------------------------------------- muse ops
 def muse_send(text):
     if not CFG.get("thread_id"):
@@ -264,6 +341,14 @@ RELAY_FOOTER = (
     "[BLOCKED-{id}] <lý do / cần gì>\n"
     "[ASK-CLAUDE-{id}] <việc cần Claude làm trong Unity trước>"
 )
+RELAY_FOOTER_GENERIC = (
+    "---\n(Tin từ Claude — đồng nghiệp điều phối, không phải Linh.)\n"
+    "Project: {project} — sửa/tạo file TRỰC TIẾP trong đó. Project KHÔNG phải Unity: không dùng Unity Editor/knowledge Unity.\n"
+    "Reply dòng đầu ĐÚNG 1 trong các format:\n"
+    "[DONE-{id}] <tóm tắt> | files: <đường dẫn>\n"
+    "[BLOCKED-{id}] <lý do / cần gì>\n"
+    "[ASK-CLAUDE-{id}] <việc cần Claude làm trước>"
+)
 PREFIX = {"task": "TASK", "bug": "BUG", "reply": "CLAUDE"}
 
 
@@ -288,7 +373,7 @@ def relay_outbox():
             if kind == "raw":
                 msg = text
             else:
-                msg = "[%s-%s] %s\n\n%s" % (PREFIX.get(kind, "TASK"), rid, text, RELAY_FOOTER.replace("{id}", rid).replace("{project}", default_project()))
+                msg = "[%s-%s] %s\n\n%s" % (PREFIX.get(kind, "TASK"), rid, text, (RELAY_FOOTER if is_unity(job.get("project") or default_project()) else RELAY_FOOTER_GENERIC).replace("{id}", rid).replace("{project}", job.get("project") or default_project()))
             muse_send(msg)
             RUNTIME["relay_at"] = time.time()
             with LOCK:
@@ -395,7 +480,8 @@ def send_task(tid):
         t = STATE["tasks"][tid]
         t["status"] = "sending"
         short = tid.split("-", 1)[1]
-        footer = CFG.get("task_footer", "").replace("{id}", short).replace("{project}", default_project())
+        fkey = "task_footer" if is_unity(default_project()) else "task_footer_generic"
+        footer = CFG.get(fkey, "").replace("{id}", short).replace("{project}", default_project())
         msg = "[%s] %s\n\n%s" % (tid, t["body"], footer)
     muse_send(msg)
     with LOCK:
@@ -438,7 +524,8 @@ def claude_review(tid):
         t["status_before"] = t["status"]
         STATE["tasks"][tid]["status"] = "reviewing"
         save_state()
-    prompt = (CFG["review_prompt"].replace("{id}", tid).replace("{body}", t.get("body", ""))
+    rkey = "review_prompt" if is_unity(repo() or default_project()) else "review_prompt_generic"
+    prompt = (CFG[rkey].replace("{id}", tid).replace("{body}", t.get("body", ""))
               .replace("{summary}", t.get("summary", "")).replace("{sha}", t.get("sha") or "HEAD"))
     argv = [os.path.expanduser(CFG["claude_bin"]), "-p", prompt, "--output-format", "json"]
     tools = CFG.get("claude_allowed_tools") or []
@@ -562,7 +649,9 @@ def term_start(cmd, cwd, title, plan=None, extra_env=None):
                     break
                 t["buf"] += data
                 t["last_out"] = time.time()
-                t["need"] = False
+                # chỉ coi là Claude chạy tiếp khi ra output thật; redraw nhỏ (spinner/status/resize) không reset → hết spam thông báo
+                if len(data) >= 400:
+                    t["need"] = False
                 if len(t["buf"]) > TERM_MAX:
                     cut = len(t["buf"]) - TERM_MAX
                     del t["buf"][:cut]
@@ -618,13 +707,16 @@ def parse_plan(pid):
     path = os.path.join(PLANS_DIR, pid + ".md")
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
-    title, tasks, cur, project = pid, [], None, ""
+    title, tasks, cur, project, kind = pid, [], None, "", ""
     for line in text.splitlines():
         if line.startswith("# ") and title == pid:
             title = line[2:].strip()
             continue
         if cur is None and line.lower().startswith("project:"):
             project = line.split(":", 1)[1].strip()
+            continue
+        if cur is None and line.lower().startswith("kind:"):
+            kind = line.split(":", 1)[1].strip()
             continue
         m = TASK_HEAD.match(line)
         if m:
@@ -653,7 +745,7 @@ def parse_plan(pid):
     last = terms[-1] if terms else None
     proj = os.path.abspath(os.path.expanduser(project)) if project else default_project()
     return {"id": pid, "title": title, "tasks": tasks, "path": path, "mtime": os.path.getmtime(path),
-            "project": proj, "project_ok": os.path.isdir(proj), "thread": plan_thread(pid, create=False),
+            "project": proj, "kind": project_kind(proj, kind), "project_ok": os.path.isdir(proj), "thread": plan_thread(pid, create=False),
             "muse_wait": muse_wait,
             "has_session": os.path.exists(os.path.join(PLANS_DIR, pid + ".session.json")),
             "term": {"id": last["id"], "alive": last["alive"], "need": bool(last.get("need")),
@@ -782,10 +874,24 @@ def list_plans():
 
 def plan_prompt(pid):
     path = os.path.join(PLANS_DIR, pid + ".md")
+    kind = parse_plan(pid)["kind"]
+    if kind != "unity":
+        return (
+            "Dùng skill muse-collab. Thực hiện plan trong file %s (plan id: %s). Project: thư mục hiện tại (loại: %s).\n"
+            "PROJECT NÀY KHÔNG PHẢI UNITY: không dùng Unity Editor/Unity MCP/Play mode/knowledge Unity, không mở ~/wkspaces/WB. "
+            "Verify bằng công cụ của project (node/npm test, chạy server, mở trang bằng trình duyệt/Playwright).\n"
+            "1. Đọc plan + trạng thái hiện tại: muse-ask --plan %s --show\n"
+            "2. Làm các task chưa done theo thứ tự phụ thuộc. Tự quyết việc nào tự làm, việc nào nhờ Muse (muse-ask), việc nào nhờ Gemini (gemini-ask) — "
+            "owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task. Trước khi đánh done phải tự chạy lại đúng done_when.\n"
+            "3. Mỗi task: bắt đầu → muse-ask --plan %s --task <Tn> --status doing \"...\"; xong và đã verify → --status done \"kết quả\"; "
+            "vướng → --status blocked \"lý do\".\n"
+            "%s"
+            "5. Kết thúc: báo ngắn task nào xong, Claude làm gì, Muse làm gì, còn gì chưa verify."
+        ) % (path, pid, kind, pid, pid, autonomy_rule(kind))
     return (
         "Dùng skill muse-collab. Thực hiện plan trong file %s (plan id: %s). Project: thư mục hiện tại.\n"
         "1. Đọc plan + trạng thái hiện tại: muse-ask --plan %s --show\n"
-        "2. Làm các task chưa done theo thứ tự phụ thuộc. Tự quyết việc nào tự làm qua Unity MCP, việc nào nhờ Muse (muse-ask) — "
+        "2. Làm các task chưa done theo thứ tự phụ thuộc. Tự quyết việc nào tự làm qua Unity MCP, việc nào nhờ Muse (muse-ask), việc nào nhờ Gemini (gemini-ask: đọc tài liệu/codebase dài, review, ý tưởng; thêm --edit nếu cần sửa file) — "
         "owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task.\n"
         "3. Mỗi task: bắt đầu → muse-ask --plan %s --task <Tn> --status doing \"...\"; xong và đã verify → --status done \"kết quả\"; "
         "vướng → --status blocked \"lý do\".\n"
@@ -794,7 +900,14 @@ def plan_prompt(pid):
     ) % (path, pid, pid, pid, autonomy_rule())
 
 
-def autonomy_rule():
+def autonomy_rule(kind="unity"):
+    if kind != "unity":
+        if not CFG.get("plan_autonomous", True):
+            return "4. Hỏi Linh trước khi xoá file, git push/reset, hay đụng ngoài thư mục project.\n"
+        return ("4. CHẠY TỰ ĐỘNG — Linh không ngồi canh terminal. ĐƯỢC PHÉP không cần hỏi: chạy test/server/script trong project, "
+                "sửa file trong phạm vi task, giao/nhắc Muse, chuyển task kế tiếp. KHÔNG hỏi 'làm tiếp không?'. "
+                "Chỉ DỪNG hỏi Linh khi: xoá file, git push/reset, cài dependency ngoài plan, kết nối server thật/ngoài mạng, "
+                "hoặc cần quyết định thiết kế không suy ra được từ plan — đánh --status blocked \"câu hỏi\" rồi làm tiếp task khác, hỏi gộp ở cuối.\n")
     if not CFG.get("plan_autonomous", True):
         return "4. Tuân thủ điểm dừng của skill (xoá file, scene chính, Play/Build… thì hỏi Linh).\n"
     return ("4. CHẠY TỰ ĐỘNG — Linh không ngồi canh terminal. ĐƯỢC PHÉP không cần hỏi: vào/thoát Play mode trong Unity Editor để test/verify "
@@ -1079,6 +1192,9 @@ def idle_watch_loop():
             except Exception:  # noqa: BLE001
                 title = t["plan"]
             t["need"], t["need_at"] = True, time.time()
+            if time.time() - t.get("noti_at", 0) < 300:
+                continue  # đã báo trong 5 phút gần đây → chỉ đánh dấu, không thông báo lại
+            t["noti_at"] = time.time()
             msg = "Claude đang chờ anh ở plan: " + title
             run(["osascript", "-e", 'display notification %s with title "Musude" sound name "Glass"' % applescript_str(msg[:180])], timeout=10)
             with LOCK:
@@ -1270,6 +1386,18 @@ class Handler(BaseHTTPRequestHandler):
                     save_config()
                 WAKE.set()
                 return self._send(200, {"thread_id": sid, "raw": res})
+            if p == "/api/cookie":
+                files = set_hatch_cookie(b.get("value", ""))
+                try:
+                    st = muse(["status"], timeout=60)
+                    err = ""
+                except Exception as e:  # noqa: BLE001
+                    st, err = None, str(e)
+                with LOCK:
+                    RUNTIME["status"], RUNTIME["status_error"] = st, err
+                    log_event("-", "cookie", "Cập nhật cookie hatch_sess", by="app")
+                WAKE.set()
+                return self._send(200, {"ok": not err, "files": files, "error": err})
             if p == "/api/config":
                 allowed = set(DEFAULT_CONFIG) - {"port"}
                 with LOCK:
@@ -1349,6 +1477,8 @@ class Handler(BaseHTTPRequestHandler):
                 if action == "write":
                     if TERMS[tid]["alive"]:
                         os.write(TERMS[tid]["fd"], b.get("data", "").encode("utf-8"))
+                        TERMS[tid]["need"] = False
+                        TERMS[tid]["last_out"] = time.time()
                 elif action == "resize":
                     term_resize(tid, b.get("cols", 80), b.get("rows", 24))
                 else:

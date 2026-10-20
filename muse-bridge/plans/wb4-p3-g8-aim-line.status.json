@@ -1,0 +1,17 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Hold_Energy inactive; step0.ueBeforeShot SetActive(true) (+Play qua OnEnable/playOnAwake), step1.ueBeforeShot SetActive(false); prefab saved. Verify runtime ở T3",
+  "at": "2026-10-14T19:38:01"
+ },
+ "T2": {
+  "status": "done",
+  "note": "G8-Dir.rotate=RotationAimFighter của BODY-ROTATE; DirectionShotE aim riêng disabled; step0.ueBeforeShot Play→body aim; DirectionShotE.ueOnShot Pause→body aim. Play test: FireDirection.up lệch 0° so với hướng tới player, bodyZ=26.6° khớp, console 0 error",
+  "at": "2026-10-14T19:39:49"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Play probe (fake Fighter1, không chạy đạn thật): Hold_Energy false→true khi step0.ueBeforeShot, phát 6/6 PS khi bật; line xoay cùng thân aimErr 0°; prefab đã save; chưa verify: cảnh trực quan Charge_Arrow 2s + đạn thật bay theo line (cần scene test P3 có pool), G9/súng khác bị xoay theo thân khi G8 chạy",
+  "at": "2026-10-14T19:39:49"
+ }
+}

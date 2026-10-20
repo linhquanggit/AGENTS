@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Play verify MakeAll: P2 thanh kill tại bounds+2 (stub CameraBouns 5,9 → x=±7, y≈-11), cả 2 thanh, laser giữ tới cuối; G9 S1/S2 charge scale 0→1 ~0.5s rồi bay, pool reset ok, Open 1 lần + Attack mỗi lần phóng; G8 Open 1 lần, Play lại ×3 không Open lại; Console 0 error; log tạm đã gỡ + compile 0 error",
+  "at": "2026-10-14T19:10:17"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Play verify MakeAll: P2 thanh kill tại bounds+2 (stub CameraBouns 5,9 → x=±7, y≈-11), cả 2 thanh, laser giữ tới cuối; G9 S1/S2 charge scale 0→1 ~0.5s rồi bay, pool reset ok, Open 1 lần + Attack mỗi lần phóng; G8 Open 1 lần, Play lại ×3 không Open lại; Console 0 error; log tạm đã gỡ + compile 0 error",
+  "at": "2026-10-14T19:10:17"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Play verify MakeAll: P2 thanh kill tại bounds+2 (stub CameraBouns 5,9 → x=±7, y≈-11), cả 2 thanh, laser giữ tới cuối; G9 S1/S2 charge scale 0→1 ~0.5s rồi bay, pool reset ok, Open 1 lần + Attack mỗi lần phóng; G8 Open 1 lần, Play lại ×3 không Open lại; Console 0 error; log tạm đã gỡ + compile 0 error",
+  "at": "2026-10-14T19:10:17"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play verify MakeAll: P2 thanh kill tại bounds+2 (stub CameraBouns 5,9 → x=±7, y≈-11), cả 2 thanh, laser giữ tới cuối; G9 S1/S2 charge scale 0→1 ~0.5s rồi bay, pool reset ok, Open 1 lần + Attack mỗi lần phóng; G8 Open 1 lần, Play lại ×3 không Open lại; Console 0 error; log tạm đã gỡ + compile 0 error",
+  "at": "2026-10-14T19:10:17"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play verify MakeAll: P2 thanh kill tại bounds+2 (stub CameraBouns 5,9 → x=±7, y≈-11), cả 2 thanh, laser giữ tới cuối; G9 S1/S2 charge scale 0→1 ~0.5s rồi bay, pool reset ok, Open 1 lần + Attack mỗi lần phóng; G8 Open 1 lần, Play lại ×3 không Open lại; Console 0 error; log tạm đã gỡ + compile 0 error",
+  "at": "2026-10-14T19:10:17"
+ }
+}

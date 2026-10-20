@@ -30,7 +30,7 @@ if os.path.exists(os.path.join(ROOT, "config.json")):
     CFG.update(json.load(open(os.path.join(ROOT, "config.json"), encoding="utf-8")))
 
 FOOTER = (
-    "---\n(Tin từ Claude Code — đồng nghiệp điều phối, không phải Linh.)\n"
+    "---\n(Tin từ {agent} — đồng nghiệp điều phối, không phải Linh.)\n"
     "Project: {project}\n"
     "Sửa/tạo file TRỰC TIẾP trong project trên (không dán code vào reply). Task có outputs thì ghi đúng đường dẫn/định dạng đó.\n"
     "Kiến thức Unity: /Users/mobione/AGENTS/AI/Unity/knowledge/ (đọc INDEX.md, chỉ mở file liên quan).\n"
@@ -38,8 +38,25 @@ FOOTER = (
     "Reply dòng đầu ĐÚNG 1 trong các format:\n"
     "[DONE-{id}] <tóm tắt, tạo bằng cách nào> | files: <danh sách đường dẫn đã tạo/sửa>\n"
     "[BLOCKED-{id}] <lý do / cần gì>\n"
-    "[ASK-CLAUDE-{id}] <việc cần Claude làm trong Unity Editor trước>"
+    "[ASK-CLAUDE-{id}] <việc cần {agent} làm trong Unity Editor trước>"
 )
+
+FOOTER_GENERIC = (
+    "---\n(Tin từ {agent} — đồng nghiệp điều phối, không phải Linh.)\n"
+    "Project: {project}\n"
+    "Sửa/tạo file TRỰC TIẾP trong project trên (không dán code vào reply). Task có outputs thì ghi đúng đường dẫn/định dạng đó.\n"
+    "Project KHÔNG phải Unity: không dùng Unity Editor/knowledge Unity. Kiểm chứng bằng công cụ của project (node/npm test, chạy app).\n"
+    "Chỉ đụng các file trong phạm vi task. Không xoá file trừ khi task ghi rõ.\n"
+    "Reply dòng đầu ĐÚNG 1 trong các format:\n"
+    "[DONE-{id}] <tóm tắt, tạo bằng cách nào> | files: <danh sách đường dẫn đã tạo/sửa>\n"
+    "[BLOCKED-{id}] <lý do / cần gì>\n"
+    "[ASK-CLAUDE-{id}] <việc cần {agent} làm trước>"
+)
+
+
+def is_unity(p):
+    return os.path.isdir(os.path.join(p, "Assets")) and os.path.isdir(os.path.join(p, "ProjectSettings"))
+
 
 def find_project(explicit=None):
     """Thứ tự: --project / MUSE_PROJECT → thư mục Unity chứa cwd → claude_workdir trong config."""
@@ -58,10 +75,14 @@ def find_project(explicit=None):
 
 
 def footer(tid):
-    return FOOTER.replace("{id}", tid).replace("{project}", PROJECT)
+    return (FOOTER if is_unity(PROJECT) else FOOTER_GENERIC).replace("{id}", tid).replace("{project}", PROJECT).replace("{agent}", AGENT_NAME)
 
 
 PROJECT = ""
+# Agent điều phối: claude (mặc định) | antigravity. Đặt bằng --agent hoặc env MUSE_AGENT.
+AGENTS = {"claude": ("Claude Code", "C"), "antigravity": ("Antigravity", "A")}
+AGENT_KEY = "claude"
+AGENT_NAME = "Claude Code"
 
 TAG = re.compile(r"\[(DONE|BLOCKED|ASK-CLAUDE)-([A-Za-z0-9_.-]+)\]")
 
@@ -77,7 +98,7 @@ def agent_dir():
 def log(kind, task, text, **kw):
     os.makedirs(agent_dir(), exist_ok=True)
     ev = {"at": datetime.now().isoformat(timespec="seconds"), "task": task, "kind": kind,
-          "text": text[:4000], "by": "claude"}
+          "text": text[:4000], "by": "claude", "agent": AGENT_KEY}  # kind giữ "claude_*" để Musude hiển thị đúng
     ev.update(kw)
     with open(os.path.join(agent_dir(), "events.jsonl"), "a", encoding="utf-8") as fh:
         fh.write(json.dumps(ev, ensure_ascii=False) + "\n")
@@ -116,9 +137,12 @@ def is_user(m):
 def next_id():
     path = os.path.join(agent_dir(), "muse_ask_counter")
     os.makedirs(agent_dir(), exist_ok=True)
+    prefix = AGENTS.get(AGENT_KEY, ("", "C"))[1]
+    if prefix != "C":
+        path += "_" + AGENT_KEY
     n = int(open(path).read().strip() or 0) + 1 if os.path.exists(path) else 1
     open(path, "w").write(str(n))
-    return "C%02d" % n
+    return "%s%02d" % (prefix, n)
 
 
 def send(text):
@@ -182,7 +206,7 @@ def baseline():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Claude ↔ Muse")
+    ap = argparse.ArgumentParser(description="Claude/Antigravity ↔ Muse")
     ap.add_argument("text", nargs="?")
     ap.add_argument("--id")
     ap.add_argument("--bug", metavar="ID")
@@ -196,11 +220,16 @@ def main():
     ap.add_argument("--status", choices=["todo", "doing", "done", "blocked"])
     ap.add_argument("--show", action="store_true")
     ap.add_argument("--project", help="đường dẫn project Muse được ghi (mặc định: project Unity chứa thư mục hiện tại)")
+    ap.add_argument("--agent", choices=sorted(AGENTS), default=None, help="ai đang điều phối (mặc định env MUSE_AGENT hoặc claude)")
     ap.add_argument("--kind", default="step")
     ap.add_argument("--timeout", type=int, default=540)
     ap.add_argument("--poll", type=int, default=5)
     a = ap.parse_args()
-    global PROJECT
+    global PROJECT, AGENT_KEY, AGENT_NAME
+    AGENT_KEY = (a.agent or os.environ.get("MUSE_AGENT") or "claude").lower()
+    if AGENT_KEY not in AGENTS:
+        die("--agent/MUSE_AGENT không hợp lệ: %s (claude|antigravity)" % AGENT_KEY)
+    AGENT_NAME = AGENTS[AGENT_KEY][0]
     PROJECT = find_project(a.project)
     if a.plan:
         pdir = os.path.join(ROOT, "plans")

@@ -1,0 +1,22 @@
+{
+ "T0": {
+  "status": "done",
+  "note": "linkOffset=0 cho S1/S2 (đọc lại runtime = 0); 0 error. Chưa nhìn trực quan 2 dây trùng (code neo cùng điểm khi offset 0)",
+  "at": "2026-10-15T09:17:12"
+ },
+ "T1": {
+  "status": "done",
+  "note": "Open/Attack bỏ Idle sau; Play: S2 giữ Open sau 5.29s (>5.13), S2/S1 giữ cuối Attack; pose cuối Attack ≈ Open (không cần useSelfAnimAttack=0)",
+  "at": "2026-10-15T09:17:12"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse thêm Bullet.SetDestroyOutCamera + gọi ở SpawnBar; compile 0 error; Play ~125 lượt phóng S1 không có 'broken(bar inactive)'; logger đối chứng hoạt động; đã gỡ log G9DBG",
+  "at": "2026-10-15T09:17:12"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Play P3_A (G9 S1+S2) và P2_A G6: đạn sinh/bay, Console 0 error; đã gỡ log tạm, Stop Play, trả spritePackerMode, 0 spriteatlas đổi",
+  "at": "2026-10-15T09:17:12"
+ }
+}

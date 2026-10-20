@@ -1,0 +1,12 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "LineUVScroll.cs tạo, compile 0 error",
+  "at": "2026-10-14T08:40:53"
+ },
+ "T2": {
+  "status": "done",
+  "note": "G7-L/M/R textureMode=Tile + LineUVScroll(UVTime -1); Trail_rail_WB4.mat tiling.x=0.25 (tex 512x128, width 1). Play TestEverything spawn WB4_P3: xích đúng tỉ lệ, offset chạy; ảnh .agent/shots/wb4-g7-t3.png",
+  "at": "2026-10-14T08:46:14"
+ }
+}

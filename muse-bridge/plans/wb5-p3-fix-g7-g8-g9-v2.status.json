@@ -1,0 +1,27 @@
+{
+ "T2": {
+  "status": "done",
+  "note": "Đã có sẵn từ v1 (PortalShotWB5: elipse, waveInterval 0.4, speed 7.5 ở prefab, gizmo); huỷ giao Muse. Verify Play ở T5",
+  "at": "2026-10-14T14:18:12"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Muse thêm linkGrowTime=0.6 (TẠM): laser chạy dần, laser2 ngược chiều; 2 đường song song giữ từ v1. Compile OK; Play slow-mo: độ dài laser tăng 0.77→1.11 ở cả 2 đường",
+  "at": "2026-10-14T14:22:26"
+ },
+ "T1": {
+  "status": "done",
+  "note": "G7 visual đã clone từ G3 trong v1 (không đụng speed/gravity); Console 0 error. Chưa tự quan sát đạn G7 trong lần Play v2 (v1 đã đếm 14 đạn)",
+  "at": "2026-10-14T14:22:26"
+ },
+ "T3": {
+  "status": "done",
+  "note": "PortalShotWB5: Charge_Portal (G8-Portal/Animation, tự tìm nếu field trống) scale 0→size trong openTime 0.25 → spawn Portal-N → tắt Charge; Attack_Portal scale 0→size (openTime) rồi giữ nguyên và bắn. Compile OK; Play probe: Charge tắt lúc spawn, Attack 0.01→0.15 rồi giữ, đạn G8 bắn sau đó, Console 0 error. Open anim gun do WorldBossWeapon sẵn có, không đổi",
+  "at": "2026-10-14T14:30:28"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play MakeAll/WB-Shooter (TEST_P3 = instance tạm, đã xoá, không lưu scene): G8 portal hiện + đạn G8 (speed 7.5 từ prefab); G9 laser grow + 2 đường; Console 0 error. Ảnh: ~/AGENTS/muse-bridge/.agent/shots/wb5-p3-v2-play.png",
+  "at": "2026-10-14T14:22:26"
+ }
+}

@@ -369,7 +369,7 @@ dialog[open]::backdrop{animation:fade .25s}
 <div id="needBar" role="alert" aria-live="assertive"></div>
 <main>
   <section>
-    <nav class="tabs" id="midTabs" aria-label="Chế độ xem"><button data-mid="plan" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg><span>Kế hoạch</span></button><button data-mid="task"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><span>Task</span></button><button data-mid="term"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span>Terminal</span></button><button data-mid="act"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Hoạt động</span></button></nav>
+    <nav class="tabs" id="midTabs" aria-label="Chế độ xem"><button data-mid="plan" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg><span>Nhiệm vụ</span></button><button data-mid="task"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><span>Task</span></button><button data-mid="term"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span>Terminal</span></button><button data-mid="act"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Hoạt động</span></button></nav>
     <div class="side" id="side-act" style="display:none">
       <div class="tabs seg" id="actFilters"></div>
       <div id="actSrc"></div>
@@ -432,6 +432,8 @@ dialog[open]::backdrop{animation:fade .25s}
   <h2>Cài đặt</h2>
   <div class="row"><button id="sStatus">Kiểm tra muse-cli status</button></div>
   <pre id="sStatusOut" style="display:none"></pre>
+  <label>Cookie hatch_sess (muse.ai → DevTools → Application → Cookies)</label>
+  <div class="row"><input id="sCookie" type="password" style="flex:1" placeholder="dán giá trị hatch_sess…" autocomplete="off"><button id="sCookieSave">Cập nhật cookie</button></div>
   <label>Thread ID (side chat)</label>
   <div class="row"><input id="sThread" style="flex:1"><button id="sNewThread">Tạo side chat mới</button></div>
   <label>Project mặc định (khi plan không ghi project:)</label><input id="sWork" placeholder="~/wkspaces/WB">
@@ -442,6 +444,7 @@ dialog[open]::backdrop{animation:fade .25s}
   <label>Claude allowedTools (cách nhau dấu phẩy)</label><input id="sTools">
   <div class="row"><div style="flex:1"><label>Poll (giây)</label><input id="sPoll" type="number"></div>
   <div style="flex:1"><label>Số lần fix tối đa</label><input id="sMax" type="number"></div></div>
+  <label>Ngôn ngữ / Language</label><select id="sLang" class="sel" style="width:100%"><option value="en">English</option><option value="vi">Tiếng Việt</option></select>
   <div class="row foot"><button id="sClose">Đóng</button><button class="primary" id="sSave">Lưu</button></div>
 </dialog>
 <dialog id="dTrash" style="width:min(720px,94vw)">
@@ -452,6 +455,69 @@ dialog[open]::backdrop{animation:fade .25s}
 <div id="toast"></div>
 
 <script>
+// ---------- i18n: ngôn ngữ giao diện (mặc định English). Dịch tại chỗ text/title/placeholder, bỏ qua nội dung người dùng & terminal.
+let LANG="en"; try{const x=new XMLHttpRequest();x.open("GET","/api/state",false);x.send();LANG=JSON.parse(x.responseText).config.lang||"en"}catch(_){try{LANG=localStorage.getItem("musude_lang")||"en"}catch(__){}}
+const I18N_EN={
+"Nhiệm vụ":"Missions","Task":"Task","Terminal":"Terminal","Hoạt động":"Activity","Chế độ xem":"View",
+"Kiểm tra mức dùng Claude ngay":"Check Claude usage now","Tự động: DONE → git pull → Claude review → PASS hoặc gửi BUG":"Auto: DONE → git pull → Claude review → PASS or send BUG",
+"Đóng/mở side chat Muse":"Toggle Muse side chat","Chat Muse":"Muse chat","Gửi PING cho Muse":"Send PING to Muse","Poll ngay":"Poll now","Thùng rác":"Trash","Cài đặt":"Settings","Cập nhật cookie":"Update cookie","dán giá trị hatch_sess…":"paste hatch_sess value…","Cookie hatch_sess (muse.ai → DevTools → Application → Cookies)":"hatch_sess cookie (muse.ai → DevTools → Application → Cookies)",
+"Tất cả":"All","Chạy":"Running","Cần xem":"Needs review","Xong":"Done","Kết thúc":"Ended","Dừng phiên":"Stop session",
+"Chọn một task, hoặc bấm “+ Task”.":"Select a task, or click “+ Task”.","Side chat Muse":"Muse side chat","Thu gọn":"Collapse",
+"Tạo side chat mới làm chat chính (context sạch)":"Create a new side chat as main chat (clean context)","Chat mới":"New chat",
+"[NOTE] Gửi tin tự do vào chat chính…":"[NOTE] Send a free message to the main chat…","Tin nhắn cho Muse":"Message to Muse","Nên có prefix · ⌘↵ để gửi":"Use a prefix · ⌘↵ to send","Gửi":"Send",
+"Task mới cho Muse":"New task for Muse","Tiêu đề":"Title","Tạo PlayerController.cs":"Create PlayerController.cs","Nội dung chi tiết (spec, file, tiêu chí nghiệm thu)":"Details (spec, files, acceptance criteria)",
+"Huỷ":"Cancel","Lưu nháp":"Save draft","Gửi cho Muse":"Send to Muse","Kiểm tra muse-cli status":"Check muse-cli status","Thread ID (side chat)":"Thread ID (side chat)","Tạo side chat mới":"New side chat",
+"Project mặc định (khi plan không ghi project:)":"Default project (when a mission has no project:)","Đường dẫn Unity repo (git, tuỳ chọn)":"Unity repo path (git, optional)","để trống nếu không dùng git":"leave empty if not using git",
+"Thư mục lịch sử (để trống = <repo>/.agent)":"History folder (empty = <repo>/.agent)","Claude allowedTools (cách nhau dấu phẩy)":"Claude allowedTools (comma-separated)","Poll (giây)":"Poll (seconds)","Số lần fix tối đa":"Max fix attempts",
+"Đóng":"Close","Lưu":"Save","Dọn sạch":"Empty trash","Ngôn ngữ":"Language",
+"Mất kết nối server":"Lost connection to server","chưa kiểm tra":"not checked","đang chạy":"running","Chưa có task.":"No tasks yet.","Đang tải diff…":"Loading diff…","Chưa có commit sha.":"No commit sha yet.",
+"Chưa có review. Bấm “Pull + Review”.":"No review yet. Click “Pull + Review”.","Gửi lại task":"Resend task","Chỉ review":"Review only","Đánh dấu PASS":"Mark PASS","Xoá task":"Delete task","Gửi BUG cho Muse":"Send BUG to Muse",
+"Mô tả lỗi + log":"Bug description + log","Gửi [BUG]":"Send [BUG]","— chưa có —":"— none —","Chưa có tin nhắn.":"No messages yet.","Chưa có thread — mở Cài đặt.":"No thread — open Settings.",
+"Đang gửi task ở nền…":"Sending task in background…","Đã đánh dấu PASS":"Marked PASS","Nhập mô tả bug":"Enter a bug description","Đang gửi BUG ở nền…":"Sending BUG in background…","Nhập nội dung":"Enter content",
+"Đang gửi cho Muse ở nền…":"Sending to Muse in background…","Đã lưu nháp":"Draft saved","Đang gửi PING ở nền — xem side chat":"Sending PING in background — see side chat","Đã poll":"Polled","Đang gửi ở nền…":"Sending in background…",
+"Bật Auto":"Auto on","Tắt Auto":"Auto off","Đã lưu cài đặt":"Settings saved","Đang kiểm tra…":"Checking…","Đã tạo side chat":"Side chat created","Chưa có hoạt động.":"No activity yet.","Bấm lần nữa để xoá":"Click again to delete",
+"chưa làm":"todo","đang làm":"doing","xong":"done","vướng":"blocked","Đóng phiên Claude":"Close Claude session","● Claude đang chạy":"● Claude running","phiên đã kết thúc":"session ended",
+"Thu gọn / mở rộng":"Collapse / expand","Tiếp tục":"Resume","Mở lại đúng phiên Claude trước (giữ ngữ cảnh)":"Reopen the previous Claude session (keeps context)","Chạy plan":"Run mission","Plan đã xong hết":"Mission fully done",
+"Phiên Claude mới; task đã xong vẫn được bỏ qua":"New Claude session; finished tasks are skipped","Mở bằng Terminal của macOS":"Open in macOS Terminal","Xoá":"Delete","Mở thư mục":"Open folder","Chưa có plan.":"No missions yet.",
+"Đã đóng phiên Claude":"Claude session closed","Claude Code đang chạy plan":"Claude Code is running the mission","Đang mở lại phiên Claude của plan":"Reopening the mission's Claude session","Đã mở Terminal của macOS":"Opened macOS Terminal",
+"Xoá?":"Delete?","Đã dừng phiên":"Session stopped","Đã chuyển plan vào thùng rác":"Mission moved to trash","đã kết thúc":"ended","— chưa có phiên —":"— no sessions —","Đã gửi cho Claude":"Sent to Claude",
+"Mở terminal":"Open terminal","Đồng ý ↵":"Approve ↵","Đang chờ anh xác nhận:":"Waiting for your confirmation:","Không đọc được usage":"Could not read usage","Không có plan.":"No missions.","kết thúc":"ended",
+"Dừng và xoá phiên":"Stop and delete session","Xoá phiên":"Delete session","Chưa có phiên.":"No sessions yet.","Mọi nguồn":"All sources","Đã xoá phiên":"Session deleted","Đã xoá các phiên đã kết thúc":"Ended sessions deleted",
+"Đang tải…":"Loading…","Tạo chat mới?":"Create new chat?","Đã tạo side chat mới làm chat chính":"New side chat set as main chat","Khôi phục":"Restore","Xoá hẳn":"Delete forever","Thùng rác trống.":"Trash is empty.",
+"Bấm lần nữa để dọn sạch":"Click again to empty","Đã dọn sạch thùng rác":"Trash emptied","Đã khôi phục":"Restored","Chắc chưa?":"Sure?","Đã xoá vĩnh viễn":"Deleted permanently","Task trong plan":"Mission task","Bản lưu cũ":"Legacy save",
+"đang gửi…":"sending…","gửi lỗi":"send error","nháp":"draft","đã gửi":"sent","đang review":"reviewing","đã gửi BUG":"BUG sent","cần Linh":"needs Linh",
+"giao task":"task assigned","gửi bug":"bug sent","trả lời Muse":"reply to Muse","nhiệm vụ":"mission","kết luận":"verdict","bước":"step","nhờ Claude":"asks Claude","chờ quá giờ":"timed out","tạo task":"task created","gửi task":"task sent",
+"lỗi":"error","ghi chú":"note","chạy plan":"run mission","bắt đầu":"started","đặt lại":"reset","xoá plan":"mission deleted","xoá task":"task deleted","cần xem":"needs review","chờ":"idle","muse-ask đang chờ Muse trả lời":"muse-ask is waiting for Muse"
+};
+const I18N_RX=[
+[/^Lỗi: /,"Error: "],[/^Đã chạy /,"Ran "],[/^Đã chuyển (.+) vào thùng rác$/,"Moved $1 to trash"],[/^thread: chưa có$/,"thread: none"],
+[/Lần fix: /,"Fix attempts: "],[/ · cập nhật /," · updated "],[/ · đang chạy: /," · running: "],[/^Hoạt động · /,"Activity · "],
+[/ task xong/," tasks done"],[/✓ Xong /,"✓ Done "],[/Muse đang làm/,"Muse working"],[/Claude đang giữ/,"Claude holding"],
+[/^Xoá (\d+) phiên đã kết thúc$/,"Delete $1 ended sessions"],[/^Tự xoá vĩnh viễn sau (\d+) ngày$/,"Auto-deleted permanently after $1 days"],
+[/xoá lúc /,"deleted at "],[/ · còn /," · "],[/(\d+) ngày (\d+) giờ/,"$1d $2h left"],[/^(\d+) giờ$/,"$1h left"],[/^(\d+) sự kiện$/,"$1 events"],
+[/Musude — cần xác nhận/,"Musude — needs confirmation"],[/ · sau: /," · after: "],[/ \(đã kết thúc\)/," (ended)"],[/^đã kết thúc/,"ended"],
+[/Plan do Project (\S+) ghi vào /,"Missions written by Project $1 to "],[/Giới hạn 5 giờ/,"5-hour limit"],[/Giới hạn tuần \(mọi model\)/,"Weekly limit (all models)"],
+[/Opus tuần/,"Opus weekly"],[/: chưa có dữ liệu/,": no data"],[/: đã dùng /,": used "],[/làm mới lúc /,"resets at "],[/Mức dùng gói Claude/,"Claude plan usage"],
+[/\(số cũ/,"(stale"],[/ — cập nhật lúc /," — updated "],[/^Task (.+) ghi 'đang làm' cho Muse.*$/s,"Tasks $1 are marked 'doing' for Muse but no muse-ask is waiting — usually Claude is waiting on you (confirm/answer) or muse-ask timed out. Open Terminal to check."],
+[/^Plan đã xong; phiên Claude vẫn đang mở chờ lệnh\. Bấm để đóng\.$/,"Mission done; Claude session still open. Click to close."],
+[/^Gửi Enter — chọn lựa chọn đang sáng \(thường là Yes\)$/,"Send Enter — picks the highlighted option (usually Yes)"]
+];
+function tr(s){if(LANG==="vi"||!s)return s;const m=s.match(/^(\s*)([\s\S]*?)(\s*)$/),k=m[2];if(!k)return s;
+  if(I18N_EN[k]!==undefined)return m[1]+I18N_EN[k]+m[3];if(!/[À-ỹđĐ]/.test(k))return s;
+  let o=k;for(const [r,v] of I18N_RX)o=o.replace(r,v);return m[1]+o+m[3]}
+const I18N_SKIP="pre,textarea,code,.xterm,#term,.msg,h3,.pid,.task .t,#detail h2,.meta,option";
+function i18nNode(n){if(LANG==="vi")return;
+  if(n.nodeType===3){const p=n.parentElement;if(!p||p.closest(I18N_SKIP)&&!p.closest("#actFilter"))return;const v=tr(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;return}
+  if(n.nodeType!==1||n.closest(".xterm,#term"))return;
+  for(const a of ["title","placeholder","aria-label"]){const v=n.getAttribute(a);if(v){const t=tr(v);if(t!==v)n.setAttribute(a,t)}}
+  if(n.tagName==="OPTION"&&n.closest("#actFilter,#termSel,#chatSel")){const v=tr(n.textContent);if(v!==n.textContent)n.textContent=v}
+  for(const c of n.childNodes)i18nNode(c)}
+function i18nInit(){document.documentElement.lang=LANG;if(LANG==="vi")return;i18nNode(document.body);document.title=tr(document.title);
+  new MutationObserver(ms=>{for(const m of ms){if(m.type==="characterData")i18nNode(m.target);else if(m.type==="attributes")i18nNode(m.target);else m.addedNodes.forEach(i18nNode);
+    if(m.target===document.head||m.target.parentNode===document.querySelector("title")||m.target.tagName==="TITLE"){const t=tr(document.title);if(t!==document.title)document.title=t}}})
+  .observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["title","placeholder","aria-label"]})}
+i18nInit();
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const SEEN={task:new Set(),act:new Set(),msg:new Set(),plan:new Set()}, TSTAT={}; let FIRST=true;
@@ -570,7 +636,8 @@ $("#auto").onchange=e=>act(()=>api("/api/config",{auto_mode:e.target.checked}),e
 $("#bSettings").onclick=()=>{const c=DATA.config;
   $("#sThread").value=c.thread_id||"";$("#sWork").value=c.claude_workdir||"";$("#sRepo").value=c.repo_path||"";$("#sAgent").value=c.agent_dir||"";
   $("#sMuse").value=c.muse_cli;$("#sClaude").value=c.claude_bin;$("#sTools").value=(c.claude_allowed_tools||[]).join(", ");
-  $("#sPoll").value=c.poll_seconds;$("#sMax").value=c.max_fix_attempts;$("#sStatusOut").style.display="none";$("#dSet").showModal()};
+  $("#sPoll").value=c.poll_seconds;$("#sMax").value=c.max_fix_attempts;$("#sStatusOut").style.display="none";$("#sLang").value=LANG;$("#dSet").showModal()};
+$("#sLang").onchange=e=>{const v=e.target.value;try{localStorage.setItem("musude_lang",v)}catch(_){}api("/api/config",{lang:v}).finally(()=>location.reload())};
 $("#sClose").onclick=()=>$("#dSet").close();
 $("#sSave").onclick=()=>act(async()=>{await api("/api/config",{thread_id:$("#sThread").value.trim(),claude_workdir:$("#sWork").value.trim(),repo_path:$("#sRepo").value.trim(),
   agent_dir:$("#sAgent").value.trim(),muse_cli:$("#sMuse").value.trim(),claude_bin:$("#sClaude").value.trim(),
@@ -578,6 +645,8 @@ $("#sSave").onclick=()=>act(async()=>{await api("/api/config",{thread_id:$("#sTh
   poll_seconds:Math.max(10,+$("#sPoll").value||30),max_fix_attempts:Math.max(0,+$("#sMax").value||3)});$("#dSet").close()},"Đã lưu cài đặt");
 $("#sStatus").onclick=async()=>{const o=$("#sStatusOut");o.style.display="block";o.textContent="Đang kiểm tra…";
   try{await api("/api/status",{});await refresh();const r=DATA.runtime;o.textContent=r.status?JSON.stringify(r.status,null,2):"Lỗi: "+r.status_error}catch(e){o.textContent="Lỗi: "+e.message}};
+$("#sCookieSave").onclick=async()=>{const v=$("#sCookie").value.trim();if(!v)return;const o=$("#sStatusOut");o.style.display="block";o.textContent="Đang kiểm tra…";
+  try{const j=await api("/api/cookie",{value:v});$("#sCookie").value="";await refresh();o.textContent=j.ok?"Cookie OK ✓\n"+j.files.join("\n"):"Đã ghi cookie nhưng status lỗi: "+j.error;if(j.ok){toast("Cookie OK");api("/api/poll",{}).catch(()=>{})}}catch(e){o.textContent="Lỗi: "+e.message}};
 $("#sNewThread").onclick=async()=>{try{const j=await api("/api/session/start",{title:"Unity collab"});$("#sThread").value=j.thread_id;toast("Đã tạo side chat");refresh()}catch(e){toast("Lỗi: "+e.message)}};
 
 
@@ -585,7 +654,7 @@ let MID="plan", ACTF="all", ACT=[];
 const MUSE_K=new Set(["done","blocked","muse_done","muse_blocked","muse_ask_claude"]);
 const CLAUDE_K=new Set(["review"]);
 function actor(e){if(MUSE_K.has(e.kind))return "muse"; if(e.by==="claude"||CLAUDE_K.has(e.kind)||String(e.kind).startsWith("claude_"))return e.kind==="muse_timeout"?"app":"claude"; return "app"}
-const KIND={claude_task:"giao task",claude_bug:"gửi bug",claude_reply:"trả lời Muse",claude_plan:"kế hoạch",claude_unity:"Unity",claude_git:"git",claude_test:"test",claude_verdict:"kết luận",claude_step:"bước",
+const KIND={claude_task:"giao task",claude_bug:"gửi bug",claude_reply:"trả lời Muse",claude_plan:"nhiệm vụ",claude_unity:"Unity",claude_git:"git",claude_test:"test",claude_verdict:"kết luận",claude_step:"bước",
   muse_done:"DONE",muse_blocked:"BLOCKED",muse_ask_claude:"nhờ Claude",muse_timeout:"chờ quá giờ",done:"DONE",blocked:"BLOCKED",review:"review",
   created:"tạo task",sent:"gửi task",bug_sent:"gửi bug",send_ok:"đã gửi",send_error:"gửi lỗi",git_pull:"git pull",error:"lỗi",manual:"Linh",note:"ghi chú",needs_human:"cần Linh",plan_run:"chạy plan",plan_doing:"bắt đầu",plan_done:"xong",plan_blocked:"vướng",plan_todo:"đặt lại",plan_archived:"xoá plan",plan_task_deleted:"xoá task",task_deleted:"xoá task",restored:"khôi phục",thread_new:"chat Muse mới"};
 async function loadActivity(){try{ACT=(await api("/api/activity?limit=400")).events}catch(e){return} renderActivity()}
@@ -720,7 +789,7 @@ function termDispose(st){if(st){st.gen++;try{st.xt.dispose()}catch(e){}}}
 async function termAttach(st,tid){if(!tid)return; st.tid=tid; const g=++st.gen; st.xt.reset(); setTimeout(()=>termFit(st),30);
   let off=0; if(st.stateEl)st.stateEl.textContent="đang chạy";
   while(g===st.gen){let j; try{j=await api(`/api/term/${tid}/read?from=${off}`)}catch(e){await new Promise(r=>setTimeout(r,1500));continue}
-    if(g!==st.gen)return; if(j.data){const bin=atob(j.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);st.xt.write(u);st.last=Date.now();if(st.waiting)clearNeed(st)}
+    if(g!==st.gen)return; if(j.data){const bin=atob(j.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);st.xt.write(u);st.last=Date.now();if(st.waiting&&u.length>=400)clearNeed(st)}
     off=j.next; if(!j.alive){if(st.stateEl)st.stateEl.textContent="đã kết thúc"+(j.exit!=null?" (exit "+j.exit+")":"");if(MID==="plan")loadPlans();if(MID==="term")termList();return}}}
 
 // ---------- tab Terminal (phiên tự do: + Claude / + Shell)
@@ -736,13 +805,14 @@ $("#tNewShell").onclick=async()=>{try{const j=await api("/api/term/start",{kind:
 $("#tKill").onclick=()=>{if(FREE&&FREE.tid)act(()=>api("/api/term/"+FREE.tid+"/kill",{}),"Đã dừng phiên")};
 
 // ---------- phát hiện terminal đang chờ xác nhận
-const ASK_RE=/(Do you want|Would you like|Allow (this|once|always)|Yes, and don.t ask|Proceed\?|Continue\?|\(y\/n\)|\[y\/N\]|\[Y\/n\]|Press Enter|❯\s*1\.\s*Yes|approve|permission to|Trust (this|the files)|Enter to confirm|Esc to cancel)/i;
+const ASK_RE=/(Do you want to (proceed|make this edit|create|run)|Yes, and don.t ask again|❯\s*1\.\s*Yes|\(y\/n\)|\[y\/N\]|\[Y\/n\]|Trust (this|the files)|Enter to confirm)/i;
 function termTail(st,n){try{const b=st.xt.buffer.active,end=b.baseY+b.cursorY+1;let out=[];for(let i=Math.max(0,end-n);i<end;i++){const l=b.getLine(i);if(l)out.push(l.translateToString(true))}return out.join("\n")}catch(e){return ""}}
 let NEEDS=new Map(); // st -> label
 function needLabel(st){if(st.pid){const p=PLANS.find(x=>x.id===st.pid);return "Plan "+(p?p.title:st.pid)}return "Terminal "+(($("#termSel").selectedOptions[0]||{}).text||"")}
 function markNeed(st,server){st.waiting=true;st.fromServer=!!server;const lb=needLabel(st);NEEDS.set(st,lb);
   if(st.pid){PEXP.add(st.pid);OPEN_T.add(st.pid);saveOpen();if(MID==="plan")renderPlans()}
-  renderNeeds(); beep(); if(!server)api("/api/notify",{text:lb+" đang chờ anh xác nhận"}).catch(()=>{})}
+  renderNeeds(); const k=st.tid||lb; if(Date.now()-(NOTI_AT[k]||0)>300000){NOTI_AT[k]=Date.now(); beep(); if(!server)api("/api/notify",{text:lb+" đang chờ anh xác nhận"}).catch(()=>{})}}
+const NOTI_AT={};
 function clearNeed(st){st.waiting=false;NEEDS.delete(st);renderNeeds();if(st.pid){const c=document.querySelector(`.plan[data-pid="${CSS.escape(st.pid)}"]`);if(c)c.classList.remove("needs")}}
 function renderNeeds(){const b=$("#needBar");const items=[...NEEDS.entries()];
   document.title=items.length?"("+items.length+") Musude — cần xác nhận":"Musude";
@@ -760,7 +830,7 @@ document.addEventListener("click",e=>{const q=e.target.closest("[data-nq]");if(q
   const n=e.target.closest("[data-need]");if(n){const st=[...NEEDS.keys()][+n.dataset.need];if(st)gotoNeed(st)}});
 let ACTX=null;function beep(){try{ACTX=ACTX||new (window.AudioContext||window.webkitAudioContext)();const o=ACTX.createOscillator(),g=ACTX.createGain();o.frequency.value=880;o.connect(g);g.connect(ACTX.destination);g.gain.setValueAtTime(.08,ACTX.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ACTX.currentTime+.35);o.start();o.stop(ACTX.currentTime+.36)}catch(e){}}
 setInterval(()=>{const all=[...Object.values(PT)];if(FREE)all.push(FREE);
-  all.forEach(st=>{if(!st||!st.tid||st.waiting)return; if(Date.now()-st.last<2000)return; if(ASK_RE.test(termTail(st,14)))markNeed(st)})},1500);
+  all.forEach(st=>{if(!st||!st.tid||st.waiting){if(st)st.askHits=0;return} if(Date.now()-st.last<4000){st.askHits=0;return} if(ASK_RE.test(termTail(st,8))){st.askHits=(st.askHits||0)+1; if(st.askHits>=3)markNeed(st)} else st.askHits=0})},1500);
 
 // ---------- Claude usage (5h / tuần)
 function fmtLeft(iso){if(!iso)return "";const ms=new Date(iso)-Date.now();if(!(ms>0))return "";const m=Math.round(ms/60000),d=Math.floor(m/1440),hh=Math.floor(m%1440/60),mm=m%60;

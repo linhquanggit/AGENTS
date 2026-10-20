@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""gemini-ask — Claude giao việc cho Gemini CLI (dùng quota tài khoản Google đã login) và nhận kết quả.
+
+  gemini-ask "câu hỏi / việc"                 chỉ đọc (mặc định): phân tích, review, đọc tài liệu dài
+  gemini-ask "việc" --edit                    cho phép Gemini sửa/tạo file trong project
+  gemini-ask "việc" --file a.cs --file b.md   đính kèm file (@path) vào prompt
+  gemini-ask "việc" --model gemini-2.5-flash --timeout 600 --id G03
+  gemini-ask --check                          kiểm tra đã cài + đăng nhập chưa
+
+In ra: dòng đầu STATUS: DONE | TIMEOUT | ERROR, rồi nội dung trả lời.
+Exit: 0 DONE, 2 TIMEOUT, 4 lỗi.
+"""
+import argparse, json, os, shutil, subprocess, sys
+from datetime import datetime
+
+ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+CFG = {"claude_workdir": "~/wkspaces/WB", "repo_path": "", "agent_dir": "",
+       "gemini_bin": "gemini", "gemini_model": "", "gemini_timeout_seconds": 600}
+p = os.path.join(ROOT, "config.json")
+if os.path.exists(p):
+    CFG.update(json.load(open(p, encoding="utf-8")))
+
+FOOTER = ("\n---\n(Tin từ Claude Code — đồng nghiệp điều phối, không phải Linh.)\n"
+          "Project: {project}\nKiến thức Unity: /Users/mobione/AGENTS/AI/Unity/knowledge/ (đọc INDEX.md, chỉ mở file liên quan).\n"
+          "{mode}\nTrả lời ngắn gọn, có cấu trúc, ghi rõ đường dẫn file nếu có tạo/sửa.")
+
+
+def agent_dir():
+    if CFG.get("agent_dir"):
+        return os.path.expanduser(CFG["agent_dir"])
+    if CFG.get("repo_path"):
+        return os.path.join(os.path.expanduser(CFG["repo_path"]), ".agent")
+    return os.path.join(ROOT, ".agent")
+
+
+def log(kind, task, text, **kw):
+    os.makedirs(agent_dir(), exist_ok=True)
+    ev = {"at": datetime.now().isoformat(timespec="seconds"), "task": task, "kind": kind,
+          "text": text[:4000], "by": "gemini" if kind.startswith("gemini_reply") else "claude", "via": "gemini"}
+    ev.update(kw)
+    with open(os.path.join(agent_dir(), "events.jsonl"), "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(ev, ensure_ascii=False) + "\n")
+
+
+def gemini_bin():
+    for c in [os.path.expanduser(CFG["gemini_bin"]), shutil.which("gemini"), "/opt/homebrew/bin/gemini",
+              "/usr/local/bin/gemini", os.path.expanduser("~/.npm-global/bin/gemini")]:
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return None
+
+
+def find_project():
+    d = os.getcwd()
+    while d != os.path.dirname(d):
+        if os.path.isdir(os.path.join(d, "Assets")) and os.path.isdir(os.path.join(d, "ProjectSettings")):
+            return d
+        d = os.path.dirname(d)
+    return os.path.abspath(os.path.expanduser(CFG.get("claude_workdir") or "~"))
+
+
+def next_id():
+    n, path = 0, os.path.join(agent_dir(), "events.jsonl")
+    if os.path.exists(path):
+        for line in open(path, encoding="utf-8"):
+            try:
+                t = json.loads(line).get("task", "")
+            except Exception:
+                continue
+            if t.startswith("G") and t[1:].isdigit():
+                n = max(n, int(t[1:]))
+    return "G%02d" % (n + 1)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("text", nargs="?")
+    ap.add_argument("--edit", action="store_true", help="cho phép sửa file (approval-mode auto_edit)")
+    ap.add_argument("--file", action="append", default=[])
+    ap.add_argument("--model")
+    ap.add_argument("--id")
+    ap.add_argument("--timeout", type=int)
+    ap.add_argument("--check", action="store_true")
+    a = ap.parse_args()
+
+    b = gemini_bin()
+    if not b:
+        print("STATUS: ERROR\nChưa cài Gemini CLI: npm i -g @google/gemini-cli rồi chạy `gemini` một lần để đăng nhập Google.")
+        sys.exit(4)
+    project = find_project()
+    if a.check:
+        r = subprocess.run([b, "-p", "Trả lời đúng một chữ: PONG"], cwd=project, capture_output=True, text=True,
+                           timeout=120, stdin=subprocess.DEVNULL)
+        print(("STATUS: DONE\n" if r.returncode == 0 else "STATUS: ERROR\n") + (r.stdout or r.stderr).strip()[-2000:])
+        sys.exit(0 if r.returncode == 0 else 4)
+    if not a.text:
+        ap.error("thiếu nội dung")
+
+    tid = a.id or next_id()
+    mode = ("Được phép sửa/tạo file TRONG PHẠM VI việc này; không xoá file, không sửa scene/prefab dùng chung."
+            if a.edit else "CHỈ ĐỌC — không sửa/tạo file nào, chỉ trả lời.")
+    prompt = a.text + "".join("\n@" + f for f in a.file) + FOOTER.format(project=project, mode=mode)
+    argv = [b, "-p", prompt, "--output-format", "json"]
+    if a.edit:
+        argv += ["--approval-mode", "auto_edit"]
+    model = a.model or CFG.get("gemini_model")
+    if model:
+        argv += ["-m", model]
+
+    log("gemini_task", tid, a.text, edit=a.edit)
+    try:
+        r = subprocess.run(argv, cwd=project, capture_output=True, text=True,
+                           timeout=a.timeout or int(CFG["gemini_timeout_seconds"]), stdin=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        log("gemini_reply", tid, "TIMEOUT")
+        print("STATUS: TIMEOUT\n[%s] Gemini chạy quá thời gian." % tid)
+        sys.exit(2)
+    out = r.stdout.strip()
+    try:
+        out = json.loads(out).get("response") or out
+    except Exception:
+        pass
+    if r.returncode != 0 and not out:
+        err = r.stderr.strip()[-2000:]
+        log("gemini_reply", tid, "ERROR: " + err)
+        print("STATUS: ERROR\n" + err)
+        sys.exit(4)
+    log("gemini_reply", tid, out)
+    print("STATUS: DONE\n[%s]\n%s" % (tid, out))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "G7: P1/P2 sprite ShurikenBullet3 scale 1, Trail (w0.2,-0.23,màu), Fx point_add copy từ G3; không đụng speed/gravity. Verify Play ở T5",
+  "at": "2026-10-14T13:46:17"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Claude tự làm (Muse offline): laser2 clone + 4 neo lệch ±linkOffset(0.15 tạm) vuông góc A-B, cập nhật mỗi tick; compile OK; verify Play ở T5",
+  "at": "2026-10-14T13:49:29"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Claude tự làm (Muse offline): PortalShotWB5 thêm portalCores/portalFireOrigins/coreCenter/coreRadius(TẠM 1,1 local FX)/waveInterval; FD random trong elipse mỗi wave (probe: 0.4s/wave, điểm lệch ≤ ~0.15x0.36 quanh core); tái dùng portal cũ nhất khi cả 2 bận; gizmo elipse vàng; prefab EnemyWB5_P3_A: gán ref + bulletSpeed 7.5 (Arrow+Split, 2 portal)",
+  "at": "2026-10-14T13:51:35"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Đã có sẵn trong IE_PortalLife: localScale 0→baseScale trong openTime(0.25 hiện có) rồi mới Init+Attack shot; thấy đúng khi Play, không thêm số mới",
+  "at": "2026-10-14T13:51:35"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play (TEST_P3 = prefab EnemyWB5_P3_A instance tạm dưới WB-Shooter, không lưu scene): G7 14 đạn, G8 portal mở liên tục 2 cái + điểm bắn random, G9 S1/S2 2 laser song song ±0.15; Console 0 error",
+  "at": "2026-10-14T13:51:35"
+ }
+}

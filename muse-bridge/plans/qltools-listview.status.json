@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse tạo asmdef+attribute; compile 0 error, không có Sirenix",
+  "at": "2026-10-16T08:59:32"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse tạo 5 file; compile 0 error; chức năng thật verify ở T4",
+  "at": "2026-10-16T09:09:04"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Đã xem bằng mắt (preview window, shots/qllist-preview5.png): header tối + count + '+', index mờ, handle, nút −, zebra, paging, search, read-only, empty hint. Claude sửa: bug iterator (exception), handle kép, empty kép, footer thừa, label thừa, nút ×",
+  "at": "2026-10-16T09:30:07"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Đóng theo yêu cầu Linh: huỷ module, code đã xoá",
+  "at": "2026-10-16T09:46:48"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Muse tạo README.md (68 dòng, ví dụ + bảng map + giới hạn)",
+  "at": "2026-10-16T09:16:50"
+ }
+}

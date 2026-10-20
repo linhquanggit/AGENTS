@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Claude tự làm (Muse offline). SequentialLaserShotWB5.cs compile OK; Play probe: warning/bật/tắt 11 tia lệch 0.1s (trừ 3 tia đầu dính hitch frame editor)",
+  "at": "2026-10-14T13:36:22"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Swap LaserShotE→SequentialLaserShotWB5 trong G2, step1 trỏ shot mới, 11 lasers giữ nguyên",
+  "at": "2026-10-14T13:36:22"
+ },
+ "T3": {
+  "status": "done",
+  "note": "useSelfAnimAttack=1 cả 6 súng G1 (chưa xem Spine chạy trong Play: scene test thiếu GamePlayController)",
+  "at": "2026-10-14T13:36:22"
+ },
+ "T4": {
+  "status": "done",
+  "note": "6 GO cha rot 0; z chuyển sang DirectionShotE; FireDirection.right trước/sau trùng nhau",
+  "at": "2026-10-14T13:36:22"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play probe: widthMultiplier 1.495→0 tuyến tính từ 80% duration, box size.y cùng tỉ lệ, size.x 13.33 không đổi; lượt 2 bắt đầu lại 1.495",
+  "at": "2026-10-14T13:36:23"
+ }
+}

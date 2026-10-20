@@ -1,0 +1,17 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse sửa xong, compile 0 error. Play-verify gộp sau T3",
+  "at": "2026-10-14T15:01:21"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse sửa xong, đã đối chiếu logic _done/_tau; compile 0 error. Play-verify gộp sau T3",
+  "at": "2026-10-14T15:04:08"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Prefab lưu qua Unity MCP: S1 orbitRadiusPx 165 + linkAfterSpread; S2 radius 1.8, stepDelayA/B 0.5, linkAfterSpread. Verify bằng reflection OrbitPositions: S1 gap=3.044=PxToWorld(165); S2 gap vào sao 0.99; S2 nghỉ 0.5s mỗi nhịp. CẢNH BÁO: S2 có thể tràn mép phải ~0.16",
+  "at": "2026-10-14T15:06:02"
+ }
+}

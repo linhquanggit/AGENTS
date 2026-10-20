@@ -1,0 +1,37 @@
+{
+ "T2": {
+  "status": "done",
+  "note": "Muse C10: EnemyWB2_P1/P2/P3 (rỗng) + SpecialRocketShotWB2 : BombShotMB42 (tách 3 khi nổ, xáo thứ tự marker). Claude sửa 1 lỗi CS0052 (idleDirection private). Compile 0 error. TEMP: HealthArmorMB42.maxHealth=2, splitShot dùng chung.",
+  "at": "2026-10-15T14:57:26"
+ },
+ "T1": {
+  "status": "done",
+  "note": "SpineAnimFlow gắn lên Animation của mọi súng + thân 3 phase (CloseInit/Open/Idle/Attack/Stop; thân Idle+Appear). OnlyAnim: Out_gun1 (P2)/Out_Gun2 (P3) loop=false, Play test đã giữ pose cuối. Súng không có Out (Gun3/4/6) dùng In_* đóng băng frame0 (NewDuration=99999) làm CloseInit — TODO chờ art. Console sạch. Scene chưa save.",
+  "at": "2026-10-15T14:52:02"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Muse C12: SummonDroneWB2 (: BaseShotE) + EnemyWB2_Drone (: Enemy). Compile 0 error. TEMP: uniqueHP=5, aimRotateSpeed=90, drone chồng 3/điểm spawn. Weapon ngoài chain.",
+  "at": "2026-10-15T15:05:41"
+ },
+ "T6": {
+  "status": "done",
+  "note": "Muse C13: EnemyWB2_P3 state machine + PuzzleZoneWB2/KillZoneLaserWB2/RotatingLinkFieldWB2. Claude sửa 2 lỗi compile (thiếu IE_SpawnBullet override, trùng tên biến _t). Compile 0 error. Nhiều TEMP (xem báo cáo cuối).",
+  "at": "2026-10-15T15:05:41"
+ },
+ "T3": {
+  "status": "done",
+  "note": "P1 dựng: G1-L1/L2/R1/R2 = WorldBossWeapon+DirectionShotE (10 dir, waves 2, fireRate 0.6 TEMP, openOnce), chain group0 L1→L2→R1→R2, chainDelayAfter 3s ở R2 (Play test: thứ tự đúng, chu kỳ 3s). Rocket-L/R = SpecialRocketShotWB2 (3 marker 1/3,3/4,1/2 rộng màn, y=-1 TEMP), chain group1 luân phiên, CD 1s (test: 3 bomb/1s). Claude sửa SpecialRocketShotWB2 (reset isStopped; Stop trong chain không huỷ rocket) + EnemyWB2_P1 dọn rocket khi dừng/chết. Console không lỗi. Chưa verify: rocket bị bắn nổ→tách 3 (cần player bắn; MakeAll thiếu SoundManager → HealthArmor.DeActive NRE khi test huỷ rocket). Scene chưa save.",
+  "at": "2026-10-15T15:09:38"
+ },
+ "T5": {
+  "status": "done",
+  "note": "P2 dựng: G2-L/R = DestinationShotE (waves2/0.2s, 3 dir cung, Bullet_Destination_MB43 mượn tạm), G3 = Rotator(StepRotation -10°/0.2s)+2 DirectionShotE 20 dir (20 waves×0.25s=5s), G4 = SummonDroneWB2 + prefab mới EnemyWB2_Drone.prefab (Spine Drone, laser clone từ WB1_P3). EnemyWB2_P2 điều phối: S4 nền, S2×3 (CD1s) → S3 5s → lặp. Play test 40s: drone 2/3s tối đa 6, S2 3 lượt rồi S3 ~5s, Console không lỗi. Chưa verify: drone bị bắn chết/laser aim player (Fighter dummy không có FighterBase).",
+  "at": "2026-10-15T15:14:08"
+ },
+ "T7": {
+  "status": "done",
+  "note": "P3 dựng: MS1-Opening/G5/G6/G7 + markers + 2 prefab mới (WB2_LinkDrone, WB2_LinkLaser) ; sửa EnemyWB2_P3 (vòng chờ puzzle/field không thoát sớm). Play test 80s: MS1→MS2→MS1→MS2 chạy 2 vòng (vòng 2 puzzle 8 ô), S7 8s, Console sạch. Báo cáo + library (mục 7, 15.8, 17, 18.2) + brief đã cập nhật. Scene CHƯA save — chờ Linh.",
+  "at": "2026-10-15T15:18:24"
+ }
+}

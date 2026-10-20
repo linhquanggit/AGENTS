@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse tạo 3 file; Claude đổi namespace QLTools.PathTemplates→QL.PathTemplates (trùng class QLTools). Compile 0 error; Figure8H+Resample16 đối xứng; 13 generator",
+  "at": "2026-10-14T16:54:02"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse tạo PathTemplateInspector.cs; Claude sửa Undo (RegisterCompleteObjectUndo, SetParent trước RegisterCreatedObjectUndo). Verify qua execute_code: compile 0 error, apply Figure8H 5→8 wp, Undo về 5 wp đúng vị trí, 0 error console. CHƯA verify bằng mắt: UI panel/thumbnail + nút Lưu template (T4 chụp ảnh)",
+  "at": "2026-10-14T16:59:03"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Claude viết Editor/PathTemplateSeeder.cs (menu Tools/QL Path Templates/Seed Library). Library 22 template: 13 Cơ bản + 9 Từ game (22 .asset). Prefab gốc không đổi (LoadPrefabContents, không save). Sửa kèm: Normalize scale từng trục (trước đó defaultSize nhân đôi tỉ lệ → hình dẹt bị méo). Console 0 error. Thumbnail khớp gizmo: chụp ảnh ở T4",
+  "at": "2026-10-14T17:00:15"
+ },
+ "T4": {
+  "status": "done",
+  "note": "22/22 template apply+Undo OK trên instance Path_WB5_P2_1 (về đúng 5 wp). Play mode: enemy splineMove bay số 8 lặp (x±2.5, y 9.5–12.5 quanh (0,11)). Ảnh: ~/AGENTS/muse-bridge/.agent/shots/wb-path-templates-T4-{inspector2,tab-game,figure8-applied}.png. Phát hiện+sửa bug T2: hook finishedDefaultHeaderGUI chỉ nhận GameObject → panel trước đó không bao giờ hiện. Console 0 error. Chưa verify: click chuột thật vào ô + nút Lưu template (modal dialog), chỉ gọi hàm trực tiếp.",
+  "at": "2026-10-14T17:02:56"
+ }
+}

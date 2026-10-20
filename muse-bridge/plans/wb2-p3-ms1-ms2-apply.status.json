@@ -1,0 +1,32 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse viết lại EnemyWB2_P3 MS1; Claude: compile 0 error, grep không còn StartPath(2). Play verify ở T5",
+  "at": "2026-10-19T16:26:38"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse viết PuzzleZoneWB2 v2 + FireAtPlayer + cache mask; Claude: compile 0 error. Play verify ở T5",
+  "at": "2026-10-19T16:26:38"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Muse nối IE_MS2 (G5 thu → G6 mở, FireAtPlayer, dọn FX); Claude: compile 0 error",
+  "at": "2026-10-19T16:29:20"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Dựng G5-K1/G5-K2 (copy shot, dùng chung anim G5; K2 flowOpen rỗng để không mở lại; K1 openOnce=false), gán weaponK1/K2 + weapons[] + G2 syncOpenWith=K1; G6: fxPrefab=Boss2, laser warning 0.5 delayStart 0 laserDuration 0.6; 0 missing ref. MakeAll CHƯA save. Boss2 borderGap đã 0.3",
+  "at": "2026-10-19T16:31:30"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play test OK (Unity Play, fighter giả FighterBase+proxy): (1) spline1→appear→K1→4 góc khác nhau, vào từ ngoài, mũi hướng tâm, K2 x2, lùi ra, không spline2 (2) replay spline1 rotZ0 → G5 thu 0.5s → G6 mở (3) puzzle tâm G6, FX trong box; FAIL→vạch đỏ bám Fighter 0.5s→laser bật 0.25s→ONE_SHOT (4) về MS1: K1 tại chỗ→4 góc→MS2 lượt 2 zone=8 (5) S7 ~8s drone có khe. CHƯA verify: PASS path (không laser) do không điều khiển được Fighter đúng thứ tự ô; Warning_G/R phủ box khi tâm ở mũi (box 4.01x7.51 không phủ hết màn - Linh chỉnh); ONE_SHOT trên Fighter thật (dummy FighterBase NRE ở OnDie). Fix trong lúc test: IE_StopWeaponAndWait, LaserShotE isNotAttackByLoad, aimOffset 180, Laser2D_CL lpos 0, cornerYBottom -0.75, stub bouns theo camera. Shots: ~/AGENTS/muse-bridge/.agent/shots/wb2p3-t12-*.png, wb2p3-t10-corner-*.png",
+  "at": "2026-10-19T16:56:17"
+ },
+ "T6": {
+  "status": "done",
+  "note": "brief WB2_P3.md + library cập nhật (WB/claude/ không tồn tại nên bỏ qua sync project doc). Chờ Linh quyết save MakeAll / apply prefab EnemyWB2_P3_A",
+  "at": "2026-10-19T16:56:52"
+ }
+}

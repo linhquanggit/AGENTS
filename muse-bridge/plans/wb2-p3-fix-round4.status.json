@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse code; Claude Play 4 góc: K1 8/8 + K2 14/14 spawned rồi mới delay 1s/lùi; exit bounds ngoài cam (4 góc) trước teleport. Console 0 error | round5 T0 (2026-10-20): code kiểm lại khớp (K1/K2 đếm viên, StopAttackOnly, exit bounds assert, fxHolder). SUPERSEDED by round5: góc phải thấy G5, MS2→MS1 lùi, G6 giữa màn, puzzle chạy lại, đóng súng.",
+  "at": "2026-10-20T03:40:51"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Flow Attack_K1(NewDuration 0.12)/Attack_K2(0.1) + ueAnimPerWave->_AnimShot, useSelfAnimAttack tắt. Play đo: 98 viên = 98 lần anim | round5 T0 (2026-10-20): code kiểm lại khớp (K1/K2 đếm viên, StopAttackOnly, exit bounds assert, fxHolder). SUPERSEDED by round5: góc phải thấy G5, MS2→MS1 lùi, G6 giữa màn, puzzle chạy lại, đóng súng.",
+  "at": "2026-10-20T03:40:51"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Boss2_Wind tách; Boss2 sạch; G6-PuzzleFx(holder+SectorMaskFxWB2)+Boss2 nested; PuzzleZoneWB2.fxHolder. Play: quạt xanh nháy từng ô + smoke 8 đường, không xoay. Sửa thêm SectorMaskFxWB2 tự bật Warning_G/R (artist để tắt). Sandbox dựng lại (chưa Play) | round5 T0 (2026-10-20): code kiểm lại khớp (K1/K2 đếm viên, StopAttackOnly, exit bounds assert, fxHolder). SUPERSEDED by round5: góc phải thấy G5, MS2→MS1 lùi, G6 giữa màn, puzzle chạy lại, đóng súng.",
+  "at": "2026-10-20T03:40:51"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play 2+ lượt: log K1/K2/exit bounds, anim 98/98, FX quạt xanh+smoke OK; brief/library/learning đã cập nhật. Chưa verify: quạt đỏ+laser bằng mắt, sandbox Play | round5 T0 (2026-10-20): code kiểm lại khớp (K1/K2 đếm viên, StopAttackOnly, exit bounds assert, fxHolder). SUPERSEDED by round5: góc phải thấy G5, MS2→MS1 lùi, G6 giữa màn, puzzle chạy lại, đóng súng.",
+  "at": "2026-10-20T03:41:09"
+ }
+}

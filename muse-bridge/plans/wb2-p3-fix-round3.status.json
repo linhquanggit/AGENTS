@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse: PlayWeaponOnce chờ OnCycleDone (K2 ~1.5s = 2 đợt×6), postK2Delay 1s, 4/4 góc mỗi lượt (log [WB2_P3]); Lỗi B = AutoDestroy ngoài màn (override bỏ qua). Claude Play verify 2 lượt, 0 error",
+  "at": "2026-10-19T21:03:32"
+ },
+ "T2": {
+  "status": "done",
+  "note": "WorldBossWeapon.PlayOpenOnly/StopAttackOnly; G5 mở 1 lần/lượt (log round1,2), đóng Stop() đầu MS2. Chưa nhìn anim G5 bằng mắt",
+  "at": "2026-10-19T21:03:32"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play S7: laser xuất phát đúng đầu drone, không lệch; shot .agent/shots/wb2p3r3_s7.png (droneArtForwardAngle 90 giữ nguyên)",
+  "at": "2026-10-19T21:03:32"
+ },
+ "T3": {
+  "status": "done",
+  "note": "engineFx+engineFxDelays {1.0,1.333} (Idle2_to_3 không có event; engine hiện 1.0s L/1.333s R); followBoneRotation=false + localRot 0 → lửa đúng 2 ống, xoay theo boss (rot 0 & 50 chụp). Wiring ở scene instance MakeAll CHƯA SAVE",
+  "at": "2026-10-19T21:03:32"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play 2 lượt MS1↔MS2, console 0 error; brief cập nhật. Hạn chế: spline 1 không tự chạy trong sandbox MakeAll nên gọi OnEndPath1 tay",
+  "at": "2026-10-19T21:03:40"
+ }
+}

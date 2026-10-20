@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse sửa WorldBossWeapon.cs (rotateOnOpenAttack); compile 0 error",
+  "at": "2026-10-15T08:39:48"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Open flow bỏ Idle, G8 useSelfAnimAttack=0; Play: Init→Idle, Play→Open, 4 lần Play sau đó không có anim Start nào khác, giữ Open; console 0 error",
+  "at": "2026-10-15T08:46:21"
+ },
+ "T2": {
+  "status": "done",
+  "note": "RotationAimFighter (offset 90, speed 5) trên G4-L/R, rotate gán, rotateOnOpenAttack=1; Play: nòng lệch 0° so với player ở 2 vị trí; console 0 error",
+  "at": "2026-10-15T08:46:21"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play P2_A+P3_A cùng lúc: G5/G6/G7/G9 chạy, bullet sinh ra, console 0 error sau khi dựng lại static harness; chưa chạy tay trong game thật",
+  "at": "2026-10-15T08:46:21"
+ }
+}

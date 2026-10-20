@@ -1,0 +1,32 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse thêm 2 event + 2 invoke (dòng 72-73, 95, 127); compile 0 error",
+  "at": "2026-10-16T15:39:34"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse đổi tên cặp file giữ guid 172305a9…, refactor; Claude bỏ nhánh dead trong ResetPose; compile 0 error, prefab P2 không Missing Script",
+  "at": "2026-10-16T15:41:44"
+ },
+ "T3": {
+  "status": "done",
+  "note": "P2: G1-L/R OnlyAnim có SpineAnimFlow (CloseInit Idle_Gun1 / Open Out_gun1→Close), anim + syncOpenWith=G2-L/R; Console 0 error",
+  "at": "2026-10-16T15:42:13"
+ },
+ "T4": {
+  "status": "done",
+  "note": "P3: 4× G2-(OnlyAnim) có WorldBossOnlyAnimGun + SpineAnimFlow (Idle_Gun2 / Out_Gun2→Close), sync=G5, start anim Idle_Gun2 loop; Console 0 error",
+  "at": "2026-10-16T15:42:13"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play (instance tạm, không đổi scene Menu): P2 và P3 OnlyAnim đứng Idle_Gun1/Idle_Gun2 sau Init; Out_* bắt đầu cùng frame với OnOpenStart của G2-L/R / G5; sau đó Close loop; Play lần 2 không phát lại; re-Init → về Idle_Gun1. Console 0 error. Đã thoát Play, instance đã Destroy",
+  "at": "2026-10-16T15:43:08"
+ },
+ "T6": {
+  "status": "done",
+  "note": "library mục 20 (dòng 202 + 920) cập nhật luật mới",
+  "at": "2026-10-16T15:43:08"
+ }
+}

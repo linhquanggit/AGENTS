@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse thêm followSmoothTime (=0 giữ cũ) + SmoothDamp; compile 0 error",
+  "at": "2026-10-13T16:12:44"
+ },
+ "T3": {
+  "status": "done",
+  "note": "bodyRotate→BodyRotate RotationAimFighter; Play: thân xoay trong aiming (z→19.6°) rồi dừng. RotationAimFighter thừa trên DamageZoneShot giữ lại (không xoá)",
+  "at": "2026-10-13T16:20:37"
+ },
+ "T2": {
+  "status": "done",
+  "note": "followSmoothTime=0.2 trên AimingDamageZone; Play: tâm ngắm trễ ~0.4u, không snap, ngừng bám sau timeFollow",
+  "at": "2026-10-13T16:20:37"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play MakeAll: G6 xoay thân+tâm trễ+zone đúng chỗ, G4 25 viên OK; 2 NRE do FighterBase giả của harness test (không liên quan). Đã ghi doc Brain mục P2 S6; chưa lưu scene, đã trả spritePackerMode",
+  "at": "2026-10-13T16:20:37"
+ }
+}

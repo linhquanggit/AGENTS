@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse sửa xong; compile 0 error, Claude đọc lại code đúng plan",
+  "at": "2026-10-14T09:12:14"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse sửa xong; compile 0 error",
+  "at": "2026-10-14T09:12:14"
+ },
+ "T3": {
+  "status": "done",
+  "note": "G4.splitFx=Explosive, prefab lưu OK; EnemyWB5_P2_A linkLaser vẫn = G6-ElectricLink/LinkLaser2D_CL; G6 linkPoint để trống",
+  "at": "2026-10-14T09:12:27"
+ },
+ "T4": {
+  "status": "done",
+  "note": "G6: cả 2 lớp tia positionCount=2 suốt 130-139 frame, đầu dây = đúng tâm đạn (khớp 0.0000 với vị trí đạn frame trước; lệch 0.09 so với frame hiện tại = 1 frame lag do thứ tự Update của LinkLaser_CL, không phải lệch tâm); boss đứng yên (move 0.0000). G4: Explosive false trước tách, true tại 1.01s sau phóng cùng frame đạn +10. Console 0 error, spriteatlas sửa=0, scene không lưu, instance tạm đã xoá",
+  "at": "2026-10-14T09:15:29"
+ },
+ "T5": {
+  "status": "done",
+  "note": "P3: G9 chạy sạch (BulletDestinationWB5, 4 cọc), Console 0 error, spriteatlas=0, scene không lưu; G8 (PortalShotWB5) không sinh HomingMissileSplitWB5 trong 12s nên chưa verify được ở P3. Library bản chính đã cập nhật (mục 10 P2 G4/G6 + bảng class mục 12); bản đồng bộ ở Project 1941 không có trên máy → chưa sync",
+  "at": "2026-10-14T09:16:51"
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "7 flow CloseInit (G1×4, G3, G4, G6) = Close loop, NewDuration=0; swap/Rocket/OnlyAnim giữ nguyên; compile 0 error. Thay đổi mới ở scene MakeAll trong bộ nhớ, CHƯA save (chờ Linh).",
+  "at": "2026-10-15T15:43:23"
+ },
+ "T2": {
+  "status": "done",
+  "note": "EnemyWB2_Drone.cs: Setup → coroutine AppearThenFire: In (0.33s) → Idle loop, laser Attack sau In; StopAllCoroutines ở Despawn/OnDie (pool-safe). Test Play: t0 anim=In, sau ~4s Idle loop. Console 0 error.",
+  "at": "2026-10-15T15:46:21"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Play test: CloseInit=Close ở 7 súng mới, swap (G2/G5/G7) giữ pose phase cũ; Open: G1/G4/G6 In→Idle_*, G2/G5/G7 Mix, G3 In_Gun3 đang chạy (12s). Console sạch. Chưa verify: rocket tách 3, drone chết/laser aim player (cần scene gameplay có SoundManager+Fighter). Chưa so pose Close vs frame0 In bằng mắt. MakeAll CHƯA save.",
+  "at": "2026-10-15T15:46:21"
+ }
+}

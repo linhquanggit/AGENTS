@@ -1,0 +1,32 @@
+{
+ "T0": {
+  "status": "done",
+  "note": "Round4 code khớp status (T1-T4 done, đã Play verify: K1 8/8,K2 14/14, exit bounds, anim 98/98, quạt xanh+smoke). Chưa verify round4: quạt đỏ+laser, sandbox. Đã ghi superseded vào status round4.",
+  "at": "2026-10-20T03:42:12"
+ },
+ "T1": {
+  "status": "done",
+  "note": "Play 2 lượt (8 góc): G5 nằm trong màn ở cả 4 góc (viewport 0.03–0.97). Ảnh r5-t1-c1.png (G5 mép phải dưới) và r5-t1-c3.png (G5 mép trái trên) đọc được G5.",
+  "at": "2026-10-20T05:06:43"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Play: mọi lần teleport có log 'exit bounds outside camera = True' (sau K1, giữa 4 góc, sau MS2 về appear). Ảnh: scratchpad r5-s7-final.png không thuộc T2. Log: wb2p3 MS2→MS1 về appearPos (0,2.87), rotZ 0.",
+  "at": "2026-10-20T04:30:15"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Play: G6 về giữa màn (log 0,-0.01). Puzzle PASS N=6 (step 6/6) và N=8 (8/8); FAIL wrongZone=1 step 2/8 → quạt đỏ (ảnh r5-t4b-puzzle-end-1.png), KillZoneLaser bắn trúng fighter test (log TakeDamage). Holder on/off đúng (world rot 0, scale 1). Lưu ý: Fighter là proxy test (NRE OnDie là do proxy, không phải boss).",
+  "at": "2026-10-20T04:40:57"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Anim log 4 lượt (r5-t4-g2fix-log.txt): G2 Out_Gun2 đầu mỗi lượt MS1 → Close (sửa WorldBossOnlyAnimGun bỏ chặn opened); G5 Idle ở MS2; G6 Close ở MS1 và sau S7 (thêm WorldBossWeapon.PlayCloseInit, gọi trước MS2_FIELD); G7 Idle_Gun4/Idle_Gun7 ngoài S7, Gun4_Mix_Gun7 trong S7. Screenshot S7: r5-t4b-s7-*.png.",
+  "at": "2026-10-20T05:06:43"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Brief WB2_P3 mục Round 5 (kết quả verify) + library mục 7 đã cập nhật. Scene MakeAll CHƯA save (chờ Linh).",
+  "at": "2026-10-20T05:16:09"
+ }
+}

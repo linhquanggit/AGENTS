@@ -1,0 +1,37 @@
+{
+ "T2": {
+  "status": "done",
+  "note": "Muse (C04) tạo ResetTrailOnEnable.cs; compile 0 error; Claude gắn lên Arrow_Line của BulletWB4_P3_G2",
+  "at": "2026-10-13T16:49:18"
+ },
+ "T1": {
+  "status": "done",
+  "note": "Arrow_Line PS+Renderer đã trùng 100% drone (diff rỗng); gắn ResetTrailOnEnable. Play: đạn spawn trailParticles=5 (không kéo vệt cũ) → 20 khi bay; Console 0 error",
+  "at": "2026-10-13T16:54:05"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Đã nối sẵn: RotationAimFighter trên DirectionShotE (offset 90, speed 20) + rotate + ueBeforeShot.Play. Play (player giả ở (3,-7)): FireDirection.up lệch 0° so với player, đạn bay tới ~(2.7,-5.8)",
+  "at": "2026-10-13T16:54:05"
+ },
+ "T5": {
+  "status": "done",
+  "note": "G7 là DashReturnShotE (code DOTween, không phải Spine). Muse viết DashHoldShakeReturnShotE; Claude đổi 3 DashShot L/M/R sang class mới: đẩy 0.18s OutSine → giữ 2s → rung 0.25s (str 0.12) → kéo về 0.3s. Play: dist 6.7 giữ ~2.3s rồi về, L→M→R tuần tự",
+  "at": "2026-10-13T16:54:06"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Charge_Arrow (clone Arrow_Line + ScaleUpOnEnable 2s) dưới G8-Dir/DirectionShotE/FireDirection, gán fxBefore thay Hold_Energy. Play: scale 0→0.8 (=scale đạn) trong 2s, tắt rồi đạn spawn ngay đầu súng; lặp 3 chu kỳ, 0 error",
+  "at": "2026-10-13T16:54:05"
+ },
+ "T6": {
+  "status": "done",
+  "note": "G7-M: dash code giống L/R (đo dist 7.02 tại t=14.5s, giữ, về). Lưu ý SpineAnimFlow (idle/attack Spine) chỉ có trên Anim-Middle, L/R không có — chưa kiểm hiển thị Spine bằng mắt",
+  "at": "2026-10-13T16:54:06"
+ },
+ "T7": {
+  "status": "done",
+  "note": "Play harness (scene trống tạm, không lưu; boss EnemyWB4_P3_A, player giả): G8 3 chu kỳ + G7 L/M/R tuần tự, Console 0 error. Chưa chạy WB4_P3.prefab test node nguyên bản/chưa xem hình",
+  "at": "2026-10-13T16:54:06"
+ }
+}

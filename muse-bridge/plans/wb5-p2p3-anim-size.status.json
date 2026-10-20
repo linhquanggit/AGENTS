@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Bảng tỉ lệ (rộng súng / rộng thân; thân P2 2.348, P3 2.440 world units, setup pose, root 1.2). Ước lượng concept bằng mắt ±15%: P2 G4 ~0.11 (hiện 0.22) → scale 0.19; G5 đĩa ~0.33 (hiện 0.83) → 0.14; G6 cột ~0.09 (hiện 0.28) → 0.11. P3 G7 ~0.12 (hiện 0.17) → 0.25; G8 ~0.16 (hiện 0.16) → giữ 0.35; G9 ~0.10 (hiện 0.33) → 0.11. Bounds đo ở setup pose trong edit mode. Kiểm lại bằng screenshot ở T2/T3.",
+  "at": "2026-10-12T10:34:28"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Linh chấp nhận theo trạng thái hiện tại (G4 0.09, G5 0.14, G6 0.11); Linh tự tinh chỉnh tay sau. Chưa verify G4 trên Game view.",
+  "at": "2026-10-12T10:41:31"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Linh chấp nhận theo trạng thái hiện tại (G7 0.25, G9 0.11, G8 0.35); Linh tự tinh chỉnh tay sau. Chưa kiểm điểm phóng G9/G8.",
+  "at": "2026-10-12T10:41:31"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Đã ghi bảng scale súng P2/P3 + ngày 2026-10-12 vào library mục 10 (BR_WorldBoss/library/worldboss-boss-library.md, ngay sau kết quả test P3)",
+  "at": "2026-10-12T10:41:55"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Kiểm không đổi scale root/thân (root 1.2, thân Animation 1 ở P2 và P3). 3 capsule collider P2/P3 giữ nguyên size/offset/trigger như trước. Chưa chạy Play lại riêng cho 'boss không trôi' sau khi đổi súng; lần test cuối 2026-10-06 trước khi đổi scale.",
+  "at": "2026-10-12T10:42:16"
+ }
+}

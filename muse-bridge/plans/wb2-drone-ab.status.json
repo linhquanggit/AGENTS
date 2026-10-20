@@ -1,0 +1,17 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse thêm boneA/appearEdgeX + logic Setup; compile 0 error",
+  "at": "2026-10-16T09:49:28"
+ },
+ "T2": {
+  "status": "done",
+  "note": "boneA gán GO A, prefab save OK (execute_code)",
+  "at": "2026-10-16T09:49:36"
+ },
+ "T3": {
+  "status": "done",
+  "note": "L/R đều bay từ mép về spawn, không lộn; ảnh /Users/mobione/AGENTS/muse-bridge/.agent/shots/wb2-drone-ab-sheet-v3.png. Chưa verify: laser/collider/RotationAimFighter trong gameplay thật",
+  "at": "2026-10-16T09:54:15"
+ }
+}
