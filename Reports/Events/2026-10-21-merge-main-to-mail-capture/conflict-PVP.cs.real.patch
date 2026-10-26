@@ -1,0 +1,29 @@
+--- base/Assets/Project/PVP/Scripts/PVP.cs	2026-10-21 15:04:16
++++ mail/Assets/Project/PVP/Scripts/PVP.cs	2026-10-21 15:04:18
+@@ -1335,6 +1335,26 @@
+         SaveData();
+     }
+ 
++    public static void GrantFromMail()
++    {
++        var _now = DPUtils.GetUtcNow;
++        var _currentFinish = string.IsNullOrEmpty(data.Booster.PremiumFinish) ? _now : data.Booster.PremiumFinish.ConvertToDateTimeUtc();
++        var _base = _currentFinish > _now ? _currentFinish : _now;
++
++        data.Booster.IsPremium = true;
++        data.Booster.PremiumStart = _now.Ticks.ToString();
++        var _totalSeconds = DPUtils.Convert(7, TimeType.Day, TimeType.Seconds);
++        data.Booster.PremiumFinish = _base.AddSeconds(_totalSeconds).Ticks.ToString();
++        // bật hết tất cả các booster
++        foreach (var _item in data.Booster.Boosters)
++        {
++            _item.IsActive = true;
++            _item.Duration = 0;
++            _item.CountWatchAds = 0;
++        }
++        SaveData();
++    }
++
+     // huỷ gói premium khi hết thời gian
+     public static void CancelBoosterPremium()
+     {

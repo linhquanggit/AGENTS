@@ -1,0 +1,263 @@
+--- base/Assets/Project/PVP/Scripts/PVP.cs	2026-10-21 15:04:16
++++ mail/Assets/Project/PVP/Scripts/PVP.cs	2026-10-21 15:04:18
+@@ -346,54 +346,54 @@
+     /// dữ liệu hoặc đang off-season.
+     /// </summary>
+     public static int SeasonVersionServerRanked { get; set; } = INVALID_SEASON_VERSION;
+-
+-    /// <summary>
+-    /// ID của event ONE_VS_ONE đang ACTIVE lấy từ all-event/connect response.
+-    /// Runtime-only giống SeasonVersionServerRanked; dùng để vá RankProcess.EventID trước khi tìm đối thủ.
+-    /// </summary>
+-    public static string EventIDServerRanked { get; set; } = string.Empty;
++
++    /// <summary>
++    /// ID của event ONE_VS_ONE đang ACTIVE lấy từ all-event/connect response.
++    /// Runtime-only giống SeasonVersionServerRanked; dùng để vá RankProcess.EventID trước khi tìm đối thủ.
++    /// </summary>
++    public static string EventIDServerRanked { get; set; } = string.Empty;
+ 
+     public static bool TryParseSeasonVersion(string _raw, out int _seasonVersion)
+     {
+         return int.TryParse(_raw, out _seasonVersion) && _seasonVersion >= 0;
+     }
+-
+-    /// <summary>
+-    /// Đồng bộ event id của mode vào save. Connect season và user data là hai nguồn tách biệt,
+-    /// nên save cũ có thể đã ở đúng SeasonVersion nhưng EventID vẫn rỗng.
+-    /// </summary>
+-    public static bool SyncEventID(MODE _mode, string _eventID)
+-    {
+-        if (string.IsNullOrWhiteSpace(_eventID)) return false;
+-
+-        var _process = GetRankProcess(_mode);
+-        if (_process == null || _process.EventID == _eventID) return false;
+-
+-        DPDebug.Log($"[PVP][SyncEventID] mode={_mode} eventID='{_process.EventID}'->'{_eventID}'");
+-        _process.EventID = _eventID;
+-        SaveData();
+-        return true;
+-    }
+-
+-    /// <summary>
+-    /// Vá riêng SeasonVersion mà không chạy logic chuyển mùa. Chỉ dùng cho dữ liệu S1 cũ đã bị lệch;
+-    /// không thay đổi rank, điểm, Battle Pass, nhiệm vụ hay bất kỳ tiến trình nào khác.
+-    /// </summary>
+-    public static bool SyncSeasonVersionOnly(MODE _mode, int _seasonVersion)
+-    {
+-        if (_seasonVersion < 0) return false;
+-
+-        var _process = GetRankProcess(_mode);
+-        if (_process == null || _process.SeasonVersion == _seasonVersion) return false;
+-
+-        DPDebug.LogWarning($"[PVP][SyncSeasonVersionOnly] mode={_mode} " +
+-            $"seasonVersion='{_process.SeasonVersion}'->'{_seasonVersion}'");
+-        _process.SeasonVersion = _seasonVersion;
+-        SaveData();
+-        return true;
+-    }
++
++    /// <summary>
++    /// Đồng bộ event id của mode vào save. Connect season và user data là hai nguồn tách biệt,
++    /// nên save cũ có thể đã ở đúng SeasonVersion nhưng EventID vẫn rỗng.
++    /// </summary>
++    public static bool SyncEventID(MODE _mode, string _eventID)
++    {
++        if (string.IsNullOrWhiteSpace(_eventID)) return false;
+ 
++        var _process = GetRankProcess(_mode);
++        if (_process == null || _process.EventID == _eventID) return false;
++
++        DPDebug.Log($"[PVP][SyncEventID] mode={_mode} eventID='{_process.EventID}'->'{_eventID}'");
++        _process.EventID = _eventID;
++        SaveData();
++        return true;
++    }
++
+     /// <summary>
++    /// Vá riêng SeasonVersion mà không chạy logic chuyển mùa. Chỉ dùng cho dữ liệu S1 cũ đã bị lệch;
++    /// không thay đổi rank, điểm, Battle Pass, nhiệm vụ hay bất kỳ tiến trình nào khác.
++    /// </summary>
++    public static bool SyncSeasonVersionOnly(MODE _mode, int _seasonVersion)
++    {
++        if (_seasonVersion < 0) return false;
++
++        var _process = GetRankProcess(_mode);
++        if (_process == null || _process.SeasonVersion == _seasonVersion) return false;
++
++        DPDebug.LogWarning($"[PVP][SyncSeasonVersionOnly] mode={_mode} " +
++            $"seasonVersion='{_process.SeasonVersion}'->'{_seasonVersion}'");
++        _process.SeasonVersion = _seasonVersion;
++        SaveData();
++        return true;
++    }
++
++    /// <summary>
+     /// Server đã mở mùa mới nhưng user CHƯA join (chưa bấm Ranked để ConnectEvent) -> rank của mùa
+     /// mới chưa xác định. Tự thành false ngay khi TryCreateNewSeason ghi SeasonVersion mới vào save.
+     /// </summary>
+@@ -485,8 +485,8 @@
+ 
+     /// <summary>
+     /// Gọi khi TÌM THẤY đối thủ và bắt đầu vào trận — cộng "chơi X trận" ngay,
+-    /// không cần đánh xong. Chỉ tính ở chế độ xếp hạng.
+-    /// </summary>
++    /// không cần đánh xong. Chỉ tính ở chế độ xếp hạng.
++    /// </summary>
+     public static void OnSeasonMatchStarted()
+     {
+         if (data == null || !IsRankedEventActive) return;
+@@ -494,11 +494,11 @@
+         SetSeasonProcess(PVPSeason.OnMatchStarted(SeasonData, SeasonProcess, modeCurrent));
+         SaveData();
+     }
+-
+-    /// <summary>
+-    /// Gọi mỗi phút online — nối từ GameController.AddMinusOnlineTime.
+-    /// KHÔNG lọc theo mode: tính tổng thời gian chơi game, không riêng gì PVP xếp hạng.
+-    /// </summary>
++
++    /// <summary>
++    /// Gọi mỗi phút online — nối từ GameController.AddMinusOnlineTime.
++    /// KHÔNG lọc theo mode: tính tổng thời gian chơi game, không riêng gì PVP xếp hạng.
++    /// </summary>
+     public static void OnSeasonOnlineMinute(int _minute = 1)
+     {
+         // OnlineTime phải được tính ngay từ màn game chung. Không phụ thuộc EndTimeEvent vì cờ này
+@@ -508,8 +508,8 @@
+         SetSeasonProcess(PVPSeason.OnOnlineMinute(SeasonData, SeasonProcess, _minute));
+         SaveData();
+     }
+-
+-    /// <summary>Gọi khi kết thúc trận — cộng "thắng X trận" và "đạt X tổng điểm". Chỉ tính ở xếp hạng.</summary>
++
++    /// <summary>Gọi khi kết thúc trận — cộng "thắng X trận" và "đạt X tổng điểm". Chỉ tính ở xếp hạng.</summary>
+     public static void OnSeasonMatchFinished()
+     {
+         // Kết quả trận/pending có thể được xử lý trước khi EndTimeEvent runtime được dựng lại
+@@ -644,46 +644,46 @@
+         }
+         SaveData();
+     }
+-    public static void Refresh()
+-    {
+-        DPDebug.Log("PVP PROCESS refresh");
+-        if (Player.PVPProcess == null)
+-            DPDebug.Log("PVP PROCESS SERVER NULL");
+-        else
+-            DPDebug.Log($"[PVP][Refresh] incoming 1v1 rank={Player.PVPProcess.OneVsOne?.Rank} " +
+-                        $"challengerPoint={Player.PVPProcess.OneVsOne?.ChallengerPoint} " +
+-                        $"seasonVersion='{Player.PVPProcess.OneVsOne?.SeasonVersion}' " +
+-                        $"isEventPlaying={Player.PVPProcess.OneVsOne?.IsEventPlaying}");
+-        //
+-        // SeasonVersion local chỉ được đổi sau khi ConnectEvent xác nhận người chơi đã join.
+-        // Một số response server có thể chứa version của season ACTIVE dù user chưa join;
+-        // không được để Refresh() ghi đè version local trong trường hợp đó.
+-        var _localSeasonVersion = data?.OneVsOne?.SeasonVersion ?? 0;
+-        var _incomingRanked = Player.PVPProcess?.OneVsOne;
+-        if (_incomingRanked != null
+-            && !_incomingRanked.IsEventPlaying
+-            && data?.OneVsOne != null)
+-        {
+-            _incomingRanked.SeasonVersion = _localSeasonVersion;
+-        }
+-
+-        data = Player.PVPProcess;
+-        if (data == null)
+-        {
+-            InitData();
+-            return;
+-        }
+-        // Data từ server có thể thiếu nhánh mode (JsonUtility để null) -> vá lại, không thì
++    public static void Refresh()
++    {
++        DPDebug.Log("PVP PROCESS refresh");
++        if (Player.PVPProcess == null)
++            DPDebug.Log("PVP PROCESS SERVER NULL");
++        else
++            DPDebug.Log($"[PVP][Refresh] incoming 1v1 rank={Player.PVPProcess.OneVsOne?.Rank} " +
++                        $"challengerPoint={Player.PVPProcess.OneVsOne?.ChallengerPoint} " +
++                        $"seasonVersion='{Player.PVPProcess.OneVsOne?.SeasonVersion}' " +
++                        $"isEventPlaying={Player.PVPProcess.OneVsOne?.IsEventPlaying}");
++        //
++        // SeasonVersion local chỉ được đổi sau khi ConnectEvent xác nhận người chơi đã join.
++        // Một số response server có thể chứa version của season ACTIVE dù user chưa join;
++        // không được để Refresh() ghi đè version local trong trường hợp đó.
++        var _localSeasonVersion = data?.OneVsOne?.SeasonVersion ?? 0;
++        var _incomingRanked = Player.PVPProcess?.OneVsOne;
++        if (_incomingRanked != null
++            && !_incomingRanked.IsEventPlaying
++            && data?.OneVsOne != null)
++        {
++            _incomingRanked.SeasonVersion = _localSeasonVersion;
++        }
++
++        data = Player.PVPProcess;
++        if (data == null)
++        {
++            InitData();
++            return;
++        }
++        // Data từ server có thể thiếu nhánh mode (JsonUtility để null) -> vá lại, không thì
+         // GetRankProcess trả null và MỌI thay đổi season (nhiệm vụ, exp, premium) bị bỏ im lặng.
+         CheckCasualData();
+         Check1V1Data();
+         // Mission hằng ngày và OnlineTime không được phụ thuộc vào việc user đã mở màn Ranked.
+         CheckSeasonDailyOnGameLoad();
+         DPDebug.Log($"[PVP][Refresh] applied 1v1 rank={data.OneVsOne?.Rank} " +
+-                    $"challengerPoint={data.OneVsOne?.ChallengerPoint} " +
+-                    $"seasonVersion='{data.OneVsOne?.SeasonVersion}' " +
+-                    $"isEventPlaying={data.OneVsOne?.IsEventPlaying}");
+-    }
++                    $"challengerPoint={data.OneVsOne?.ChallengerPoint} " +
++                    $"seasonVersion='{data.OneVsOne?.SeasonVersion}' " +
++                    $"isEventPlaying={data.OneVsOne?.IsEventPlaying}");
++    }
+     public static void OnNewDay()
+     {
+         OnNewDayBooster();
+@@ -1335,6 +1335,26 @@
+         SaveData();
+     }
+ 
++    public static void GrantFromMail()
++    {
++        var _now = DPUtils.GetUtcNow;
++        var _currentFinish = string.IsNullOrEmpty(data.Booster.PremiumFinish) ? _now : data.Booster.PremiumFinish.ConvertToDateTimeUtc();
++        var _base = _currentFinish > _now ? _currentFinish : _now;
++
++        data.Booster.IsPremium = true;
++        data.Booster.PremiumStart = _now.Ticks.ToString();
++        var _totalSeconds = DPUtils.Convert(7, TimeType.Day, TimeType.Seconds);
++        data.Booster.PremiumFinish = _base.AddSeconds(_totalSeconds).Ticks.ToString();
++        // bật hết tất cả các booster
++        foreach (var _item in data.Booster.Boosters)
++        {
++            _item.IsActive = true;
++            _item.Duration = 0;
++            _item.CountWatchAds = 0;
++        }
++        SaveData();
++    }
++
+     // huỷ gói premium khi hết thời gian
+     public static void CancelBoosterPremium()
+     {
+@@ -1975,7 +1995,7 @@
+         isForfeitResultShown = true;
+         return true;
+     }
+-
++
+     static void ClearPendingMatch()
+     {
+         // Chụp lại trước khi xoá pending; OnSeasonMatchFinished dùng giá trị này để nhận biết
+@@ -1984,7 +2004,7 @@
+         data.HasPendingMatch = false;
+         data.PendingMatchMode = MODE.NONE;
+         data.PendingMatchSeasonDayID = string.Empty;
+-    }
++    }
+ 
+     // Fallback cho force kill: callback pause/quit có thể không kịp chạy. Khi game mở lại,
+     // pending match được tính là thua với score 0 và không thêm RecentMatchScores.

@@ -1,0 +1,34 @@
+--- base/Assets/Project/Sweep/Scripts/Sweep.cs	2026-10-21 15:04:29
++++ mail/Assets/Project/Sweep/Scripts/Sweep.cs	2026-10-21 15:04:31
+@@ -184,6 +184,31 @@
+         DPDebug.Log($"Khang: PurchasedSweepSub {Data.CurrentSweepSub} {sweepType} {GetEndDate()}");
+     }
+ 
++    public static void GrantFromMail(SweepType sweepType)
++    {
++        if (Data == null)
++        {
++            // set value default variables
++            Data = new Process();
++            Data.CurrentSweepSub = SweepType.Free;
++            Data.EndDate = SetEndDate(DPUtils.GetUtcNow);
++            //
++        }
++
++        var _now = DPUtils.GetUtcNow;
++        var _base = GetEndDate() > _now ? GetEndDate() : _now;
++
++        Data.CurrentSweepSub = sweepType;
++        Data.EndDate = SetEndDate(_base.AddDays(30));
++
++        SweepTimesLeft = GetSweepTimeLeft(sweepType);
++
++        ResetRewardLimit();
++
++        SaveData();
++        DPDebug.Log($"Khang: GrantFromMail {Data.CurrentSweepSub} {sweepType} {GetEndDate()}");
++    }
++
+     public static void ResetRewardLimit()
+     {
+         foreach (var _rwLimit in Sweeps.RewardLimits)

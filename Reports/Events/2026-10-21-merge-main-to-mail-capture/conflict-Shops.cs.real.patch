@@ -1,0 +1,52 @@
+--- base/Assets/Project/Scripts/Shops.cs	2026-10-21 15:04:27
++++ mail/Assets/Project/Scripts/Shops.cs	2026-10-21 15:04:28
+@@ -1,4 +1,4 @@
+-﻿﻿using DP.Tools;
++﻿using DP.Tools;
+ using DP.Utilities;
+ using Games;
+ using I2.Loc;
+@@ -236,6 +236,8 @@
+ 
+     #region [GOLD & GEM]
+ 
++    public static List<GemPackData> GemPacks => asset.Value.gemPacks;
++
+     // Get gem packs dataTutorial with Type
+     public static GemPackData GetGemPackData(PACK_TYPE _type)
+     {
+@@ -751,6 +753,34 @@
+         AddRewardNormal();
+         // add offer reward
+         AddPowerBoostOfferReward();
++    }
++
++    // Mail bù IAP thật đã trả tiền: bỏ qua IsUnlocked (star/level/RemoveAds default có thể không còn đúng lúc
++    // claim mail), vẫn giữ nguyên guard IsBought (OneTimePurchase) để không cấp trùng gói đã mua thật.
++    public bool GrantFromMail()
++    {
++        if (IsBought)
++            return false;
++
++        if (OneTimePurchase)
++            IsBought = true;
++
++        if (IsFighter)
++        {
++            Fighter.Process _process = Fighter.GetProcess(FighterID);
++            Fighter.Unlock(_process);
++        }
++
++        if (IsWingman)
++        {
++            Wingman.Process _process = Wingman.GetProcess(WingmanID);
++            Wingman.Unlock(_process);
++        }
++
++        AddRewardNormal();
++        AddPowerBoostOfferReward();
++        OpenContainer();
++        return true;
+     }
+ 
+     public List<RewardCount> OpenContainer()

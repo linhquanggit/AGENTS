@@ -19,6 +19,13 @@ Reply in **Vietnamese** by default. Keep code, identifiers, APIs, file names, lo
 - **Flow capture log**: `~/.claude/logs/flow-capture.log`. For "log để test luồng / check bug": truncate it first, have the user reproduce, then read it — instead of asking for console/device logs. Writing to it is the project's own code.
 - **Reports**: `Reports/<project-basename>/<YYYY-MM-DD>-<slug>.md` in THIS repo (never inside the project's SCM). On "lưu báo cáo / ghi tiến trình": write it, then add one line to `Reports/INDEX.md` (`- [title](path) — hook`).
 
+## Dọn rác (BẮT BUỘC, mọi agent)
+- KHÔNG tạo thư mục/file ScreenShot, Capture, Temp, Test, backup `*.before-*`, log thử… trong project hay thư mục của Linh. Ảnh chụp màn hình, capture, file thử, script dùng 1 lần → để ở thư mục scratch của phiên (hoặc `/tmp`), KHÔNG để trong project/Assets/repo.
+- Cần giữ vì Linh yêu cầu → chỉ 1 chỗ đã thống nhất (`Reports/<project>/…`), nói rõ với Linh đã để ở đâu.
+- Tạo cái gì tạm trong project (backup, file thử, folder chụp) → DỌN ngay khi xong việc, trước khi báo xong. Báo cáo cuối phải có dòng "Đã dọn: …" (hoặc "Không tạo file tạm").
+- Xoá bị chặn (Operation not permitted) → xin quyền xoá đúng thư mục một lần; Linh từ chối thì nói rõ file nào còn lại để Linh xoá, không đổi tên/giấu sang thư mục khác.
+- Trước khi báo xong: rà `git status`/Plastic hoặc danh sách file đổi, mọi file lạ ngoài phạm vi task → xoá hoặc hỏi.
+
 ## Project entry points
 - **WB / World Boss / project "1941"** (`~/wkspaces/WB`): read `~/wkspaces/Brain/BR_WorldBoss/AGENT.md` FIRST — it is the map for the whole module. Follow its reading order (brief → library sections → design rows R… → Figma tiles). Do not scan WB code beyond what the brief/library points to; widen only when they don't cover the task, and say so.
 

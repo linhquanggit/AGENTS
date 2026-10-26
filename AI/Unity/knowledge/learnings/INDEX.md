@@ -3,6 +3,7 @@
 Grep this file by task keywords; open only matching entries. Big multi-section captures → [snapshots/INDEX.md](../snapshots/INDEX.md).
 Format: `- [title](slug.md) — hook ≤120 chars (scope)` · newest first.
 
+- [StepRotation quét nòng ±N° (WB2 P3 G5)](worldboss-steprotation-sweep.md) — ueReachMin/stopAtInitAfterMax/initLocal; rotate=None; waitFireRate cần Init; test qua Manager.LoadTestScene
 - [FX artist: holder + nested prefab](fx-prefab-artist-holder-nested.md) — không gắn script lên prefab FX artist; holder con + script tự bật Warning/mask (WB2 G6)
 - [ENEMY_TYPE WB đổi số quên Enemies.asset + prefab](worldboss-enemy-type-renumber-data-loss.md) — đổi số enum enemy phải grep Enemies.asset `Type:` + prefab `type:` (Enemies/WorldBoss)
 - [Sync StarDataInit PROMOTED: giữ StarLevelUpgradeFactor](stardatainit-promoted-sync-dataconvert-to-data.md) — DataConvert zero field này, chỉ copy các field base sang Data (Fighters/Wingmans)

@@ -1,0 +1,12 @@
+--- base/Assets/Onegame/Scripts/DHS.cs	2026-10-21 15:03:48
++++ mail/Assets/Onegame/Scripts/DHS.cs	2026-10-21 15:03:49
+@@ -1297,7 +1297,8 @@
+         }
+     }
+ 
+-    public static void ClaimEvent(MonoBehaviour _mono, Action<bool, string> _callback, bool _isIncludeLeaderboard, EVENT_TYPE _type)
++    public static void ClaimEvent(MonoBehaviour _mono, Action<bool, string> _callback, bool _isIncludeLeaderboard,
++        EVENT_TYPE _type)
+     {
+         _mono.StartCoroutine(IEClaimEvent(_callback, _isIncludeLeaderboard, _type));
+     }

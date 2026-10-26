@@ -1,0 +1,57 @@
+--- base/Assets/Project/Events/Scripts/Noel/HolidayNoel.cs	2026-10-21 15:04:03
++++ mail/Assets/Project/Events/Scripts/Noel/HolidayNoel.cs	2026-10-21 15:04:05
+@@ -1573,6 +1573,54 @@
+         SaveData(_process);
+ 
+         DPDebug.Log($"✅ Gift Pack ID {giftPackID} marked as purchased.");
++    }
++
++    // Mail bù IAP thật đã trả tiền: CHỈ cấp khi event Noel đang active (HOLIDAY_NOEL_POINT vô nghĩa khi
++    // event đóng - không có UI tiêu, và bị Reset về 0 khi chu kỳ event MỚI bắt đầu). Không bypass IsEventActive
++    // như các module khác - claim sau khi event đã đóng phải để CS xử lý tay. Vẫn chống double-grant cho gói limited.
++    public static bool GrantFromMail(IAP_Product _product, out string _failReason)
++    {
++        _failReason = null;
++        if (!IsEventActive)
++        {
++            _failReason = "event dang dong (IsEventActive=false)";
++            return false;
++        }
++
++        var _process = Player.HolidayNoelProcess;
++        if (_process == null)
++        {
++            _failReason = "HolidayNoelProcess null";
++            return false;
++        }
++
++        var _giftData = HolidayNoels.GetGiftPackNoelByProduct(_product);
++        if (_giftData == null)
++        {
++            _failReason = "khong tim thay GiftPackNoel map voi product nay trong asset";
++            return false;
++        }
++
++        var giftPackProcess = _process.lstGiftPackProcess?.FirstOrDefault(gp => gp.GiftPackID == _giftData.ID);
++        if (giftPackProcess == null)
++        {
++            _failReason = $"khong tim thay GiftPackProcess (GiftPackID={_giftData.ID}) trong lstGiftPackProcess hien tai";
++            return false;
++        }
++
++        if (_giftData.IsLimitedPack && giftPackProcess.IsPurchased)
++        {
++            _failReason = "da mua limited pack nay roi (IsPurchased=true)";
++            return false;
++        }
++
++        if (_giftData.IsLimitedPack)
++            giftPackProcess.IsPurchased = true;
++
++        var _mailReward = new RewardCount { Type = REWARD_TYPE.HOLIDAY_NOEL_POINT, Count = _giftData.Value };
++        Rewards.AddReward(_mailReward, _whereLogReport: "MailIapGrant");
++        SaveData(_process);
++        return true;
+     }
+ 
+     #endregion
