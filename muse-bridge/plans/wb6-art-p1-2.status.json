@@ -1,0 +1,37 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse DONE; review code PASS (field khớp source; G3 close=Out)",
+  "at": "2026-10-26T15:33:58"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse DONE; review code PASS",
+  "at": "2026-10-26T15:33:58"
+ },
+ "T3": {
+  "status": "done",
+  "note": "AttachArt P1 chạy OK: 6 súng + thân có flow, 0 cảnh báo, 6 TEMP",
+  "at": "2026-10-26T15:34:23"
+ },
+ "T4": {
+  "status": "done",
+  "note": "G1 PASS: In 4s→Idle1; Open 2.73 → bắn L/R thay phiên đều 2.0s, chu kỳ khẩu 4s, errors=0 (sau fix cooldown + runInBackground). Chưa xem hình đạn bằng mắt (11 hướng/cong về player)",
+  "at": "2026-10-26T15:48:10"
+ },
+ "T5": {
+  "status": "done",
+  "note": "G2 PASS: L/R bắn cùng giây (6.27, 8.82, 11.32...), CD 2.5s, errors=0. Fix: bỏ SpineAnimSync (đè entry làm R không bắn). TEMP: pulseStepDuration 0.35, spiralDuration 2, spiralAngularSpeed 360/90, designCooldown 1.63 + delayShot 0.87. Chưa xem hình vòng nở/xoắn bằng mắt",
+  "at": "2026-10-26T15:50:50"
+ },
+ "T6": {
+  "status": "done",
+  "note": "G3 PASS: Open In 2.83s → L/R bắn cùng giây 6.83/9.88/12.89, CD 3s, errors=0. Chưa xem hình chữ V/cầu to dần bằng mắt",
+  "at": "2026-10-26T15:51:20"
+ },
+ "T7": {
+  "status": "blocked",
+  "note": "Đã Restore+lưu MakeAll, báo cáo + library mục 11 + brief WB6_P1 xong (bản project worldboss-boss-library.md chỉ là stub trỏ về Brain nên không sửa). Cần Linh OK: xoá Assets/Editor/WB6/ (AttachArt_WB6_P1.cs, TestGun_WB6_P1.cs + .meta) và ~/.claude/logs/wb6-*.log/json?",
+  "at": "2026-10-26T15:53:08"
+ }
+}

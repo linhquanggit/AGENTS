@@ -1,0 +1,57 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Review PASS (signature khớp Bullet.cs:195/293, không sửa Bullet.cs, TEMP+Tooltip). Compile check gộp sau khi T2/T4/T6 xong.",
+  "at": "2026-10-23T15:21:54"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Review PASS: API khớp BaseShotE/Bullet/WorldBossGizmos; Editor.log 0 error CS",
+  "at": "2026-10-23T15:22:44"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Review PASS: spec S4/S5/S6/S9 khớp, Editor.log compile 0 error CS sau khi file ghi; PylonLinkShot có gizmo+log debug",
+  "at": "2026-10-23T15:30:12"
+ },
+ "T6": {
+  "status": "done",
+  "note": "Review PASS (kế thừa LinkLaserShotE, API khớp, gizmo đa giác + góc an toàn). Lưu ý nhỏ: OnLaser base vẫn AutoAttack LinkLaser thừa → prefab phải có đúng 3 LinkLaser_CL (T10 dựng đúng).",
+  "at": "2026-10-23T15:23:12"
+ },
+ "T8": {
+  "status": "done",
+  "note": "Review PASS: field SerializedObject khớp BaseShotE/DirectionShotE/WorldBossWeapon, idempotent, không SaveScene. Lưu ý: G3 dùng DirectionShotE hướng xuống ±9° (không aim player) — xem khi Play",
+  "at": "2026-10-23T15:30:41"
+ },
+ "T9": {
+  "status": "done",
+  "note": "Review PASS: field khớp, compile sạch sau sửa CS0029, menu chạy ra hierarchy + log. Lưu ý: G4 collider donor nhỏ hơn hình grow (TEMP)",
+  "at": "2026-10-23T15:54:33"
+ },
+ "T10": {
+  "status": "done",
+  "note": "Review PASS: menu chạy OK. Lưu ý: G7 'tăng tốc sau 0.5s' xấp xỉ bằng accelerationSpeed liên tục (cần class đạn riêng nếu muốn đúng); request của G8/G9 để mặc định",
+  "at": "2026-10-23T15:54:33"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Build P1 OK (6 súng, 0 warning SerializedObject). Play: 63 đạn G1 cong, 32 đạn ring G2, 4 cầu G3 grow ×2.46→3 (TEMP), ảnh .agent/shots/wb6-p1-play.png. Lỗi duy nhất: NRE Fighter/FighterBase của scene MakeAll (có sẵn, không liên quan WB6; kích Error Pause). Chưa verify: G3 aim thẳng xuống ±9° chứ không aim player; curve G1 chưa test với Fighter thật (fallback điểm); scene MakeAll dirty chưa save.",
+  "at": "2026-10-23T15:32:53"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Play P2 ~45s: S4 deck 5 khẩu không lặp trong lượt (3 lượt liên tiếp OK); S5 2 khẩu cùng lúc, 4 lượt lệch +30° (-90→0); S6 PairUnique 8 O: mỗi D mỗi cột dùng đúng 1 lần/O, cột bắt đầu random độc lập; Console chỉ NRE Fighter có sẵn. Ảnh .agent/shots/wb6-p2-play.png. Chưa verify: boss xoay ngang (gọi weapon.Attack trực tiếp, bỏ qua EnemyWB6_P2.OnAttack)",
+  "at": "2026-10-23T15:55:26"
+ },
+ "T7": {
+  "status": "done",
+  "note": "Play P3: S7 tên lửa+tách nón thấy ảnh (.agent/shots/wb6-p3-game2.png); S8 xoay 30° CW/phát (angle 210 sau 8 phát); S9 OneToMany 4 O đúng luật (mỗi cột ≥1 đầu, N=3 đích khác nhau/L). Library mục 11, 17, 18.6, 19 cập nhật ở Brain (bản WB chỉ là file trỏ; bản Project 1941 cần Linh sync); briefs WB6_P1/2/3 có bảng TEMP. Chưa verify: hình tam giác S8 trong ảnh, S7 tăng tốc 0.5s (xấp xỉ), SoundManager phải instantiate tay khi test laser.",
+  "at": "2026-10-23T15:59:02"
+ },
+ "T11": {
+  "status": "done",
+  "note": "Linh xác nhận xoá: đã xoá Assets/Editor/WB6/ (+.meta) và wb6-build-P*.log; refresh+compile không có error CS mới",
+  "at": "2026-10-23T16:00:06"
+ }
+}

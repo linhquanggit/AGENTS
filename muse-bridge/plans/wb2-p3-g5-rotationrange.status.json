@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "StepRotation.cs +3 option (ueReachMin, stopAtInitAfterMax, initLocal) + Start(); Muse ghi file, Claude verify: refresh+console 0 error",
+  "at": "2026-10-20T15:27:53"
+ },
+ "T2": {
+  "status": "done",
+  "note": "restAngle đo = -90 (KHÔNG phải 0): Rotate z=-90 thì nòng chĩa thẳng xuống. FireDirection1 K1+K2 localRot 180→-90 (up=(0,-1)), localPos giữ (0.82,0,0). Prefab đã save. Rotate để z=-90. Ảnh: Assets/Screenshots/wb2_g5_rot_minus90_c.png, wb2_g5_rot_minus165.png. CHƯA xác nhận art xoay theo ở -165 (ảnh gần như không đổi) và chưa chụp -15; kiểm lại ở T4 Play.",
+  "at": "2026-10-20T15:27:53"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Prefab EnemyWB2_P3_A đã save. Rotate z=-90 (270). 2 StepRotation (Step K1 đầu, Step K2 sau): init -90, min -165, max -15, step 75, speed -50, Yoyo, delay 0, continuous, triggerStepOnPlay false, stopAtInitAfterMax, initLocal; ueReachMin → DirectionShotE.Attack (K1 ở G5-K1, K2 ở Rotate). DirectionShotE K1 waves 8, fireRate 0.428571, fireDirections 1 phần tử (FireDirection1); K2 waves 6, fireRate 0.6, 1 phần tử. Đã xoá GunSweepAimWB2+SweepAimShotWB2 khỏi cả 2 shot. WorldBossWeapon G5-K1 + G5: attackType ATTACK_ON_EVENT, ueEvent → Step.Play, rotate None. Grep prefab: không còn guid 64c1a990 / 0f4abe22. Console 0 error sau refresh. Lưu ý: K1 fireDirections gốc 8 phần tử (plan ghi 3), K2 gốc 6 (plan ghi 6) — đã cắt còn 1.",
+  "at": "2026-10-20T15:29:32"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Verify Play đúng đường Manager.LoadTestScene (GamePlay+TestEverything, có GPC/camera/pool thật). K1: PLAY→viên đầu 1.53s, 8/8 viên cách 0.43s, góc world -165→-15 (tương đối quanh -90: -75,-53.1,-31.7,-10,10.8,32.7,54.1,75; lệch ≤0.7° so với bảng), dừng ở z=270(-90) sau 1.5s, tổng 6.06s. K2 (3 góc): 6/6 viên cách 0.61s, góc tương đối so với mũi boss -165→-15 lệch ≤1.2°, dừng ở 270 sau 1.5s. Log: 'K1 done (8/8, timeout=False)', 'K2 done (6/6, timeout=False)' x3. Đã sửa thêm StepRotation.cs: (1) Play() chuẩn hoá cacheAngle về cùng miền initAngle khi initLocal (lỗi gốc: lấy localEulerAngles=270 so với init -90 → quay 435° ~8.8s trước viên đầu); (2) PrepareNextStep clamp target về init khi stopAtInitAfterMax && passedMax. Sửa prefab: weapons list thêm G5(K2)+G5-K1(K1) để Init chạy → waitFireRate có giá trị. Chưa verify thật bằng mắt: ảnh có boss ở góc + đạn nhưng bị popup game che nhiều lần, chưa có ảnh khẳng định đạn ra đầu nòng; MS2 đóng G5 chưa quan sát riêng. 0 NullReference sau test.",
+  "at": "2026-10-20T15:52:11"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Đã ghi 2 tài liệu: ~/wkspaces/Brain/BR_WorldBoss/library/worldboss-boss-library.md (Round 6, WB2 P3 G5: cấu hình + số đo T4) và ~/AGENTS/AI/Unity/knowledge/learnings/worldboss-steprotation-sweep.md (+ dòng INDEX.md). Lưu ý: không tìm thấy 'Project 1941 claude/worldboss-boss-library.md' trên máy; bản ~/wkspaces/WB/worldboss-boss-library.md chỉ 230 byte nên ghi vào bản Brain.",
+  "at": "2026-10-20T15:52:47"
+ }
+}
