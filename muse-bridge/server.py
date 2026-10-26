@@ -1363,6 +1363,25 @@ class Handler(BaseHTTPRequestHandler):
                                         "runtime": {k: RUNTIME[k] for k in RUNTIME}})
         if u.path == "/api/git/show":
             return self._send(200, {"text": git_show((q.get("sha") or [""])[0])})
+        if u.path in ("/office3d", "/office3d/"):
+            # Toggle sang 3D: /office3d/ mo trang 3D (giao dien cu van la /).
+            fp = os.path.join(HERE, "office3d", "index.html")
+            if os.path.exists(fp):
+                with open(fp, "rb") as fh:
+                    return self._send(200, fh.read(), "text/html")
+            return self._send(404, {"error": "not found"})
+        if u.path.startswith("/office3d/"):
+            # Tai san 3D: chi phuc vu file tinh trong thu muc office3d/,
+            # chi .html/.css/.js, chan traversal bang basename.
+            name = os.path.basename(u.path)
+            if not name.endswith((".html", ".css", ".js")):
+                return self._send(404, {"error": "not found"})
+            fp = os.path.join(HERE, "office3d", name)
+            if os.path.exists(fp):
+                ctype = "text/html" if name.endswith(".html") else "text/css" if name.endswith(".css") else "application/javascript"
+                with open(fp, "rb") as fh:
+                    return self._send(200, fh.read(), ctype)
+            return self._send(404, {"error": "not found"})
         if u.path.startswith("/vendor/"):
             name = os.path.basename(u.path)
             fp = os.path.join(HERE, "vendor", name)

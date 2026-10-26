@@ -257,7 +257,6 @@ button:active{transform:scale(.96)}
 button .i{transition:transform .3s var(--spring)}
 #bPoll:hover .i{transform:rotate(180deg)}
 #bPoll.busy .i{animation:sp .7s linear infinite}
-#bNew:hover .i{transform:rotate(90deg)}
 #bTrash:hover .i{transform:rotate(-8deg) translateY(-1px)}
 #bChatClose:hover .i{transform:rotate(90deg)}
 #bSettings:hover .i{transform:scaleX(-1)}
@@ -324,7 +323,7 @@ dialog[open]::backdrop{animation:fade .25s}
 @media (max-width:760px){#midTabs{flex-direction:row;overflow-x:auto}#midTabs>button{width:auto}}
 
 /* ---------- cột trái: 4 tab ngang + danh sách theo tab */
-#midTabs{display:grid!important;grid-template-columns:repeat(4,1fr);flex-direction:row!important;gap:2px;padding:3px!important;margin:0 0 14px!important;border:1px solid var(--line)!important;border-radius:10px;background:var(--bg)!important}
+#midTabs{display:grid!important;grid-template-columns:1fr;flex-direction:row!important;gap:2px;padding:3px!important;margin:0 0 14px!important;border:1px solid var(--line)!important;border-radius:10px;background:var(--bg)!important}
 #midTabs>button{flex-direction:column;justify-content:center;gap:3px;padding:6px 2px!important;min-height:48px;font-size:11px!important;width:auto!important}
 #midTabs>button.on::before{display:none}
 #midTabs>button.alert::after{top:6px;right:8px;transform:none}
@@ -339,11 +338,21 @@ dialog[open]::backdrop{animation:fade .25s}
 .task:hover .tdel,.task .tdel:focus-visible,.task .tdel[data-armed]{opacity:1}
 .task .tdel .i{width:13px;height:13px}
 #bChat.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+
+#b3d{cursor:pointer;border-radius:10px;padding:4px 10px 4px 4px;margin-left:-4px;transition:background .2s,box-shadow .2s;user-select:none}
+#b3d:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+#b3d:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#b3d h1{transition:color .2s}
+#b3d.on{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),0 0 16px color-mix(in srgb,var(--accent) 40%,transparent)}
+#b3d.on h1{color:var(--accent)}
+#v3d{display:none;position:fixed;left:0;right:0;top:52px;bottom:0;width:100%;height:calc(100% - 52px);border:0;z-index:30;background:#0d1018}
+body.mode3d #v3d{display:block}
+body.mode3d header .status,body.mode3d header .usage,body.mode3d header label.switch,body.mode3d header .sep,body.mode3d header .tools>button{display:none!important}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand"><svg viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="228" fill="#f6f5f2"/><circle cx="302" cy="386" r="66" fill="#6b4fc7"/><circle cx="722" cy="386" r="66" fill="#2f5bd3"/><rect x="192" y="452" width="640" height="118" rx="59" fill="#1d1d1b"/><path d="M302,570 Q512,782 722,570" fill="none" stroke="#2f5bd3" stroke-width="88" stroke-linecap="round"/></svg><h1>Musude</h1></div>
+  <div class="brand" id="b3d" role="button" tabindex="0" aria-pressed="false" title="Bấm để bật/tắt văn phòng 3D"><svg viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="228" fill="#f6f5f2"/><circle cx="302" cy="386" r="66" fill="#6b4fc7"/><circle cx="722" cy="386" r="66" fill="#2f5bd3"/><rect x="192" y="452" width="640" height="118" rx="59" fill="#1d1d1b"/><path d="M302,570 Q512,782 722,570" fill="none" stroke="#2f5bd3" stroke-width="88" stroke-linecap="round"/></svg><h1>Musude</h1></div>
   <div class="status">
     <span class="pill" id="pMuse"><span class="dot"></span>muse-cli</span>
     <span class="pill" id="pPoll"><span class="dot"></span>poll</span>
@@ -364,12 +373,12 @@ dialog[open]::backdrop{animation:fade .25s}
     <button class="ghost" id="bTrash" title="Thùng rác"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span id="trashBadge" class="badge" style="display:none"></span></button>
     <button class="ghost" id="bSettings" title="Cài đặt"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
   </div>
-  <button class="primary" id="bNew"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Task</button>
 </header>
+<iframe id="v3d" title="Văn phòng 3D"></iframe>
 <div id="needBar" role="alert" aria-live="assertive"></div>
 <main>
   <section>
-    <nav class="tabs" id="midTabs" aria-label="Chế độ xem"><button data-mid="plan" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg><span>Nhiệm vụ</span></button><button data-mid="task"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><span>Task</span></button><button data-mid="term"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span>Terminal</span></button><button data-mid="act"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Hoạt động</span></button></nav>
+    <nav class="tabs" id="midTabs" aria-label="Chế độ xem"><button data-mid="plan" class="on"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg><span>Nhiệm vụ</span></button></nav>
     <div class="side" id="side-act" style="display:none">
       <div class="tabs seg" id="actFilters"></div>
       <div id="actSrc"></div>
@@ -623,7 +632,7 @@ document.addEventListener("click",e=>{
   if(k==="delete"){if(!armed(a))return; const id=SEL; SEL=null; act(()=>api("/api/task/"+id+"/delete",{}),"Đã chuyển "+id+" vào thùng rác").then(loadTrash)}
   if(k==="bug"){const t=$("#bugText").value.trim(); if(!t)return toast("Nhập mô tả bug"); act(()=>api(base+"bug",{text:t}),"Đang gửi BUG ở nền…")}
 });
-$("#bNew").onclick=()=>{$("#nTitle").value="";$("#nBody").value="";$("#dNew").showModal()};
+
 $("#nCancel").onclick=()=>$("#dNew").close();
 const newTask=send=>{const body=$("#nBody").value.trim(); if(!body)return toast("Nhập nội dung");
   $("#dNew").close();act(async()=>{const j=await api("/api/task",{title:$("#nTitle").value,body,send});SEL=j.id;setMid("task")},send?"Đang gửi cho Muse ở nền…":"Đã lưu nháp")};
@@ -817,7 +826,7 @@ function clearNeed(st){st.waiting=false;NEEDS.delete(st);renderNeeds();if(st.pid
 function renderNeeds(){const b=$("#needBar");const items=[...NEEDS.entries()];
   document.title=items.length?"("+items.length+") Musude — cần xác nhận":"Musude";
   document.querySelector('[data-mid="plan"]').classList.toggle("alert",items.some(([s])=>s.pid));
-  document.querySelector('[data-mid="term"]').classList.toggle("alert",items.some(([s])=>!s.pid));
+  document.querySelector('[data-mid="term"]')?.classList.toggle("alert",items.some(([s])=>!s.pid));
   if(!items.length){b.classList.remove("show");return}
   b.innerHTML=`<span class="ndot"></span><b>Đang chờ anh xác nhận:</b> `+items.map(([s,l],i)=>`<span class="nitem"><button class="nlink" data-need="${i}" title="Mở terminal">${esc(l)}</button><button class="ghost nq" data-nq="${i}|ok" title="Gửi Enter — chọn lựa chọn đang sáng (thường là Yes)">Đồng ý ↵</button><button class="ghost nq" data-nq="${i}|go" title="Gửi: tiếp tục, tự quyết, không cần hỏi">Làm tiếp</button></span>`).join("");
   b.classList.add("show")}
@@ -988,6 +997,13 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-mxex
 const _lp=window.loadPlans;load();setInterval(()=>{if(!document.hidden)load()},60000);
 document.addEventListener("click",e=>{if(e.target.closest("[data-nav],[data-pc]"))setTimeout(load,300)});
 })();
+
+// ---------- nút 3D (bật/tắt, nút sáng lên khi đang ở 3D)
+function set3d(v){document.body.classList.toggle("mode3d",v);const b=$("#b3d");b.classList.toggle("on",v);b.setAttribute("aria-pressed",v?"true":"false");
+  const f=$("#v3d");if(v&&!f.getAttribute("src"))f.setAttribute("src","/office3d/");try{localStorage.setItem("mb_3d",v?"1":"0")}catch(e){}}
+$("#b3d").onclick=()=>set3d(!document.body.classList.contains("mode3d"));
+$("#b3d").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#b3d").click()}};
+try{if(localStorage.getItem("mb_3d")==="1")set3d(true)}catch(e){}
 </script>
 </body>
 </html>
