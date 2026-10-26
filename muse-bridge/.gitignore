@@ -5,3 +5,6 @@ config.json
 trash/
 __pycache__/
 *.before-*
+
+# Cache số liệu sinh lại được từ transcript (metrics.py)
+plans/*.metrics.json

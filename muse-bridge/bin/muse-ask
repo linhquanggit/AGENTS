@@ -7,6 +7,11 @@
   muse-ask --reply C07 "trả lời"         trả lời một [ASK-CLAUDE-C07] của Muse, chờ tiếp
   muse-ask --wait C07 --since 5123       chờ tiếp (khi lần trước TIMEOUT)
   muse-ask --history 10                  xem 10 tin gần nhất
+  muse-ask --thread <thread_id> "nội dung"   gửi/chờ ở thread chỉ định (chỉ lần gọi đó)
+  muse-ask --plan P --task T1 "nội dung"     nhiều chat song song: task T1 dùng thread trong plans/P.threads.json
+                                         (chưa có → tự tạo chat mới "P T1" và ghi threads.json)
+  muse-ask --plan P --ready              liệt kê task sẵn sàng: id | owner | files: …
+                                         (id sinh dạng T1-C01; --bug/--reply/--wait tự tìm đúng thread qua idmap)
   muse-ask --plan P --show               in plan + trạng thái từng task
   muse-ask --plan P --task T2 --status doing|done|blocked|todo "ghi chú"
   muse-ask --log "Tạo Animator Player.controller" [--id C07] [--kind unity]
@@ -16,6 +21,7 @@ Kết quả in ra: dòng đầu STATUS: DONE | BLOCKED | ASK_CLAUDE | TIMEOUT, r
 Exit: 0 DONE, 1 BLOCKED, 3 ASK_CLAUDE, 2 TIMEOUT, 4 lỗi.
 """
 import argparse
+import fcntl
 import json
 import os
 import re
@@ -87,6 +93,28 @@ AGENT_NAME = "Claude Code"
 TAG = re.compile(r"\[(DONE|BLOCKED|ASK-CLAUDE)-([A-Za-z0-9_.-]+)\]")
 
 
+EXTRA = {}  # trường thêm cho event/waiting (thread, ptask, pplan) — chỉ có khi chạy nhánh multichat
+
+
+class FileLock:
+    """flock theo file — để nhiều muse-ask chạy đồng thời không đè counter/idmap."""
+
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        self.fh = open(self.path, "a+")
+        fcntl.flock(self.fh, fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, *a):
+        try:
+            fcntl.flock(self.fh, fcntl.LOCK_UN)
+        finally:
+            self.fh.close()
+
+
 def agent_dir():
     if CFG.get("agent_dir"):
         return os.path.expanduser(CFG["agent_dir"])
@@ -99,6 +127,7 @@ def log(kind, task, text, **kw):
     os.makedirs(agent_dir(), exist_ok=True)
     ev = {"at": datetime.now().isoformat(timespec="seconds"), "task": task, "kind": kind,
           "text": text[:4000], "by": "claude", "agent": AGENT_KEY}  # kind giữ "claude_*" để Musude hiển thị đúng
+    ev.update(EXTRA)
     ev.update(kw)
     with open(os.path.join(agent_dir(), "events.jsonl"), "a", encoding="utf-8") as fh:
         fh.write(json.dumps(ev, ensure_ascii=False) + "\n")
@@ -140,9 +169,149 @@ def next_id():
     prefix = AGENTS.get(AGENT_KEY, ("", "C"))[1]
     if prefix != "C":
         path += "_" + AGENT_KEY
-    n = int(open(path).read().strip() or 0) + 1 if os.path.exists(path) else 1
-    open(path, "w").write(str(n))
+    with FileLock(os.path.join(agent_dir(), "locks", "counter.lock")):
+        n = int(open(path).read().strip() or 0) + 1 if os.path.exists(path) else 1
+        open(path, "w").write(str(n))
     return "%s%02d" % (prefix, n)
+
+
+# ---------- multichat: thread theo task (plans/<plan>.threads.json) + idmap id → thread
+def _safe(x):
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", x)
+
+
+def load_threads(plan):
+    """{"T1": thread_id, ...}. Lỗi/không có file → {} (rơi về hành vi cũ)."""
+    try:
+        f = os.path.join(ROOT, "plans", plan + ".threads.json")
+        if plan and os.path.exists(f):
+            d = json.load(open(f, encoding="utf-8"))
+            return {k: v for k, v in d.items() if isinstance(v, str) and v} if isinstance(d, dict) else {}
+    except Exception:  # noqa: BLE001
+        pass
+    return {}
+
+
+def idmap_file(plan):
+    return os.path.join(ROOT, "plans", plan + ".idmap.json") if plan else os.path.join(agent_dir(), "noplan.idmap.json")
+
+
+def idmap_set(plan, tid, thread, task):
+    """Ghi tid → {thread, task}. Lỗi ghi không được làm hỏng việc gửi."""
+    try:
+        f = idmap_file(plan)
+        with FileLock(os.path.join(agent_dir(), "locks", "idmap_%s.lock" % _safe(plan or "noplan"))):
+            d = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else {}
+            d[tid] = {"thread": thread, "task": task or "", "at": datetime.now().isoformat(timespec="seconds")}
+            tmp = f + ".tmp%d" % os.getpid()
+            json.dump(d, open(tmp, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+            os.replace(tmp, f)
+    except Exception as e:  # noqa: BLE001
+        print("(cảnh báo: không ghi được idmap: %s)" % e, file=sys.stderr)
+
+
+def idmap_find(tid, plan=""):
+    """Tìm id trong idmap của plan (hoặc quét mọi idmap, lấy bản mới nhất). → dict hoặc None."""
+    try:
+        cands = []
+        if plan:
+            files = [(plan, idmap_file(plan))]
+        else:
+            pdir = os.path.join(ROOT, "plans")
+            files = [(n[:-len(".idmap.json")], os.path.join(pdir, n)) for n in os.listdir(pdir) if n.endswith(".idmap.json")]
+            files.append(("", idmap_file("")))
+        for pl, f in files:
+            if os.path.exists(f):
+                e = json.load(open(f, encoding="utf-8")).get(tid)
+                if e and e.get("thread"):
+                    cands.append((e.get("at", ""), pl, e))
+        if cands:
+            _, pl, e = max(cands, key=lambda c: c[0])
+            return {"thread": e["thread"], "task": e.get("task", ""), "plan": pl}
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def _find_key(obj, key):
+    if isinstance(obj, dict):
+        if obj.get(key):
+            return obj[key]
+        for v in obj.values():
+            hit = _find_key(v, key)
+            if hit:
+                return hit
+    elif isinstance(obj, list):
+        for v in obj:
+            hit = _find_key(v, key)
+            if hit:
+                return hit
+    return None
+
+
+def ensure_task_thread(plan, task):
+    """threads.json chưa có task → tạo chat mới (muse session-start) và ghi lại; có rồi → dùng lại. Có khóa file."""
+    with FileLock(os.path.join(agent_dir(), "locks", "threads_%s.lock" % _safe(plan))):
+        cur = load_threads(plan)
+        if task in cur:
+            return cur[task], False
+        res = muse(["session-start", "--title", "%s %s" % (plan, task)], timeout=60)
+        sid = _find_key(res, "session_id") or _find_key(res, "id")
+        if not sid:
+            die("không tạo được chat riêng cho %s (session-start không trả session_id). Chạy tuần tự: bỏ --task." % task)
+        f = os.path.join(ROOT, "plans", plan + ".threads.json")
+        try:
+            cur = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else {}
+        except Exception:  # noqa: BLE001
+            cur = {}
+        cur[task] = sid
+        tmp = f + ".tmp%d" % os.getpid()
+        json.dump(cur, open(tmp, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        os.replace(tmp, f)
+    return sid, True
+
+
+TASK_HEAD = re.compile(r"^##\s+(T[0-9A-Za-z_.-]*)\s*[—\-:]+\s*(.*)$")
+
+
+def ready_tasks(plan):
+    """Cùng logic independent_tasks() của server.py: chưa done; depends trống/'-' hoặc mọi depends đã done."""
+    pdir = os.path.join(ROOT, "plans")
+    tasks, cur = [], None
+    for line in open(os.path.join(pdir, plan + ".md"), encoding="utf-8").read().splitlines():
+        m = TASK_HEAD.match(line)
+        if m:
+            cur = {"id": m.group(1), "owner": "any", "depends": "", "files": ""}
+            tasks.append(cur)
+        elif cur is not None:
+            low = line.strip().lower()
+            for k in ("owner", "depends", "files"):
+                if low.startswith(k + ":"):
+                    cur[k] = line.split(":", 1)[1].strip()
+    sp = os.path.join(pdir, plan + ".status.json")
+    try:
+        st = json.load(open(sp, encoding="utf-8")) if os.path.exists(sp) else {}
+    except Exception:  # noqa: BLE001
+        st = {}
+    done = {t["id"] for t in tasks if (st.get(t["id"]) or {}).get("status") == "done"}
+    out = []
+    for t in tasks:
+        if t["id"] in done:
+            continue
+        deps = re.findall(r"T[0-9A-Za-z_.-]*", t["depends"] if t["depends"] != "-" else "")
+        if all(d in done for d in deps):
+            out.append(t)
+    return out
+
+
+def next_task_id(plan, task):
+    """Id không trùng cho task có chat riêng: T1-C01, T1-C02… (đếm theo plan+task, có khóa)."""
+    prefix = AGENTS.get(AGENT_KEY, ("", "C"))[1]
+    path = os.path.join(agent_dir(), "muse_ask_counter_%s_%s" % (_safe(plan or "noplan"), _safe(task)))
+    with FileLock(os.path.join(agent_dir(), "locks", "counter_task.lock")):
+        n = int(open(path).read().strip() or 0) + 1 if os.path.exists(path) else 1
+        open(path, "w").write(str(n))
+    return "%s-%s%02d" % (task, prefix, n)
 
 
 def send(text):
@@ -155,10 +324,10 @@ def mark_waiting(tid, kind):
     import atexit
     d = os.path.join(agent_dir(), "waiting")
     os.makedirs(d, exist_ok=True)
-    path = os.path.join(d, re.sub(r"[^A-Za-z0-9_.-]", "_", tid) + ".json")
+    path = os.path.join(d, (_safe(EXTRA["pplan"]) + "__" if EXTRA.get("pplan") else "") + re.sub(r"[^A-Za-z0-9_.-]", "_", tid) + ".json")
     with open(path, "w", encoding="utf-8") as fh:
         json.dump({"id": tid, "kind": kind, "pid": os.getpid(), "since": time.time(),
-                   "plan": os.environ.get("MUSE_PLAN", ""), "thread": CFG.get("thread_id", "")}, fh)
+                   "plan": EXTRA.get("pplan") or os.environ.get("MUSE_PLAN", ""), "thread": CFG.get("thread_id", "")}, fh)
 
     def cleanup():
         try:
@@ -217,8 +386,10 @@ def main():
     ap.add_argument("--log", metavar="TEXT")
     ap.add_argument("--plan")
     ap.add_argument("--task")
+    ap.add_argument("--thread", help="thread_id Muse cho lần gọi này (ghi đè thread của plan/config)")
     ap.add_argument("--status", choices=["todo", "doing", "done", "blocked"])
     ap.add_argument("--show", action="store_true")
+    ap.add_argument("--ready", action="store_true", help="liệt kê task sẵn sàng của --plan")
     ap.add_argument("--project", help="đường dẫn project Muse được ghi (mặc định: project Unity chứa thư mục hiện tại)")
     ap.add_argument("--agent", choices=sorted(AGENTS), default=None, help="ai đang điều phối (mặc định env MUSE_AGENT hoặc claude)")
     ap.add_argument("--kind", default="step")
@@ -231,7 +402,32 @@ def main():
         die("--agent/MUSE_AGENT không hợp lệ: %s (claude|antigravity)" % AGENT_KEY)
     AGENT_NAME = AGENTS[AGENT_KEY][0]
     PROJECT = find_project(a.project)
-    if a.plan:
+    # multichat: --task Tn có thread riêng (threads.json) hoặc --thread → gửi tin, không phải cập nhật trạng thái
+    plan_eff = a.plan or os.environ.get("MUSE_PLAN") or ""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", plan_eff):
+        plan_eff = ""
+    threads = load_threads(plan_eff) if plan_eff else {}
+    if a.ready:
+        if not plan_eff or not os.path.exists(os.path.join(ROOT, "plans", plan_eff + ".md")):
+            die("--ready cần --plan <id> hợp lệ")
+        rt = ready_tasks(plan_eff)
+        for t in rt:
+            print("%s | %s | files: %s" % (t["id"], t["owner"], t["files"] or "-"))
+        if not rt:
+            print("(không có task sẵn sàng)")
+        return
+    mc = bool(a.task and not a.status and not a.show and (a.thread or a.task in threads))
+    # --task Tn "nội dung" mà chưa có chat riêng → tự tạo (chỉ khi là lệnh giao việc, plan có thật)
+    if (not mc and a.task and a.text and plan_eff and not (a.status or a.show or a.log or a.bug or a.reply or a.wait or a.history)
+            and re.fullmatch(r"T[0-9A-Za-z_.-]*", a.task) and os.path.exists(os.path.join(ROOT, "plans", plan_eff + ".md"))):
+        sid, fresh = ensure_task_thread(plan_eff, a.task)
+        threads[a.task] = sid
+        mc = True
+        if fresh:
+            EXTRA.update({"thread": sid, "ptask": a.task, "pplan": plan_eff})
+            log("thread_new", "%s/%s" % (plan_eff, a.task), "Tạo chat Muse riêng cho task %s" % a.task)
+    via_id = bool((a.bug or a.reply or a.wait) and idmap_find(a.bug or a.reply or a.wait, plan_eff))
+    if a.plan and not mc and not via_id:
         pdir = os.path.join(ROOT, "plans")
         if not re.fullmatch(r"[A-Za-z0-9_.-]+", a.plan) or not os.path.exists(os.path.join(pdir, a.plan + ".md")):
             die("không có plan %s trong %s" % (a.plan, pdir))
@@ -258,7 +454,21 @@ def main():
         log("claude_" + a.kind, a.id or "-", a.log)
         print("logged")
         return
-    th = os.environ.get("MUSE_THREAD") or ""
+    th, src, mtask, mplan = "", "", a.task or "", plan_eff
+    if a.thread:
+        th, src = a.thread, "arg"
+    elif mc and a.task in threads:
+        th, src = threads[a.task], "task"
+    if not th and (a.bug or a.reply or a.wait):
+        f = idmap_find(a.bug or a.reply or a.wait, plan_eff)
+        if f:
+            th, src, mtask, mplan = f["thread"], "idmap", f["task"], f["plan"]
+    if th and not re.fullmatch(r"[A-Za-z0-9-]{8,64}", th):
+        die("thread id không hợp lệ: %s" % th)
+    if src:
+        EXTRA.update({"thread": th, "ptask": mtask, "pplan": mplan})
+    if not th:
+        th = os.environ.get("MUSE_THREAD") or ""
     if not th and a.plan:
         tf = os.path.join(ROOT, "plans", a.plan + ".thread.json")
         if os.path.exists(tf):
@@ -291,9 +501,12 @@ def main():
         if not a.text:
             ap.print_help()
             sys.exit(4)
-        tid, kind = (a.id or next_id()), "TASK"
+        tid, kind = (a.id or (next_task_id(plan_eff, a.task) if mc else next_id())), "TASK"
         msg = "[TASK-%s] %s\n\n%s" % (tid, a.text.strip(), footer(tid))
 
+    if src and src != "idmap":
+        idmap_set(plan_eff, tid, th, a.task)
+        EXTRA["ptask"], EXTRA["pplan"] = a.task or "", plan_eff
     since = baseline()
     mark_waiting(tid, kind)
     send(msg)

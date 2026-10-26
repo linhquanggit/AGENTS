@@ -669,7 +669,7 @@ function renderActivity(){
   rows.forEach((e,i)=>{const d=(e.at||"").slice(0,10); if(d!==day){day=d;h+=`<div class="day">${d}</div>`}
     const a=actor(e), who={claude:"Claude",muse:"Muse",app:"App"}[a], txt=String(e.text||""), k=(e.at||"")+i;
     const lines=txt.split("\n"), tagLine=lines.find(l=>/\[(DONE|BLOCKED|ASK-CLAUDE)-/.test(l)), first=esc((tagLine||lines[0]).slice(0,220)), long=txt.length>220||txt.includes("\n");
-    const task=e.task&&e.task!=="-"?`<b style="font-family:var(--mono);font-size:12px">${esc(e.task)}</b> `:"";
+    const task=(e.task&&e.task!=="-"?`<b style="font-family:var(--mono);font-size:12px">${esc(e.task)}</b> `:"")+(e.thread?`<span style="font-family:var(--mono);font-size:11px;color:var(--mute)" title="${esc(e.thread)}">${e.ptask?esc(e.ptask)+" · ":""}chat ${esc(String(e.thread).slice(0,8))}</span> `:"");
     const nw=fresh("act",k+e.kind);h+=`<div class="act ${nw?"fresh":""}" style="--i:${nw?Math.min(ai++,12):0}"><span class="tm">${(e.at||"").slice(11,19)}</span><span class="who-b who-${a}">${who}</span><div>
       <span class="kd">${esc(KIND[e.kind]||e.kind)}</span>${task}${long?`<details data-k="${k}" ${open.has(k)?"open":""}><summary>${first} <span style="color:var(--mute)">▾</span></summary><pre>${esc(txt)}</pre></details>`:first}</div></div>`});
   box.innerHTML=h;
@@ -713,7 +713,7 @@ function planHeadHtml(p){const n=p.tasks.length,d=p.tasks.filter(t=>t.status==="
   h+=`<div class="pbody"><div class="pinner">`;
   p.tasks.forEach(t=>{const k=p.id+t.id;
     h+=`<div class="pt"><span class="tid">${esc(t.id)}</span><div><details data-k="${k}"><summary style="cursor:pointer;list-style:none">${esc(t.title)}</summary><pre>${esc(t.body.trim())}</pre></details>
-      <div class="meta">owner: ${esc(t.owner)}${t.depends&&t.depends!=="-"?" · sau: "+esc(t.depends):""}${t.note?" · "+esc(t.note):""}</div></div><span style="display:flex;gap:6px;align-items:center"><span class="st st-${t.status}">${ST[t.status]||t.status}</span><button class="danger" data-ptdel="${esc(p.id)}|${esc(t.id)}" title="Xoá task" style="padding:0 7px;font-size:12px">✕</button></span></div>`});
+      <div class="meta">owner: ${esc(t.owner)}${t.depends&&t.depends!=="-"?" · sau: "+esc(t.depends):""}${t.note?" · "+esc(t.note):""}${(p.threads||{})[t.id]?` · chat: <span style="font-family:var(--mono)" title="${esc(p.threads[t.id])}">${esc(p.threads[t.id].slice(0,8))}</span>`:""}</div></div><span style="display:flex;gap:6px;align-items:center"><span class="st st-${t.status}">${ST[t.status]||t.status}</span><button class="danger" data-ptdel="${esc(p.id)}|${esc(t.id)}" title="Xoá task" style="padding:0 7px;font-size:12px">✕</button></span></div>`});
   h+=`</div></div>`;
   return h}
 
@@ -928,6 +928,66 @@ document.addEventListener("click",e=>{
 });
 
 refresh().then(()=>{CHAT_SEEN=lastMuseSeq();applyChat()}); setMid("plan"); loadActivity(); loadTrash(); loadChatList(); setInterval(()=>{refresh();loadActivity();loadTrash();loadChatList();if(CHAT_OPEN)fetchChat();if(MID==="plan")loadPlans();if(MID==="term")termList().catch(()=>{})},5000);
+</script>
+<style>
+.pmx{margin-top:10px;border-top:1px solid var(--line,#8884);padding-top:8px;font-size:12.5px}
+.pmx table,.mxcmp table{width:100%;border-collapse:collapse}
+.pmx th,.mxcmp th{font-weight:500;color:var(--mute);text-align:left;padding:3px 6px;font-size:11.5px;white-space:nowrap}
+.pmx td,.mxcmp td{padding:3px 6px;font-variant-numeric:tabular-nums}
+.pmx .na,.mxcmp .na{color:var(--mute);font-style:italic}
+.pmx input{width:64px}
+.mxcmp{margin:0 0 12px;overflow-x:auto;font-size:12.5px}
+.mxcmp td.g{color:var(--ok);font-weight:600}.mxcmp td.r{color:var(--bad);font-weight:600}
+</style>
+<script>
+(function(){
+let MX=[],busy=false;const MXO=new Set();
+const na='<span class="na">không ghi</span>',v=x=>x==null?na:x;
+const tot=m=>m.tokens?m.tokens.input+m.tokens.output+m.tokens.cache_creation+m.tokens.cache_read:null;
+const tokTxt=m=>{const t=m.tokens;if(!t)return na;return `${tot(m).toLocaleString("vi")} <span style="color:var(--mute)">(vào ${t.input} · ra ${t.output} · ghi cache ${t.cache_creation.toLocaleString("vi")} · đọc cache ${t.cache_read.toLocaleString("vi")})</span>`};
+const errs=m=>(m.loi_lot_review==null&&m.loi_linh_phat_hien==null)?null:(m.loi_lot_review||0)+(m.loi_linh_phat_hien||0);
+async function load(){if(busy)return;busy=true;try{const j=await api("/api/metrics");MX=j.metrics||[];if(j.error)console.warn("metrics:",j.error)}catch(e){MX=[]}busy=false;draw()}
+function cardHtml(m){
+  if(m.error)return `<div style="color:var(--mute)">Chỉ số hiệu quả: lỗi — ${esc(m.error)}</div>`;
+  const inp=(f,val)=>`<input type="number" min="0" placeholder="chưa nhập" data-mxf="${f}" data-mxp="${esc(m.id)}" value="${val==null?"":val}">`;
+  const why=Object.values(m.notes||{}).map(esc).join(" · ");
+  const sm=[["phút",m.minutes],["MCP",m.mcp],["Play",m.play],["token",tot(m)==null?null:tot(m).toLocaleString("vi")]].map(([k,x])=>`${x==null?na:x} ${k}`).join(" · ");
+  return `<details data-mxd="${esc(m.id)}" ${MXO.has(m.id)?"open":""}><summary style="cursor:pointer"><b>Chỉ số hiệu quả</b> <span style="color:var(--mute)">${sm}</span></summary><div style="overflow-x:auto;margin-top:6px"><table><tr>
+  <th>Phút giao→xong</th><th>Gọi MCP</th><th>Play</th><th>Review (vòng)</th><th>Claude tự viết code</th><th>Model Claude</th><th>Token Claude</th></tr><tr>
+  <td>${v(m.minutes)}</td><td>${v(m.mcp)}</td><td>${v(m.play)}</td><td>${v(m.review_rounds)}</td><td>${v(m.self_code)}</td>
+  <td>${m.models&&m.models.length?esc(m.models.join(", ")):na}</td><td>${tokTxt(m)}</td></tr></table></div>
+  <div class="row" style="gap:14px;margin-top:6px;flex-wrap:wrap;align-items:center"><label>Lỗi lọt qua review (lộ ở test) ${inp("loi_lot_review",m.loi_lot_review)}</label>
+  <label>Lỗi Linh phát hiện sau khi báo xong ${inp("loi_linh_phat_hien",m.loi_linh_phat_hien)}</label>
+  <button data-mxexp="${esc(m.id)}" ${m.exported?"disabled":""}>${m.exported?"Đã xuất vào Reports":"Xuất vào Reports"}</button></div>
+  ${why?`<div style="color:var(--mute);margin-top:4px;font-size:11.5px">${why}</div>`:""}</details>`}
+function cmpHtml(){
+  const rows=MX.filter(m=>!m.error);if(!rows.length)return"";
+  const cols=[["Phút",m=>m.minutes],["MCP",m=>m.mcp],["Play",m=>m.play],["Token",tot],["Lỗi",errs]];
+  const body=rows.map((m,i)=>{const p=rows[i-1];
+    const cell=(c)=>{const x=c[1](m),y=p?c[1](p):null;let cl="";
+      if(x!=null&&c[0]==="Lỗi"&&x===0)cl="g"; else if(x!=null&&y!=null&&x!==y)cl=x<y?"g":"r";
+      return `<td class="${cl}">${x==null?na:(typeof x==="number"?x.toLocaleString("vi"):x)}</td>`};
+    return `<tr><td>${esc(m.id)}</td>${cols.map(cell).join("")}</tr>`}).join("");
+  return `<details data-mxd="__cmp" ${MXO.has("__cmp")?"open":""}><summary style="cursor:pointer"><b>So sánh chỉ số</b> <span style="color:var(--mute)">${rows.length} plan · xanh = tốt hơn dòng trước, đỏ = tệ hơn</span></summary><table style="margin-top:6px"><tr><th>Plan</th>${cols.map(c=>`<th>${c[0]}</th>`).join("")}</tr>${body}</table></details>`}
+function draw(){try{
+  const box=document.querySelector("#plans");if(!box)return;
+  const top=box.querySelector(".plans-top");
+  if(top){let c=box.querySelector(".mxcmp");if(!c){c=document.createElement("div");c.className="mxcmp";top.after(c)}
+    const h=cmpHtml();if(c.dataset.h!==h){c.dataset.h=h;c.innerHTML=h}}
+  box.querySelectorAll(".plan").forEach(card=>{const m=MX.find(x=>x.id===card.dataset.pid);if(!m)return;
+    let d=card.querySelector(".pmx");if(!d){d=document.createElement("div");d.className="pmx";const ph=card.querySelector(".ph");(ph?ph.after(d):card.prepend(d))}
+    if(d.contains(document.activeElement))return;
+    const h=cardHtml(m);if(d.dataset.h!==h){d.dataset.h=h;d.innerHTML=h}})
+}catch(e){console.warn("metrics UI:",e)}}
+let t;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(draw,60)}).observe(document.querySelector("#plans"),{childList:true,subtree:true});
+document.addEventListener("toggle",e=>{const d=e.target;if(d.dataset&&d.dataset.mxd)d.open?MXO.add(d.dataset.mxd):MXO.delete(d.dataset.mxd)},true);
+document.addEventListener("change",async e=>{const i=e.target.closest("[data-mxf]");if(!i)return;
+  try{const r=await api("/api/metrics/manual",{plan:i.dataset.mxp,field:i.dataset.mxf,value:i.value});if(r.error)toast("Lỗi: "+r.error);else toast("Đã lưu")}catch(x){toast("Lỗi: "+x.message)}load()});
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-mxexp]");if(!b)return;b.disabled=true;
+  try{const r=await api("/api/metrics/export",{plan:b.dataset.mxexp});toast(r.error?"Lỗi: "+r.error:"Đã ghi vào Reports/WB/metrics.md")}catch(x){toast("Lỗi: "+x.message)}load()});
+const _lp=window.loadPlans;load();setInterval(()=>{if(!document.hidden)load()},60000);
+document.addEventListener("click",e=>{if(e.target.closest("[data-nav],[data-pc]"))setTimeout(load,300)});
+})();
 </script>
 </body>
 </html>

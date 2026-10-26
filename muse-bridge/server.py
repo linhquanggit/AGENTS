@@ -746,6 +746,7 @@ def parse_plan(pid):
     proj = os.path.abspath(os.path.expanduser(project)) if project else default_project()
     return {"id": pid, "title": title, "tasks": tasks, "path": path, "mtime": os.path.getmtime(path),
             "project": proj, "kind": project_kind(proj, kind), "project_ok": os.path.isdir(proj), "thread": plan_thread(pid, create=False),
+            "threads": plan_threads(pid),
             "muse_wait": muse_wait,
             "has_session": os.path.exists(os.path.join(PLANS_DIR, pid + ".session.json")),
             "term": {"id": last["id"], "alive": last["alive"], "need": bool(last.get("need")),
@@ -885,9 +886,9 @@ def plan_prompt(pid):
             "owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task. Trước khi đánh done phải tự chạy lại đúng done_when.\n"
             "3. Mỗi task: bắt đầu → muse-ask --plan %s --task <Tn> --status doing \"...\"; xong và đã verify → --status done \"kết quả\"; "
             "vướng → --status blocked \"lý do\".\n"
-            "%s"
+            "%s%s"
             "5. Kết thúc: báo ngắn task nào xong, Claude làm gì, Muse làm gì, còn gì chưa verify."
-        ) % (path, pid, kind, pid, pid, autonomy_rule(kind))
+        ) % (path, pid, kind, pid, pid, split_rule(pid), autonomy_rule(kind))
     return (
         "Dùng skill muse-collab. Thực hiện plan trong file %s (plan id: %s). Project: thư mục hiện tại.\n"
         "1. Đọc plan + trạng thái hiện tại: muse-ask --plan %s --show\n"
@@ -895,9 +896,22 @@ def plan_prompt(pid):
         "owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task.\n"
         "3. Mỗi task: bắt đầu → muse-ask --plan %s --task <Tn> --status doing \"...\"; xong và đã verify → --status done \"kết quả\"; "
         "vướng → --status blocked \"lý do\".\n"
-        "%s"
+        "%s%s"
         "5. Kết thúc: báo ngắn task nào xong, Claude làm gì, Muse làm gì, còn gì chưa verify."
-    ) % (path, pid, pid, pid, autonomy_rule())
+    ) % (path, pid, pid, pid, split_rule(pid), autonomy_rule())
+
+
+def split_rule(pid):
+    """Bước 'chia việc song song' trong chỉ dẫn Run Mission. Lỗi/tắt → chuỗi rỗng (chạy tuần tự như cũ)."""
+    try:
+        n = max(1, int(CFG.get("max_parallel_chats", 4)))
+        return ("3b. Chia việc song song: lấy task sẵn sàng bằng `muse-ask --plan %s --ready`. Các task owner muse sẵn sàng mà `files:` "
+                "không giao nhau → giao CÙNG LÚC, mỗi task 1 lệnh `muse-ask --plan %s --task Tn \"...\"` chạy nền (run_in_background), "
+                "mỗi task tự có chat riêng, tối đa %d chat cùng lúc. Trong lúc chờ: review task đã DONE, làm task owner claude sẵn sàng. "
+                "Mỗi khi một task xong và qua review → chạy lại --ready và giao tiếp. Nếu `files:` giao nhau → tuần tự. "
+                "Nếu lệnh/chat riêng lỗi → quay về chạy tuần tự.\n") % (pid, pid, n)
+    except Exception:  # noqa: BLE001
+        return ""
 
 
 def autonomy_rule(kind="unity"):
@@ -949,6 +963,62 @@ def plan_thread(pid, create=True):
         log_event(pid, "thread_new", "Tạo side chat Muse riêng cho plan", by="app", thread=sid)
         save_state()
     return sid
+
+
+# ---------- multichat: mỗi task một chat riêng (plans/<pid>.threads.json = {"T1": thread_id})
+THREADS_LOCK = threading.Lock()
+
+
+def plan_threads(pid):
+    try:
+        path = os.path.join(PLANS_DIR, pid + ".threads.json")
+        if os.path.exists(path):
+            d = json.load(open(path, encoding="utf-8"))
+            return {k: v for k, v in d.items() if isinstance(v, str) and v} if isinstance(d, dict) else {}
+    except Exception:  # noqa: BLE001
+        pass
+    return {}
+
+
+def _save_plan_threads(pid, d):
+    path = os.path.join(PLANS_DIR, pid + ".threads.json")
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(d, fh, ensure_ascii=False, indent=1)
+    os.replace(tmp, path)
+
+
+def create_task_chats(pid, task_ids):
+    """Tạo side chat cho các task (bỏ qua task đã có thread); ghi threads.json một lần. → dict task→thread vừa tạo."""
+    made = {}
+    with THREADS_LOCK:
+        cur = plan_threads(pid)
+        for tn in task_ids:
+            if tn in cur:
+                continue
+            sid = new_session("Bridge · %s · %s" % (pid, tn))
+            cur[tn] = made[tn] = sid
+            _save_plan_threads(pid, cur)  # ghi ngay từng task: lỗi giữa chừng không mất chat đã tạo
+    with LOCK:
+        for tn, sid in made.items():
+            log_event("%s/%s" % (pid, tn), "thread_new", "Tạo chat Muse riêng cho task %s" % tn, by="app", thread=sid, ptask=tn, pplan=pid)
+        if made:
+            save_state()
+    return made
+
+
+def independent_tasks(pid):
+    """Task chưa xong, không có depends (trống / '-') hoặc mọi depends đã done."""
+    pl = parse_plan(pid)
+    done = {t["id"] for t in pl["tasks"] if t.get("status") == "done"}
+    out = []
+    for t in pl["tasks"]:
+        if t.get("status") == "done":
+            continue
+        deps = re.findall(r"T[0-9A-Za-z_.-]*", t.get("depends", "") if t.get("depends", "") != "-" else "")
+        if all(d in done for d in deps):
+            out.append(t["id"])
+    return out
 
 
 def plan_session(pid, new=False):
@@ -1306,6 +1376,8 @@ class Handler(BaseHTTPRequestHandler):
             for pl in list_plans():
                 if pl.get("thread") and pl["thread"] != CFG.get("thread_id"):
                     items.append({"id": pl["thread"], "title": "Plan · " + pl["id"], "main": False})
+                for tn, tid in (pl.get("threads") or {}).items():
+                    items.append({"id": tid, "title": "Plan · %s · %s" % (pl["id"], tn), "main": False})
             return self._send(200, {"threads": items})
         if u.path == "/api/thread":
             th = (q.get("id") or [""])[0]
@@ -1331,6 +1403,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, term_read(m.group(1), int((q.get("from") or ["0"])[0])))
         if u.path == "/api/trash":
             return self._send(200, {"items": trash_list(), "days": CFG.get("trash_days", 3)})
+        if u.path == "/api/metrics":  # chỉ số hiệu quả (metrics.py) — lỗi không ảnh hưởng phần còn lại
+            try:
+                import metrics
+                return self._send(200, {"metrics": metrics.compute_all()})
+            except Exception as e:  # noqa: BLE001
+                return self._send(200, {"error": str(e)})
         if u.path == "/api/plans":
             return self._send(200, {"plans": list_plans(), "dir": PLANS_DIR})
         if u.path == "/api/activity":
@@ -1357,6 +1435,16 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             p = u.path
+            if p in ("/api/metrics/manual", "/api/metrics/export"):
+                try:
+                    import metrics
+                    if p.endswith("manual"):
+                        r = metrics.set_manual(b.get("plan", ""), b.get("field", ""), b.get("value"))
+                    else:
+                        r = metrics.export(b.get("plan", ""))
+                    return self._send(200, r)
+                except Exception as e:  # noqa: BLE001
+                    return self._send(200, {"error": str(e)})
             if p == "/api/status":
                 try:
                     st = muse(["status"], timeout=60)
@@ -1433,6 +1521,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"ok": True})
             if p == "/api/trash/empty":
                 return self._send(200, {"purged": trash_purge()})
+            m = re.fullmatch(r"/api/plan/([A-Za-z0-9_.-]+)/task/(T[0-9A-Za-z_.-]*)/chat", p)
+            if m:
+                made = create_task_chats(m.group(1), [m.group(2)])
+                return self._send(200, {"ok": True, "created": made, "threads": plan_threads(m.group(1))})
+            m = re.fullmatch(r"/api/plan/([A-Za-z0-9_.-]+)/chats", p)
+            if m:
+                made = create_task_chats(m.group(1), independent_tasks(m.group(1)))
+                return self._send(200, {"ok": True, "created": made, "threads": plan_threads(m.group(1))})
             m = re.fullmatch(r"/api/plan/([A-Za-z0-9_.-]+)/task/(T[0-9A-Za-z_.-]*)/delete", p)
             if m:
                 delete_plan_task(m.group(1), m.group(2))
