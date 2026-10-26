@@ -13,3 +13,17 @@ Chỉ đọc: gọi `/api/plans`, `/api/state`, `/api/usage`, `/api/trash`. Khô
 - Mặc định chỉ hiện mission đang làm + vài mission đã xong; nút "Hiện cả mission đã xong" mở hết.
 
 Thư viện: Three.js r147 (MIT, `three.min.js`, `OrbitControls.js`) đóng gói local, không cần mạng.
+
+PM · Claude (hành vi theo hoạt động thật, chỉ đọc `/api/activity`):
+- Review (`claude_verdict`, `claude_bug`, `review`) → PM đi tới đúng bàn nhân viên của plan đó, đứng xem ~11–16s.
+- Chạy MCP/Unity (`claude_unity`, `claude_test`, `claude_file`, `claude_plan`) → PM ngồi bàn máy tính của mình, đến 2 phút sau sự kiện cuối.
+- Rảnh → góc nghỉ: ngả lưng, uống trà, boxing, hút điếu cày (đổi hoạt động mỗi 14–26s).
+
+Bố Linh (CEO) và phòng riêng (góc trái phía sau, tường kính, neon):
+- Hoạt động khi rảnh (đổi mỗi 14–38s): ký duyệt, xem TV, bar, chạy bộ, đánh golf, ghế massage, karaoke, ngắm cá, đọc sách; thỉnh thoảng đi kiểm tra bàn nhân viên.
+- Task treo/pending (sự kiện `needs_human`, `muse_timeout`, `plan_blocked`, `muse_blocked`, hoặc plan "Cần xem" kéo dài >4 phút) → Bố ra tận chỗ PM · Claude đấm, Claude xin lỗi; nghỉ 90s giữa hai lần.
+- Phòng 56x(≥40), neon quanh tường, góc nghỉ của PM, bàn bóng bàn, máy bán nước, ghế lười ở phía trước.
+
+Bố cục công ty (vách kính, hành lang, nhiều phòng):
+- Dãy sau: phòng Bố Linh | Phòng nghỉ (PM) | hành lang | Phòng PM · Claude (họp). Giữa: Dev floor (bàn nhân viên). Dãy trước: Game room | Pantry | WC | Lobby (lễ tân, cửa chính).
+- Vách kính có khe cửa đúng chỗ các đường đi; đã kiểm tra tự động mọi lộ trình (Bố, PM, nhân viên đi giải trí/WC) không xuyên tường.
