@@ -7,7 +7,7 @@ Load `../knowledge/addressables.md` when the scope involves Addressables, bundle
 ## Procedure
 1. **Health Check (Filesystem)**:
    - **Meta Integrity**: Scan for missing `.meta` files or orphaned `.meta` files.
-   - **Compile Status**: Run a quick check (if possible via Unity CLI) to see if there are blocking compile errors.
+   - **Compile Status**: `~/AGENTS/muse-bridge/bin/unity-errors` (errors since last mark) or `unity-errors --last 50` (tail of Editor.log).
    - **Broken References**: Search for "guid: 00000000000000000000000000000000" in YAML files to find missing references.
 2. **Asset Analysis**:
    - **Asset Density**: Count key asset types (Prefabs, Materials, Scripts) in the targeted feature folder to judge complexity.
@@ -16,7 +16,7 @@ Load `../knowledge/addressables.md` when the scope involves Addressables, bundle
    - **Hierarchy Scan**: If Scene files are YAML, scan for top-level GameObjects or specific components (e.g., Managers) to map the hierarchy.
    - **Layer/Tag Audit**: Identify all custom Tags and Layers used in the current scope.
 4. **Change Tracking**:
-   - **Recent Changes**: Use `git` to identify the most recently modified assets and scripts to understand the current "hotspots" of development.
+   - **Recent Changes**: Plastic SCM project (has `.plastic/`) → `cm status --short` / `cm log`; git project → `git log --stat -n 10`. Identify the current "hotspots".
 
 ## Anti-Hallucination Guardrails
 - **DO NOT** assume a scene is structured correctly without scanning its YAML content.

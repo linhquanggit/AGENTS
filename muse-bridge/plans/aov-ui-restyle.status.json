@@ -1,0 +1,37 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "16 ảnh aov-base-{playing,camnang,comfort,settings}-{375,768,1024,1440}.png. 3 điểm xấu: (1) emoji làm icon + tiêu đề/nav phẳng, không có chiều sâu; (2) team Xanh/Đỏ chỉ khác viền trên, slot ban/pick rỗng nhạt khó thấy, timer 30 nhỏ trong khung hẹp, 'Giai đoạn' bị bẻ dòng xấu; (3) mobile 375 header bẻ 2 dòng, nav xuống dòng, 2 khối gợi ý chữ dày đặc, ink-soft tương phản thấp. Không tràn ngang. Console 0 lỗi.",
+  "at": "2026-10-27T09:19:10"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Verify: 0 hex ngoài :root, Russo One/Chakra Petch, @supports fallback, kính hiển thị đúng, console 0 lỗi, ảnh aov-t2check-*",
+  "at": "2026-10-27T09:24:33"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Verify: 0 emoji icon (Claude sửa nốt ✅/🟡 ở app.js:45), 18 symbol SVG, nút icon có aria-label, regression CDP: pick/khoá vị trí/Start/Reset/sao/tìm OK, 0 lỗi JS",
+  "at": "2026-10-27T09:38:57"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Verify: 0 hex ngoài :root, tap ≥44 (31 nút đo ở 375, Claude vá .pickLabel), reduced-motion block có, ảnh aov-t4-*, console 0 lỗi. Lưu ý: ở 375 hàng rec đua ra ~10px khỏi card (xem T6)",
+  "at": "2026-10-27T09:40:14"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Verify: 0 style=\" trong index.html (heroDetail dùng class .hidden, app.js bật display:block vẫn chạy), 0 hex ngoài :root, id/data-tab giữ nguyên (39 id), focus-visible ring, 3 bảng ở 375 không tràn ngang, console 0 lỗi, ảnh aov-t5-*",
+  "at": "2026-10-27T09:50:54"
+ },
+ "T6": {
+  "status": "done",
+  "note": "PASS: console 0 lỗi; contrast min 4.6:1 trên blob sáng (Claude đổi chữ đỏ sang --red-text từ 4.03); 62fps khi cuộn 130 tướng, .pickList/.slot không blur; fallback không backdrop-filter đọc tốt; focus ring; tap ≥44 (31 nút); trạng thái không chỉ màu; reduced-motion 0 animation; 375/768/1024/1440 không tràn ngang (Claude vá .recRow nhô 10px ở 375); hồi quy: pick/ban/đổi first-pick/Start-Reset/khoá lane/tìm/sao lưu sau reload/recommend OK",
+  "at": "2026-10-27T09:54:47"
+ },
+ "T7": {
+  "status": "done",
+  "note": "Đã dọn 81 ảnh aov-* trong muse-bridge/.agent/shots + profile Edge/scratch; không có *.bak/.tmp/test-* trong project; không có log aov-ui-restyle-*",
+  "at": "2026-10-27T09:55:01"
+ }
+}

@@ -24,10 +24,9 @@ $HookCmd = "powershell -NoProfile -Command `"Get-Content -Raw -Encoding UTF8 -Li
 
 function Get-Directive {
   # Path uses backslashes; the model reads either separator. No ' or " so it embeds cleanly.
-  "ACTIVE DIRECTIVE - do this BEFORE the first task: read $Link\AGENTS.md (profile selector) and follow it. " +
-  "Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load AI/Core/Rules.md plus that profile context/ files, " +
-  "then route via its Workflows.md. Prepend your first response of the session with [AI_RUNTIME_LOADED " +
-  [char]0x00B7 + " global " + [char]0x00B7 + " <Profile>]. This is not optional background context."
+  "ACTIVE DIRECTIVE - before the first task read $Link\AGENTS.md and follow its load order: Core rules always; " +
+  "profile Conventions and Workflows only when this session writes or reviews code. Prepend your first response of the session with [AI_RUNTIME_LOADED " +
+  [char]0x00B7 + " global " + [char]0x00B7 + " <Profile>]."
 }
 
 function Get-Block {
@@ -38,7 +37,7 @@ function Get-Block {
 For **every task in any project**, use the shared AI Runtime at `__LINK__`:
 1. Read `__LINK__\AGENTS.md` (the profile selector) and follow it.
 2. Unity project (has `Assets/` + `ProjectSettings/`) -> `AI/Unity/`, else `AI/Common/`.
-3. Load that profile's `context/`, then route to a skill per its `Workflows.md`.
+3. Load `AI/Core/Rules.md` + the profile `context/Rules.md`; read the profile `Conventions.md` + `Workflows.md` only when this session writes or reviews code.
 4. Prepend your first response of the session with `[AI_RUNTIME_LOADED · global · <Profile>]` (`<Profile>` = Unity or Common) — confirms the global runtime was read. Verification only.
 # <<< ai-runtime <<<
 '@

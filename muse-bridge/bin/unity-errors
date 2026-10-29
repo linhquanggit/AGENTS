@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""unity-errors — kiểm lỗi compile Unity rẻ (đọc Editor.log, in 1 dòng), thay cho nhiều lượt read_console.
+
+  unity-errors --mark     đánh dấu cuối log hiện tại (gọi TRƯỚC refresh_unity)
+  unity-errors            in lỗi `error CS` xuất hiện sau mốc (tối đa 15 dòng, không trùng)
+  unity-errors --last N   xem N KB cuối log (khi cần)
+Log mặc định: ~/Library/Logs/Unity/Editor.log (đổi bằng env UNITY_EDITOR_LOG).
+"""
+import os
+import re
+import sys
+
+LOG = os.path.expanduser(os.environ.get("UNITY_EDITOR_LOG", "~/Library/Logs/Unity/Editor.log"))
+MARK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".agent", "unity_errors_mark")
+
+
+def main():
+    if not os.path.exists(LOG):
+        print("UNITY: không thấy %s" % LOG)
+        return 2
+    size = os.path.getsize(LOG)
+    args = sys.argv[1:]
+    if args[:1] == ["--mark"]:
+        os.makedirs(os.path.dirname(MARK), exist_ok=True)
+        open(MARK, "w").write(str(size))
+        print("UNITY: đã đánh dấu (%d KB)" % (size // 1024))
+        return 0
+    if args[:1] == ["--last"]:
+        n = int(args[1]) if len(args) > 1 else 20
+        with open(LOG, "rb") as fh:
+            fh.seek(max(0, size - n * 1024))
+            sys.stdout.write(fh.read().decode("utf-8", "replace"))
+        return 0
+    start = 0
+    try:
+        start = int(open(MARK).read().strip())
+    except (OSError, ValueError):
+        pass
+    if start > size:
+        start = 0  # Unity đã mở lại, log mới
+    with open(LOG, "rb") as fh:
+        fh.seek(start)
+        text = fh.read().decode("utf-8", "replace")
+    errs, seen = [], set()
+    for line in text.splitlines():
+        if re.search(r"error CS\d{4}", line):
+            key = line.strip()
+            if key not in seen:
+                seen.add(key)
+                errs.append(key[:300])
+    if not errs:
+        print("UNITY: 0 error CS (%d KB log mới sau mốc)" % (len(text) // 1024))
+        return 0
+    print("UNITY: %d error CS" % len(errs))
+    for e in errs[:15]:
+        print(e)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

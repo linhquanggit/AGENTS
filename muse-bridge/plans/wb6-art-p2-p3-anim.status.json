@@ -1,0 +1,32 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Sửa xong: tự đăng ký OnOpenStart, bỏ qua khẩu weapon.anim; review OK",
+  "at": "2026-10-28T17:11:17"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Sửa xong (bỏ ueAttack→OnOpen, thêm dọn listener cũ); review OK",
+  "at": "2026-10-28T17:11:29"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Muse DONE T3-C04 (driver boss + late-subscribe + spritePacker); đã chạy thật P1/P2/P3 và ra log đầy đủ; compile 0 error",
+  "at": "2026-10-29T08:25:44"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Compile 0 error; AttachArt P2P3 WARN=0 ERROR=0 (thân P2/P3, G4, G5, G7, G8, P1 G3 bone). Lưu ý delayActionAppear P2=4.03, P3=7.27 (gồm Idle loop) — xem ở T5",
+  "at": "2026-10-28T17:12:06"
+ },
+ "T5": {
+  "status": "done",
+  "note": "WARN đã giải thích: P1 thân PASS In→Idle1 nhưng 6 gun P1 skeletonDataAsset=null (không kiểm được, cần art); P2 PASS (G6 rule3 WARN do Attack 4s>nhịp, đã chấp nhận); P3 PASS (G9 rule3 WARN tương tự); G8 NRE từ SoundManager.Instance null (scene test).",
+  "at": "2026-10-28T17:24:26"
+ },
+ "T6": {
+  "status": "done",
+  "note": "Docs + Restore + dọn xong (xoá 2 script Editor WB6 + meta + thư mục, 4 log tạm). Còn mở: gun P1 skeletonDataAsset null; scene MakeAll dirty chờ Linh lưu",
+  "at": "2026-10-29T08:33:07"
+ }
+}

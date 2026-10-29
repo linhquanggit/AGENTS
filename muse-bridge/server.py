@@ -37,8 +37,13 @@ DEFAULT_CONFIG = {
     "plan_allowed_tools": ["Read", "Grep", "Glob", "Edit", "Write", "MultiEdit", "TodoWrite",
                            "Bash(muse-ask:*)", "Bash(gemini-ask:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)",
                            "Bash(ls:*)", "Bash(cat:*)", "Bash(grep:*)", "Bash(find:*)",
+                           "Agent", "Task", "Bash(unity-errors:*)", "Bash(~/AGENTS/muse-bridge/bin/unity-errors:*)", "Bash(/Users/mobione/AGENTS/muse-bridge/bin/unity-errors:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)", "Bash(file:*)", "Bash(sips:*)", "Bash(screencapture:*)",
                            "mcp__unityMCP", "mcp__UnityMCP"],
     "plan_permission_mode": "acceptEdits",
+    # Tiết kiệm token: model cho phiên chạy plan ("" = mặc định của claude), hook plan-guard, cache subagent 1 giờ
+    "plan_model": "",
+    "plan_guard": True,
+    "subagent_cache_1h": True,
     "plan_autonomous": True,
     "idle_alert_seconds": 30,
     "claude_timeout_seconds": 900,
@@ -697,6 +702,77 @@ def term_kill(tid):
             pass
 
 
+# Hộp hỏi quyền / menu chọn của Claude Code đang hiện trong terminal → đưa nút lên 3D.
+_ANSI_FWD = re.compile(rb"\x1b\[(\d*)C")
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>78]")
+_OPT = re.compile(r"^\s*([❯›>])?\s*(\d{1,2})[.)]\s+(.+?)\s*$")
+_BOX = "│╭╮╰╯─┃┏┓┗┛━"
+
+
+def _term_text(raw):
+    raw = _ANSI_FWD.sub(lambda m: b" " * min(int(m.group(1) or 1), 200), raw)
+    txt = _ANSI.sub("", raw.decode("utf-8", "replace")).replace("\r\n", "\n").replace("\r", "\n")
+    return ["\x00" if ln.strip()[:1] in ("╭", "┏") else ln.strip().strip(_BOX).rstrip() for ln in txt.split("\n")]
+
+
+def term_prompt(t):
+    """Menu chọn đang chờ ở cuối terminal: {q, ctx, opts:[{n,t}], sig} hoặc None.
+    Chỉ nhận menu có con trỏ ❯ (menu thật của Claude Code, không phải list markdown) và là thứ cuối cùng trên màn hình."""
+    if not t.get("alive") or time.time() - t.get("last_out", 0) < 0.8:
+        return None
+    with t["cond"]:
+        end = t["base"] + len(t["buf"])
+        if end - t.get("ans_end", -10 ** 9) < 120:
+            return None  # vừa trả lời, chưa có gì mới
+        raw = bytes(t["buf"][-12000:])
+    lines = [ln for ln in _term_text(raw)]
+    # tìm khối option cuối: dòng "1." gần cuối nhất, rồi các dòng 2., 3. … liền sau
+    idx = [i for i, ln in enumerate(lines) if (_OPT.match(ln) or None) and _OPT.match(ln).group(2) == "1"]
+    if not idx:
+        return None
+    i1 = idx[-1]
+    opts, cursor, last_i, want = [], False, i1, 1
+    for j in range(i1, min(len(lines), i1 + 40)):
+        m = _OPT.match(lines[j])
+        if m and int(m.group(2)) == want:
+            opts.append({"n": m.group(2), "t": m.group(3).strip()[:160]})
+            cursor = cursor or bool(m.group(1))
+            last_i, want = j, want + 1
+        elif m:
+            break
+        elif opts and lines[j] and want > 1 and j == last_i + 1 and not re.match(r"(?i)esc|enter|tab|ctrl|↑|←", lines[j]):
+            opts[-1]["t"] = (opts[-1]["t"] + " " + lines[j].strip())[:160]  # option bị xuống dòng
+            last_i = j
+    if len(opts) < 2 or not cursor:
+        return None
+    tail = " ".join(lines[last_i + 1:]).strip()
+    if len(tail) > 300 or "for shortcuts" in tail or "⏺" in tail or "✻" in tail:
+        return None  # sau menu đã có output khác → menu cũ
+    before = [ln for ln in lines[max(0, i1 - 14):i1] if ln.strip() or ln == "\x00"]
+    while before and before[-1] == "\x00":
+        before.pop()
+    q = before[-1].strip() if before else ""
+    ctx = []
+    for ln in reversed(before[:-1]):
+        if ln == "\x00" or ln.startswith("⏺") or ln.startswith(">") or _OPT.match(ln) or len(ctx) >= 4:
+            break
+        ctx.insert(0, ln.strip()[:200])
+    sig = "%x" % (hash((q, tuple(o["t"] for o in opts), tuple(ctx))) & 0xffffffff)
+    return {"q": q[:200], "ctx": ctx, "opts": opts[:9], "sig": sig}
+
+
+def term_answer(tid, n, sig):
+    t = TERMS[tid]
+    pr = term_prompt(t)
+    if not pr or pr["sig"] != sig or not any(o["n"] == str(n) for o in pr["opts"]):
+        return False
+    os.write(t["fd"], str(n).encode())
+    with t["cond"]:
+        t["ans_end"] = t["base"] + len(t["buf"])
+    t["need"], t["last_out"] = False, time.time()
+    return True
+
+
 # ---------------------------------------------------------------- plans
 PLANS_DIR = os.path.join(HERE, "plans")
 PLAN_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
@@ -750,7 +826,8 @@ def parse_plan(pid):
             "muse_wait": muse_wait,
             "has_session": os.path.exists(os.path.join(PLANS_DIR, pid + ".session.json")),
             "term": {"id": last["id"], "alive": last["alive"], "need": bool(last.get("need")),
-                     "idle": int(time.time() - last.get("last_out", time.time()))} if last else None}
+                     "idle": int(time.time() - last.get("last_out", time.time())),
+                     "prompt": term_prompt(last)} if last else None}
 
 
 
@@ -881,7 +958,8 @@ def plan_prompt(pid):
             "Dùng skill muse-collab. Thực hiện plan trong file %s (plan id: %s). Project: thư mục hiện tại (loại: %s).\n"
             "PROJECT NÀY KHÔNG PHẢI UNITY: không dùng Unity Editor/Unity MCP/Play mode/knowledge Unity, không mở ~/wkspaces/WB. "
             "Verify bằng công cụ của project (node/npm test, chạy server, mở trang bằng trình duyệt/Playwright).\n"
-            "1. Đọc plan + trạng thái hiện tại: muse-ask --plan %s --show\n"
+            "1. Xem tổng quan (bản gọn: tiêu đề task + trạng thái): muse-ask --plan %s --show. Chỉ đọc đầy đủ 1 task khi làm nó: muse-ask --plan <plan id> --task <Tn> --show. Không dùng --full.\n"
+            "1b. TIẾT KIỆM TOKEN CLAUDE (ưu tiên số 1; Muse dư token): bạn là điều phối, giữ ngữ cảnh mỏng. Mỗi task giao cho MỘT subagent (Agent tool) với brief ngắn: plan id, task Tn, dùng skill muse-collab, đọc task bằng --task <Tn> --show, làm + verify đúng done_when + cập nhật --status, TRẢ VỀ ≤10 dòng (kết quả · file đổi · đã verify gì · còn vướng). Mặc định đẩy việc cho Muse (code, đọc/điều tra code, tài liệu, báo cáo, tự review); Claude chỉ làm việc Muse không làm được (Unity Editor/MCP, chạy/kiểm chứng trên máy, chuyển file). Không đọc lại file/log subagent đã đọc; tin tóm tắt, chỉ kiểm khi mâu thuẫn.\n"
             "2. Làm các task chưa done theo thứ tự phụ thuộc. Tự quyết việc nào tự làm, việc nào nhờ Muse (muse-ask), việc nào nhờ Gemini (gemini-ask) — "
             "owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task. Trước khi đánh done phải tự chạy lại đúng done_when.\n"
             "3. Mỗi task: bắt đầu → muse-ask --plan %s --task <Tn> --status doing \"...\"; xong và đã verify → --status done \"kết quả\"; "
@@ -891,7 +969,8 @@ def plan_prompt(pid):
         ) % (path, pid, kind, pid, pid, split_rule(pid), autonomy_rule(kind))
     return (
         "Dùng skill muse-collab. Thực hiện plan trong file %s (plan id: %s). Project: thư mục hiện tại.\n"
-        "1. Đọc plan + trạng thái hiện tại: muse-ask --plan %s --show\n"
+        "1. Xem tổng quan (bản gọn: tiêu đề task + trạng thái): muse-ask --plan %s --show. Chỉ đọc đầy đủ 1 task khi làm nó: muse-ask --plan <plan id> --task <Tn> --show. Không dùng --full.\n"
+            "1b. TIẾT KIỆM TOKEN CLAUDE (ưu tiên số 1; Muse dư token): bạn là điều phối, giữ ngữ cảnh mỏng. Mỗi task giao cho MỘT subagent (Agent tool) với brief ngắn: plan id, task Tn, dùng skill muse-collab, đọc task bằng --task <Tn> --show, làm + verify đúng done_when + cập nhật --status, TRẢ VỀ ≤10 dòng (kết quả · file đổi · đã verify gì · còn vướng). Mặc định đẩy việc cho Muse (code, đọc/điều tra code, tài liệu, báo cáo, tự review); Claude chỉ làm việc Muse không làm được (Unity Editor/MCP, chạy/kiểm chứng trên máy, chuyển file). Không đọc lại file/log subagent đã đọc; tin tóm tắt, chỉ kiểm khi mâu thuẫn.\n"
         "2. Làm các task chưa done theo thứ tự phụ thuộc. Tự quyết việc nào tự làm qua Unity MCP, việc nào nhờ Muse (muse-ask), việc nào nhờ Gemini (gemini-ask: đọc tài liệu/codebase dài, review, ý tưởng; thêm --edit nếu cần sửa file) — "
         "owner trong plan chỉ là gợi ý. Khi giao Muse, đưa đủ ngữ cảnh từ plan vào task.\n"
         "3. Mỗi task: bắt đầu → muse-ask --plan %s --task <Tn> --status doing \"...\"; xong và đã verify → --status done \"kết quả\"; "
@@ -902,14 +981,12 @@ def plan_prompt(pid):
 
 
 def split_rule(pid):
-    """Bước 'chia việc song song' trong chỉ dẫn Run Mission. Lỗi/tắt → chuỗi rỗng (chạy tuần tự như cũ)."""
+    """Bước 'chia việc song song'. Lỗi/tắt → chuỗi rỗng (chạy tuần tự như cũ)."""
     try:
         n = max(1, int(CFG.get("max_parallel_chats", 4)))
-        return ("3b. Chia việc song song: lấy task sẵn sàng bằng `muse-ask --plan %s --ready`. Các task owner muse sẵn sàng mà `files:` "
-                "không giao nhau → giao CÙNG LÚC, mỗi task 1 lệnh `muse-ask --plan %s --task Tn \"...\"` chạy nền (run_in_background), "
-                "mỗi task tự có chat riêng, tối đa %d chat cùng lúc. Trong lúc chờ: review task đã DONE, làm task owner claude sẵn sàng. "
-                "Mỗi khi một task xong và qua review → chạy lại --ready và giao tiếp. Nếu `files:` giao nhau → tuần tự. "
-                "Nếu lệnh/chat riêng lỗi → quay về chạy tuần tự.\n") % (pid, pid, n)
+        return ("3b. Song song: lấy task sẵn sàng bằng `muse-ask --plan %s --ready`. Task sẵn sàng mà `files:` không giao nhau → "
+                "giao CÙNG LÚC cho nhiều subagent (mỗi subagent 1 task, mỗi task tự có chat Muse riêng), tối đa %d cùng lúc. "
+                "Một task xong → chạy lại --ready và giao tiếp. `files:` giao nhau → tuần tự.\n") % (pid, n)
     except Exception:  # noqa: BLE001
         return ""
 
@@ -1037,14 +1114,44 @@ def plan_session(pid, new=False):
 
 
 def resume_prompt(pid):
-    return ("Tiếp tục plan %s (phiên trước bị dừng giữa chừng). Chạy lại: muse-ask --plan %s --show. "
+    return ("Tiếp tục plan %s (phiên trước bị dừng giữa chừng). Xem tổng quan gọn: muse-ask --plan %s --show. "
+            "Giữ ngữ cảnh mỏng: mỗi task giao 1 subagent, trả ≤10 dòng; đẩy việc cho Muse tối đa. "
             "Task đang 'doing': kiểm tra trước (muse-ask --history 10 trong chat của plan, file đã tạo/sửa) — "
             "Muse đã trả lời DONE thì dùng kết quả, KHÔNG gửi lại; chưa có thì --wait hoặc làm tiếp. "
             "Rồi làm các task còn lại theo skill muse-collab.") % (pid, pid)
 
 
+def plan_settings_file():
+    """Settings riêng cho phiên chạy plan: cache subagent 1h + hook plan-guard (tự cho phép lệnh đọc, chặn lệnh nguy hiểm)."""
+    st = {}
+    if CFG.get("subagent_cache_1h", True):
+        st["subagentPromptCacheTtl"] = "1h"
+    if CFG.get("plan_guard", True):
+        st["hooks"] = {"PreToolUse": [{"matcher": "Bash", "hooks": [
+            {"type": "command", "command": shq(os.path.join(HERE, "bin", "plan-guard"))}]}]}
+    # Ảnh chụp không được nằm trong project: chuyển ra .agent/shots sau mỗi lệnh MCP/Bash (luôn bật)
+    st.setdefault("hooks", {})["PostToolUse"] = [{"matcher": "Bash|mcp__.*", "hooks": [
+        {"type": "command", "command": shq(os.path.join(HERE, "bin", "capture-guard"))}]}]
+    if not st:
+        return ""
+    path = os.path.join(HERE, ".agent", "plan-settings.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(st, fh, indent=1)
+    return path
+
+
+def plan_env():
+    return {"CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL": "1h"} if CFG.get("subagent_cache_1h", True) else {}
+
+
 def plan_flags():
     f = ""
+    if CFG.get("plan_model"):
+        f += " --model " + shq(CFG["plan_model"])
+    sf = plan_settings_file()
+    if sf:
+        f += " --settings " + shq(sf)
     if CFG.get("plan_permission_mode"):
         f += " --permission-mode " + shq(CFG["plan_permission_mode"])
     tools = CFG.get("plan_allowed_tools") or []
@@ -1075,7 +1182,7 @@ def run_plan_embedded(pid, resume=False):
         cmd = "%s --session-id %s \"$(cat %s)\"%s" % (shq(claude), shq(sid), shq(pfile), plan_flags())
         note = "Chạy plan trong terminal của app (phiên mới)"
     tid = term_start(cmd, wd, "plan " + pid, plan=pid,
-                     extra_env=dict({"MUSE_PLAN": pid, "MUSE_PROJECT": wd}, **({"MUSE_THREAD": thread} if thread else {})))
+                     extra_env=dict({"MUSE_PLAN": pid, "MUSE_PROJECT": wd}, **({"MUSE_THREAD": thread} if thread else {}), **plan_env()))
     with LOCK:
         log_event(pid, "plan_run", note, by="app")
         save_state()
@@ -1093,7 +1200,9 @@ def run_plan(pid):
         fh.write(plan_prompt(pid))
     claude = os.path.expanduser(CFG.get("claude_bin", "claude"))
     thread = plan_thread(pid)
-    cmd = "cd %s && MUSE_PLAN=%s MUSE_PROJECT=%s MUSE_THREAD=%s %s \"$(cat %s)\"" % (shq(wd), shq(pid), shq(wd), shq(thread), shq(claude), shq(pfile))
+    env = " ".join("%s=%s" % (k, shq(v)) for k, v in plan_env().items())
+    cmd = "cd %s && MUSE_PLAN=%s MUSE_PROJECT=%s MUSE_THREAD=%s %s %s \"$(cat %s)\"%s" % (
+        shq(wd), shq(pid), shq(wd), shq(thread), env, shq(claude), shq(pfile), plan_flags())
     script = 'tell application "Terminal"\nactivate\ndo script %s\nend tell' % applescript_str(cmd)
     code, out, err = run(["osascript", "-e", script], timeout=20)
     if code != 0:
@@ -1415,6 +1524,13 @@ class Handler(BaseHTTPRequestHandler):
         if u.path == "/api/terms":
             return self._send(200, {"terms": [{"id": t["id"], "title": t["title"], "alive": t["alive"], "started": t["started"],
                                                "exit": t["exit"], "plan": t.get("plan")} for t in TERMS.values()]})
+        if u.path == "/api/prompts":
+            out = []
+            for t in list(TERMS.values()):
+                pr = term_prompt(t)
+                if pr:
+                    out.append({"term": t["id"], "plan": t.get("plan"), "title": t["title"], "prompt": pr})
+            return self._send(200, {"prompts": out})
         m = re.fullmatch(r"/api/term/(t\d+)/read", u.path)
         if m:
             if m.group(1) not in TERMS:
@@ -1422,12 +1538,6 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, term_read(m.group(1), int((q.get("from") or ["0"])[0])))
         if u.path == "/api/trash":
             return self._send(200, {"items": trash_list(), "days": CFG.get("trash_days", 3)})
-        if u.path == "/api/metrics":  # chỉ số hiệu quả (metrics.py) — lỗi không ảnh hưởng phần còn lại
-            try:
-                import metrics
-                return self._send(200, {"metrics": metrics.compute_all()})
-            except Exception as e:  # noqa: BLE001
-                return self._send(200, {"error": str(e)})
         if u.path == "/api/plans":
             return self._send(200, {"plans": list_plans(), "dir": PLANS_DIR})
         if u.path == "/api/activity":
@@ -1454,16 +1564,6 @@ class Handler(BaseHTTPRequestHandler):
         try:
             b = self._body()
             p = u.path
-            if p in ("/api/metrics/manual", "/api/metrics/export"):
-                try:
-                    import metrics
-                    if p.endswith("manual"):
-                        r = metrics.set_manual(b.get("plan", ""), b.get("field", ""), b.get("value"))
-                    else:
-                        r = metrics.export(b.get("plan", ""))
-                    return self._send(200, r)
-                except Exception as e:  # noqa: BLE001
-                    return self._send(200, {"error": str(e)})
             if p == "/api/status":
                 try:
                     st = muse(["status"], timeout=60)
@@ -1583,6 +1683,13 @@ class Handler(BaseHTTPRequestHandler):
                 if tid in TERMS:
                     term_kill(tid)
                     TERMS.pop(tid, None)
+                return self._send(200, {"ok": True})
+            m = re.fullmatch(r"/api/term/(t\d+)/answer", p)
+            if m:
+                if m.group(1) not in TERMS:
+                    return self._send(404, {"error": "không có terminal"})
+                if not term_answer(m.group(1), b.get("n"), b.get("sig")):
+                    return self._send(409, {"error": "Hộp hỏi đã đổi hoặc đã được trả lời"})
                 return self._send(200, {"ok": True})
             m = re.fullmatch(r"/api/term/(t\d+)/(write|resize|kill)", p)
             if m:

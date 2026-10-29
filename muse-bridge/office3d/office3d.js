@@ -1,8 +1,11 @@
-/* office3d.js — Văn phòng 3D của Musude (Three.js r147, chạy local, chỉ đọc).
-   Dữ liệu: /api/plans, /api/state, /api/usage, /api/trash (cùng origin).
+/* office3d.js — Văn phòng 3D của Musude (Three.js r147, chạy local).
+   Dữ liệu: /api/plans, /api/state, /api/usage, /api/trash, /api/activity (cùng origin).
    Nhân viên = mission (plan). Thông tin trên thanh trạng thái của Musude
    (muse-cli, poll, 5 giờ, Tuần, Auto, Chat Muse, PING, thùng rác, task)
-   được dựng thành đồ trang trí trong phòng. Không có nút ghi/xoá nào ở đây. */
+   được dựng thành đồ trang trí trong phòng. Card nhân viên có nút chạy plan và ghi terminal.
+   Case sinh hoạt: tranh chỗ ngủ, xếp hàng WC/trà sữa/máy game (có đấm nhau chen hàng),
+   nhảy, ăn vặt, lướt điện thoại, tập thể dục, bóng bàn, tám chuyện, giúp bạn blocked,
+   mèo văn phòng, robot hút bụi, và trốn việc bị Bố/PM bắt đấm rồi về bàn (không đổi trạng thái mission). */
 (function () {
   'use strict';
   var EMBED = false; try { EMBED = window.parent !== window; } catch (e) {}
@@ -12,6 +15,7 @@
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function api(path) { return fetch(path).then(function (r) { return r.json().then(function (j) { if (!r.ok || j.error) throw new Error(j.error || r.status); return j; }); }); }
+  function post(path, body) { return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Bridge': '1' }, body: JSON.stringify(body || {}) }).then(function (r) { return r.json().then(function (j) { if (!r.ok || j.error) throw new Error(j.error || r.status); return j; }); }); }
   function rnd(a, b) { return a + Math.random() * (b - a); }
 
   /* ---------- dữ liệu ---------- */
@@ -28,7 +32,7 @@
     return 'idle';
   }
   var CAT_TEXT = { done: 'Đã xong', blocked: 'Cần xem', waiting: 'Chờ Muse', doing: 'Đang làm', idle: 'Chưa chạy' };
-  var CAT_COLOR = { done: '#3ecf8e', blocked: '#f36c64', waiting: '#ad92ff', doing: '#f2a650', idle: '#8d919c', sleep: '#7a6bd0', game: '#3b82f6', tea: '#e0679b', wc: '#2f8fb8', watched: '#e0763a' };
+  var CAT_COLOR = { done: '#3ecf8e', blocked: '#f36c64', waiting: '#ad92ff', doing: '#f2a650', idle: '#8d919c', sleep: '#7a6bd0', game: '#3b82f6', tea: '#e0679b', wc: '#2f8fb8', watched: '#e0763a', fight: '#e0483e', queue: '#f2c14e', coffee: '#c98a4b', phone: '#8d97ad', dance: '#ff4fd8', snack: '#ffb347', chat: '#4f8cff', help: '#3ecf8e', sneak: '#7a6bd0', caught: '#e0483e', pet: '#ff7a59', workout: '#2ec4c6', celebrate: '#ffd34d', ping: '#1f6fb5' };
   function fmtLeft(iso) {
     if (!iso) return ''; var ms = new Date(iso) - Date.now(); if (isNaN(ms)) return ''; if (ms <= 0) return '0p';
     var m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
@@ -186,6 +190,20 @@
       else if (cat === 'tea') { x.beginPath(); x.moveTo(42, 30); x.lineTo(86, 30); x.lineTo(78, 72); x.lineTo(50, 72); x.closePath(); x.fill(); x.beginPath(); x.moveTo(70, 30); x.lineTo(80, 14); x.stroke(); }
       else if (cat === 'wc') { x.font = '800 40px ' + FONT; x.fillText('WC', 64, 52); }
       else if (cat === 'watched') { x.font = '800 48px ' + FONT; x.fillText('!?', 64, 52); }
+      else if (cat === 'fight') { x.font = '800 44px ' + FONT; x.fillText('💥', 64, 52); }
+      else if (cat === 'queue') { x.font = '800 32px ' + FONT; x.fillText('XẾP', 64, 52); }
+      else if (cat === 'coffee') { x.font = '800 44px ' + FONT; x.fillText('☕', 64, 52); }
+      else if (cat === 'phone') { x.font = '800 32px ' + FONT; x.fillText('alo', 64, 52); }
+      else if (cat === 'dance') { x.font = '800 44px ' + FONT; x.fillText('♪', 64, 52); }
+      else if (cat === 'snack') { x.font = '800 40px ' + FONT; x.fillText('🍪', 64, 52); }
+      else if (cat === 'chat') { x.font = '800 40px ' + FONT; x.fillText('💬', 64, 52); }
+      else if (cat === 'help') { x.font = '800 40px ' + FONT; x.fillText('🤝', 64, 52); }
+      else if (cat === 'sneak') { x.font = '800 40px ' + FONT; x.fillText('👀', 64, 52); }
+      else if (cat === 'caught') { x.font = '800 48px ' + FONT; x.fillText('!!', 64, 52); }
+      else if (cat === 'pet') { x.font = '800 40px ' + FONT; x.fillText('🐾', 64, 52); }
+      else if (cat === 'workout') { x.font = '800 40px ' + FONT; x.fillText('💪', 64, 52); }
+      else if (cat === 'celebrate') { x.font = '800 40px ' + FONT; x.fillText('🎉', 64, 52); }
+      else if (cat === 'ping') { x.font = '800 40px ' + FONT; x.fillText('PP', 64, 52); }
       else { x.font = '800 44px ' + FONT; x.fillText('zZ', 64, 52); }
     });
   }
@@ -220,6 +238,7 @@
     bx(g, 0.9, 0.1, 0.9, '#3b4256', 0.45, 0.5, 0.95); bx(g, 0.9, 0.85, 0.12, '#3b4256', 0.45, 0.98, 1.43); cyl(g, 0.06, 0.06, 0.45, '#222', 0.45, 0.25, 0.95); cyl(g, 0.4, 0.4, 0.06, '#222', 0.45, 0.04, 0.95, 6);
     return { group: g, plate: plate, screens: scr };
   }
+  function carpetDraw(x, w, h) { x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h); for (var i = 0; i < w * h / 14; i++) { var a = seeded(i * 1.37 + 5), b = seeded(i * 2.11 + 9), k = seeded(i * 0.77 + 3); var g = Math.round(222 + k * 33); x.fillStyle = 'rgb(' + g + ',' + g + ',' + Math.min(255, g + 3) + ')'; x.fillRect(Math.floor(a * w), Math.floor(b * h), 2, 2); } x.fillStyle = '#9aa2bb'; for (var m = 0; m < 2; m++) { x.fillRect(m * w / 2, 0, 3, h); x.fillRect(0, m * h / 2, w, 3); } x.fillStyle = '#ffffff'; for (var m2 = 0; m2 < 2; m2++) { x.fillRect(m2 * w / 2 + 3, 0, 1, h); x.fillRect(0, m2 * h / 2 + 3, w, 1); } }
   function seeded(n) { var v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }
   var CODE_COL = ['#c792ea', '#82aaff', '#c3e88d', '#f78c6c', '#89ddff', '#d6dbe8'];
   function drawCode(x, w, h, cat, id, off, t) {
@@ -351,7 +370,7 @@
   function clearWorld() { while (world.children.length) { var c = world.children.pop(); c.traverse(function (o) { if (o.geometry) o.geometry.dispose(); }); } chars = []; anim = []; boards = {}; walls = []; pickMeshes = []; bubbleOf = {}; COLL = []; }
   function pickPlans() {
     var act = PLANS.filter(function (p) { return planCat(p) !== 'done'; }), done = PLANS.filter(function (p) { return planCat(p) === 'done'; });
-    var shown = SHOW_ALL ? done : done.slice(0, Math.max(0, 14 - act.length));
+    var shown = SHOW_ALL ? done : done.slice(0, Math.max(0, 40 - act.length));
     return { list: act.concat(shown), hidden: done.length - shown.length };
   }
   function structSig() { var s = pickPlans(); return s.list.map(function (p) { return p.id; }).join('|') + '#' + s.hidden + '#' + SHOW_ALL; }
@@ -377,12 +396,9 @@
     var hw = W / 2, hd = D / 2, WH = 7.2;
 
     // sàn + tường
-    var floorTex = mkTex(512, 512, function (x, w, h) {
-      x.fillStyle = '#7d89a6'; x.fillRect(0, 0, w, h);
-      for (var r = 0; r < 4; r++) for (var q = 0; q < 4; q++) { var tone = 0.96 + seeded(r * 7 + q * 3 + 1) * 0.06; x.fillStyle = 'rgb(' + Math.round(168 * tone) + ',' + Math.round(176 * tone) + ',' + Math.round(198 * tone) + ')'; x.fillRect(q * 128 + 2, r * 128 + 2, 124, 124); }
-    });
-    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(W / 8, D / 8);
-    var floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshLambertMaterial({ map: floorTex })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; world.add(floor);
+    var floorTex = mkTex(256, 256, carpetDraw);
+    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(W / 4, D / 4);
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshLambertMaterial({ color: '#8d96b4', map: floorTex })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; world.add(floor);
     bx(world, W + 1.2, 0.4, D + 1.2, '#7a84a3', 0, -0.22, 0, true);
     function wall(w, x, z, ry, name) {
       var m = new THREE.Mesh(new THREE.BoxGeometry(w, WH, 0.35), new THREE.MeshLambertMaterial({ color: '#eae6f2', transparent: true, opacity: 1 }));
@@ -496,10 +512,11 @@
     resetCamera();
   }
   function applyPlan(ch, p, force) {
-    var cat = planCat(p); ch.plan = p;
+    var cat = planCat(p); ch.plan = p; var prevCat = ch.cat;
     if (ch.cat !== cat || force) {
       ch.cat = cat; ch.status = cat; setFace(ch, cat === 'done' ? 'happy' : cat === 'blocked' ? 'worry' : cat === 'waiting' ? 'think' : cat === 'idle' ? 'sleep' : 'smile');
       var spr = bubbleSprite(cat); ch.bubble.material = spr.material;
+      if (!force && prevCat && prevCat !== 'done' && cat === 'done' && !ch.away && !ch.mv) { ch.act = 'celebrate'; showCat(ch, 'celebrate'); setTimeout(function () { if (ch.act === 'celebrate' && !ch.away) { ch.act = null; showCat(ch, ch.cat || 'done'); } }, 3500); }
     }
     redraw(ch.plate.material.map, function (x, w, h) { drawPlate(x, w, h, p, cat, ch.team); });
     ch.plate.material.map.needsUpdate = true;
@@ -540,11 +557,11 @@
   function resetView() { applyView(VIEW); }
 
   /* ---------- hoạt ảnh nhân vật ---------- */
-  var EVENTS = { doing: ['look', 'nod', 'stretch', 'sip', 'turn'], waiting: ['look', 'stretch', 'sip', 'turn'], done: ['cheer', 'wave', 'stretch', 'turn'], idle: ['look', 'stretch', 'turn'], blocked: ['look', 'turn'], ceo: ['sip', 'look', 'nod'] };
+  var EVENTS = { doing: [], waiting: [], done: ['cheer', 'wave', 'stretch', 'turn'], idle: ['look', 'stretch', 'turn'], blocked: ['look', 'turn'], ceo: ['sip', 'look', 'nod'] };
   function animateChar(c, t, dt) {
     var s = c.status, cur = c.cur, k = Math.min(1, dt * 9), tg = { aLx: c.seated ? -0.95 : 0.05, aRx: c.seated ? -0.95 : 0.05, aLz: 0.06, aRz: -0.06, hy: Math.sin(t * 0.7 + c.phase) * 0.12, hx: 0, jump: 0 };
     if (c.seated) { c.legL.rotation.x = c.legR.rotation.x = -Math.PI / 2; }
-    if (s === 'doing') { tg.aLx = -1.05 + Math.sin(t * 17 + c.phase) * 0.14; tg.aRx = -1.05 + Math.sin(t * 17 + c.phase + 3) * 0.14; tg.hx = 0.12 + Math.sin(t * 2 + c.phase) * 0.03; tg.hy *= 0.3; }
+    if (s === 'doing') { tg.aLx = -1.05 + Math.sin(t * 17 + c.phase) * 0.14; tg.aRx = -1.05 + Math.sin(t * 17 + c.phase + 3) * 0.14; tg.hx = 0.12; tg.hy = 0; }
     else if (s === 'waiting') { tg.aRx = -2.3; tg.aRz = -0.2; tg.hx = 0.05; tg.hy = Math.sin(t * 0.9 + c.phase) * 0.35; }
     else if (s === 'blocked') { tg.aRx = Math.PI * 0.93; tg.aRz = -0.25 + Math.sin(t * 7) * 0.3; tg.hx = 0.08; }
     else if (s === 'done') { tg.aLx = -0.7; tg.aRx = -0.7; tg.hx = -0.05; }
@@ -569,9 +586,22 @@
       else if (a === 'wc') { tg.aLx = tg.aRx = -0.9; tg.hx = 0.35; tg.hy = 0; }
       else if (a === 'watched') { tg.aLx = -1.05 + Math.sin(t * 30 + c.phase) * 0.22; tg.aRx = -1.05 + Math.sin(t * 27 + c.phase + 2) * 0.22; tg.hx = 0.22; tg.hy = 0.1; }
       else if (a === 'inspect') { tg.aLx = 0.05; tg.aRx = -1.5; tg.aRz = 0.3; tg.hy = Math.sin(t * 0.9) * 0.45; tg.hx = 0.12; }
+      else if (a === 'fight') { var fp = Math.sin(t * 10); tg.aLx = -0.6 - 1.2 * Math.max(0, fp); tg.aRx = -0.6 - 1.2 * Math.max(0, -fp); tg.hx = 0.1; tg.hy = Math.sin(t * 5) * 0.2; tg.jump = Math.abs(Math.cos(t * 10)) * 0.06; }
+      else if (a === 'queue') { tg.aLx = -0.5; tg.aRx = -0.5; tg.hx = 0.05; tg.hy = Math.sin(t * 2 + c.phase) * 0.3; tg.jump = Math.max(0, Math.sin(t * 6 + c.phase) - 0.9) * 0.3; }
+      else if (a === 'phone') { tg.hx = 0.38; tg.aRx = -1.9; tg.aRz = -0.1; tg.aLx = -0.5; tg.hy = Math.sin(t * 0.7 + c.phase) * 0.1; }
+      else if (a === 'dance') { tg.aLx = -1.4 + Math.sin(t * 6 + c.phase) * 0.6; tg.aRx = -1.4 + Math.sin(t * 6 + c.phase + 2) * 0.6; tg.aLz = 0.4; tg.aRz = -0.4; tg.hy = Math.sin(t * 3 + c.phase) * 0.5; tg.jump = Math.abs(Math.sin(t * 6 + c.phase)) * 0.25; }
+      else if (a === 'snack') { tg.aRx = -1.7 + Math.sin(t * 1.5 + c.phase) * 0.3; tg.hx = 0.18; tg.hy = Math.sin(t * 0.8 + c.phase) * 0.2; tg.aLx = -0.5; }
+      else if (a === 'chat') { tg.aRx = -1.2 + Math.sin(t * 2.5 + c.phase) * 0.4; tg.aLx = -0.8; tg.hy = Math.sin(t * 1.8 + c.phase) * 0.45; tg.hx = -0.05; }
+      else if (a === 'help') { tg.aRx = -1.4; tg.aRz = 0.3; tg.hx = 0.15; tg.hy = Math.sin(t * 1.2 + c.phase) * 0.3; tg.aLx = -0.5; }
+      else if (a === 'sneak') { tg.hx = 0.28; tg.aLx = -0.4; tg.aRx = -0.4; tg.hy = 0; }
+      else if (a === 'caught') { tg.hx = 0.35 + Math.sin(t * 26) * 0.08; tg.hy = Math.sin(t * 22) * 0.5; tg.aLx = tg.aRx = -0.3; tg.aLz = 0.5; tg.aRz = -0.5; }
+      else if (a === 'pet') { tg.hx = 0.32; tg.aRx = -1.0; tg.aRz = 0.2; tg.aLx = -0.6; }
+      else if (a === 'workout') { tg.aLx = tg.aRx = -0.9 + Math.sin(t * 4 + c.phase) * 0.5; tg.hx = 0.1; tg.jump = Math.abs(Math.sin(t * 4 + c.phase)) * 0.08; }
+      else if (a === 'celebrate') { tg.aLx = tg.aRx = Math.PI * 0.9; tg.aLz = 0.3; tg.aRz = -0.3; tg.jump = Math.abs(Math.sin(t * 5 + c.phase)) * 0.35; }
+      else if (a === 'ping') { tg.aRx = -1.0 + Math.sin(t * 8 + c.phase) * 0.5; tg.aLx = -0.6; tg.hy = Math.sin(t * 2 + c.phase) * 0.3; }
     }
     c.nextEv -= dt;
-    if (!c.ev && c.nextEv <= 0 && !c.act) { var list = EVENTS[c.kind === 'ceo' ? 'ceo' : s] || ['look']; c.ev = { type: list[Math.floor(Math.random() * list.length)], t0: t, dur: rnd(1.4, 2.4) }; }
+    if (!c.ev && c.nextEv <= 0 && !c.act) { var list = EVENTS[c.kind === 'ceo' ? 'ceo' : s] || ['look']; if (!list.length) c.nextEv = 3; else c.ev = { type: list[Math.floor(Math.random() * list.length)], t0: t, dur: rnd(1.4, 2.4) }; }
     if (c.ev) {
       var e = c.ev, u = (t - e.t0) / e.dur;
       if (u >= 1) { c.ev = null; c.nextEv = rnd(6, 20); }
@@ -612,10 +642,10 @@
 
 
   /* ---------- nghỉ ngơi, WC, BỐ đi kiểm tra ---------- */
-  var LV = null, DIR = { nextL: 6, nextWC: 25, nextTour: 35 };
+  var LV = null, DIR = { nextL: 3, nextWC: 25, nextTour: 35, nextTruant: 30, nextPair: 20, nextHelp: 60, nextQF: 15, nextFight: 12, nextChaos: 60 };
   function V3(x, z) { return new THREE.Vector3(x, 0, z); }
   function showCat(c, cat) {
-    var f = { done: 'happy', blocked: 'worry', waiting: 'think', idle: 'sleep', doing: 'smile', sleep: 'sleep', game: 'happy', tea: 'happy', wc: 'smile', watched: 'worry' }[cat] || 'smile';
+    var f = { done: 'happy', blocked: 'worry', waiting: 'think', idle: 'sleep', doing: 'smile', sleep: 'sleep', game: 'happy', tea: 'happy', wc: 'smile', watched: 'worry', fight: 'worry', queue: 'think', coffee: 'happy', phone: 'smile', dance: 'happy', snack: 'happy', chat: 'happy', help: 'smile', sneak: 'think', caught: 'worry', pet: 'happy', workout: 'smile', celebrate: 'happy', ping: 'happy' }[cat] || 'smile';
     setFace(c, f); if (!c.bubble) return;
     if (!bubbleCache[cat]) bubbleCache[cat] = bubbleTex(cat);
     c.bubble.material.map = bubbleCache[cat]; c.bubble.material.needsUpdate = true;
@@ -635,6 +665,7 @@
     }
     var s = Math.min(m.sp * dt, d); p.x += dx / d * s; p.z += dz / d * s;
     var df = Math.atan2(dx, dz) - c.group.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); c.group.rotation.y += df * Math.min(1, dt * 10);
+    var sph = Math.floor((t * 10 + c.phase) / Math.PI); if (sph !== c.stepPh) { c.stepPh = sph; var sn = sfxNear(p); if (sn > 0.05) sfx('step', p, 0.35 * sn); }
     var sw = Math.sin(t * 10 + c.phase); c.legL.rotation.x = sw * 0.6; c.legR.rotation.x = -sw * 0.6; c.cur.aLx = -sw * 0.6; c.cur.aRx = sw * 0.6;
     c.root.position.y = 0.62 + Math.abs(Math.cos(t * 10 + c.phase)) * 0.05; return true;
   }
@@ -653,33 +684,37 @@
   function freeSlot(k) { var a = LV.slots[k]; for (var i = 0; i < a.length; i++) if (!a[i].busy) return a[i]; return null; }
   function endLeisure(c) {
     if (c.returning) return;
-    if (c.slot) { c.slot.busy = null; c.slot = null; }
-    c.act = null; if (c.cup) c.cup.visible = false;
+    if (c.slot) { c.slot.busy = null; c.slot = null; pumpQueues(); }
+    c.act = null; if (c.cup) c.cup.visible = false; if (c.phone) c.phone.visible = false;
     if (c.away === 'nap') { c.away = null; c.slotDoor = null; c.cool = rnd(25, 60); c.forced = false; showCat(c, c.cat || 'idle'); return; }
-    if (c.away === 'wc') c.wcStage = 'out';
+    if (c.away === 'wc') { c.wcStage = 'out'; sfx('flush', c.group.position, 0.5); setTimeout(function () { sfx('door', c.group.position, 0.5); }, 900); }
     c.returning = true; showCat(c, c.cat || 'idle');
     goPath(c, pathHome(c), function () { var d = c.deskPos; c.group.position.set(d.sx, 0, d.sz); c.seated = true; c.faceY = Math.PI; c.away = null; c.slotDoor = null; c.returning = false; c.forced = false; c.cool = rnd(25, 60); });
   }
   function startLeisure(c, kind) {
-    var opts = []; if (freeSlot('sofa')) opts.push('sleep'); if (freeSlot('game')) opts.push('game'); if (freeSlot('tea')) opts.push('tea'); opts.push('nap');
+    var opts = []; opts.push('sleep'); opts.push('sleep'); opts.push('game'); opts.push('tea'); if (freeSlot('dance')) opts.push('dance'); if (freeSlot('snack')) opts.push('snack'); if (freeSlot('phone')) opts.push('phone'); if (freeSlot('workout')) opts.push('workout'); if (freeSlot('ping')) opts.push('ping'); opts.push('nap');
     var k = kind || opts[Math.floor(Math.random() * opts.length)]; c.ev = null;
     if (k === 'nap') { c.away = 'nap'; c.act = 'nap'; c.dwell = rnd(18, 40); showCat(c, 'sleep'); return; }
+    if (k === 'sleep') { var sf = freeSlot('sofa'); if (!sf) { fightForSleep(c); return; } if (LV.slots.sofa.some(function (s) { return s.busy; }) && Math.random() < 0.5) { fightForSleep(c); return; } }
+    if (k === 'tea' && !freeSlot('tea')) { joinQueue(c, 'coffee'); return; }
+    if (k === 'game' && !freeSlot('game')) { joinQueue(c, 'game'); return; }
     var slot = freeSlot(k === 'sleep' ? 'sofa' : k); if (!slot) return startLeisure(c, 'nap');
     slot.busy = c; c.slot = slot; c.away = 'leisure'; c.returning = false; c.slotDoor = { x: slot.door, rowZ: slot.rowZ };
     var d = c.deskPos, cx = sideCx(c), pts = [V3(d.sx, d.az), V3(cx, d.az), V3(cx, LV.FZ), V3(slot.door, LV.FZ), V3(slot.door, slot.rowZ), V3(slot.x, slot.rowZ)];
     if (k === 'sleep') pts.push(V3(slot.x, slot.appr));
     pts.push(V3(slot.x, slot.z));
     goPath(c, pts, function () {
-      c.group.position.set(slot.x, 0, slot.z); c.act = k; c.dwell = k === 'sleep' ? rnd(25, 50) : k === 'game' ? rnd(20, 40) : rnd(12, 22);
+      c.group.position.set(slot.x, 0, slot.z); c.act = k === 'ping' ? 'ping' : k; c.dwell = k === 'sleep' ? rnd(25, 50) : k === 'game' ? rnd(20, 40) : k === 'dance' ? rnd(15, 30) : k === 'ping' ? rnd(15, 30) : k === 'workout' ? rnd(15, 25) : k === 'snack' ? rnd(10, 18) : rnd(12, 22);
       if (k === 'sleep') { c.seated = true; c.yoff = 0.25; c.faceY = Math.PI; } else c.faceY = 0;
       if (k === 'tea') ensureCup(c).visible = true;
-      showCat(c, k);
+      if (k === 'phone') ensurePhone(c).visible = true;
+      showCat(c, k === 'ping' ? 'ping' : k);
     });
   }
   function startWC(c) {
     var wc = LV.wc, d = c.deskPos, cx = sideCx(c); wc.visitor = c; c.away = 'wc'; c.wcStage = 'in'; c.ev = null; c.returning = false; c.slotDoor = { x: wc.x, rowZ: wc.seatZ };
     goPath(c, [V3(d.sx, d.az), V3(cx, d.az), V3(cx, LV.FZ), V3(wc.x, LV.FZ), V3(wc.x, wc.doorZ), V3(wc.x, wc.seatZ)], function () {
-      c.group.position.set(wc.x, 0, wc.seatZ); c.seated = true; c.faceY = Math.PI; c.act = 'wc'; c.dwell = rnd(7, 11); showCat(c, 'wc');
+      c.group.position.set(wc.x, 0, wc.seatZ); c.seated = true; c.faceY = Math.PI; c.act = 'wc'; c.dwell = rnd(7, 11); showCat(c, 'wc'); sfx('door', c.group.position, 0.5);
     });
   }
   function startTour(ceo, forceN) {
@@ -717,21 +752,28 @@
       if (c.kind !== 'plan') return;
       if (c.cool > 0) c.cool -= dt;
       if ((c.away === 'leisure' || c.away === 'nap') && !c.forced && c.cat !== 'done' && !c.returning) endLeisure(c);
+      if ((c.away === 'queueWC' || c.away === 'queueCoffee' || c.away === 'queueGame') && c.cat !== 'done' && c.cat !== 'idle' && !c.returning) leaveQueue(c, true);
       if (c.act && c.dwell !== undefined && (c.away === 'leisure' || c.away === 'nap' || c.away === 'wc')) { c.dwell -= dt; if (c.dwell <= 0) { c.dwell = 1e9; endLeisure(c); } }
     });
-    var v = wc.visitor; if (v && v.wcStage === 'out' && v.group.position.z < wc.doorZ - 0.7) { v.wcStage = null; wc.visitor = null; }
+    var v = wc.visitor; if (v && v.wcStage === 'out' && v.group.position.z < wc.doorZ - 0.7) { v.wcStage = null; wc.visitor = null; pumpWCQueue(); }
     DIR.nextL -= dt;
     if (DIR.nextL <= 0) {
-      DIR.nextL = rnd(3, 7);
+      DIR.nextL = rnd(2, 4);
       var cl = chars.filter(function (c) { return c.kind === 'plan' && !c.away && !c.mv && !c.act && c.cat === 'done' && !(c.cool > 0); });
       if (cl.length && Math.random() < 0.7) startLeisure(rpick(cl));
     }
     DIR.nextWC -= dt;
     if (DIR.nextWC <= 0) {
       DIR.nextWC = rnd(30, 60);
-      var wl = chars.filter(function (c) { return c.kind === 'plan' && !c.away && !c.mv && !c.act; });
-      if (!wc.visitor && wl.length) startWC(rpick(wl));
+      var wl = chars.filter(function (c) { return c.kind === 'plan' && !c.away && !c.mv && !c.act && (c.cat === 'done' || c.cat === 'idle'); });
+      if (wl.length) { if (!wc.visitor) startWC(rpick(wl)); else if (WCQ.length < 4) joinQueue(rpick(wl), 'wc'); }
     }
+    DIR.nextTruant -= dt; if (DIR.nextTruant <= 0) { DIR.nextTruant = rnd(30, 60); tryTruant(); }
+    DIR.nextPair -= dt; if (DIR.nextPair <= 0) { DIR.nextPair = rnd(20, 40); tryDeskChat(); }
+    DIR.nextHelp -= dt; if (DIR.nextHelp <= 0) { DIR.nextHelp = rnd(55, 95); tryHelpBlocked(); }
+    DIR.nextQF -= dt; if (DIR.nextQF <= 0) { DIR.nextQF = rnd(15, 30); queueFightRandom(); }
+    DIR.nextFight -= dt; if (DIR.nextFight <= 0) { DIR.nextFight = rnd(15, 25); tryForceFight(); }
+    DIR.nextChaos -= dt; if (DIR.nextChaos <= 0) { DIR.nextChaos = rnd(90, 150); chaosBurst(); }
   }
   function forceTest(kind, n) {
     var pl = chars.filter(function (c) { return c.kind === 'plan' && !c.away; }), ceo = chars.filter(function (c) { return c.kind === 'ceo'; })[0];
@@ -973,6 +1015,9 @@
     if (cur.kind === 'punish') {
       if (now < cur.until) return; PMS.hold = false; pmAct(null); PMS.cur = null; CEOS.lastPunish = now; ceoAct(null); return ceoChoose();
     }
+    if (cur.kind === 'catch') {
+      if (now < cur.until) return; ceoAct(null); CEOS.cur = null; return ceoGoSpot('work');
+    }
     if (cur.kind === 'inspect') {
       if (now < cur.until) return; var e = cur.e; if (e && e.act === 'watched') { e.act = null; showCat(e, e.cat || 'idle'); }
       ceoAct(null); CEOS.cur = null; return ceoTourNext();
@@ -998,7 +1043,7 @@
     SU = { sx0: sx0, sz0: sz0, SW: SW, SD: SD, hub: V3(X(9.0), Z(7.2)), doorIn: V3(X(SW - 0.8), doorZ), doorOut: V3(X(SW + 1.3), doorZ), outX: X(SW + 1.3), spots: {} };
     var glass = new THREE.MeshLambertMaterial({ color: '#9fd5ff', transparent: true, opacity: 0.2 });
     // sàn thảm + tường kính + neon
-    var fl = bx(world, SW, 0.14, SD, '#35285a', X(SW / 2), 0.07, Z(SD / 2), true); fl.receiveShadow = true;
+    var fl = bx(world, SW, 0.14, SD, tileMat('#4a3a7a', SW, SD), X(SW / 2), 0.07, Z(SD / 2), true); fl.receiveShadow = true;
     bx(world, SW, 3.4, 0.08, glass, X(SW / 2), 1.8, Z(SD), true);
     var n1 = doorZ - 1.2 - sz0; bx(world, 0.08, 3.4, n1, glass, X(SW), 1.8, sz0 + n1 / 2, true);
     var n2 = sz0 + SD - (doorZ + 1.2); bx(world, 0.08, 3.4, n2, glass, X(SW), 1.8, doorZ + 1.2 + n2 / 2, true);
@@ -1112,8 +1157,14 @@
     bx(g, w + 0.7, h + 0.3, 0.12, '#14172a', 0, 0, -0.05, true); neon(g, w + 0.7, 0.05, 0.05, color, 0, (h + 0.3) / 2, 0.02, 0); neon(g, w + 0.7, 0.05, 0.05, color, 0, -(h + 0.3) / 2, 0.02, 0);
     return neonText(g, text, color, w, h, 0, 0, 0.04, 0);
   }
+  var TILE = null;
+  function tileMat(c, w, d) {
+    if (!TILE) TILE = mkTex(256, 256, carpetDraw);
+    var t = TILE.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(w / 4, d / 4);
+    return new THREE.MeshLambertMaterial({ color: '#8d96b4', map: t });
+  }
   function patch(x1, z1, x2, z2, c, y) {
-    var m = new THREE.Mesh(new THREE.BoxGeometry(x2 - x1, 0.03, z2 - z1), (c && c.isMaterial) ? c : M(c)); m.position.set((x1 + x2) / 2, y || 0.02, (z1 + z2) / 2); m.receiveShadow = true; world.add(m); return m;
+    var m = new THREE.Mesh(new THREE.BoxGeometry(x2 - x1, 0.03, z2 - z1), (c && c.isMaterial) ? c : tileMat(c, x2 - x1, z2 - z1)); m.position.set((x1 + x2) / 2, y || 0.02, (z1 + z2) / 2); m.receiveShadow = true; world.add(m); return m;
   }
   function buildFloorplan(hw, hd) {
     var Zb = -hd + 13.1, ZF = hd - 7.6, DR = [-hd + 7.0, -hd + 9.2];
@@ -1121,7 +1172,7 @@
     // sàn từng phòng
     patch(-9.9, -hd, -1.4, Zb, '#d9d0c0'); patch(5.6, -hd, hw, Zb, '#c3d0e4');
     patch(-hw, ZF, -5.2, hd, '#3d4273'); patch(-5.2, ZF, 9.4, hd, '#f1e6d0'); patch(9.4, ZF, 13.4, hd, '#cfe3f0'); patch(13.4, ZF, hw, hd, '#e8e2d4');
-    patch(13.4, ZF, hw, ZF + 0.25, '#b9a98a', 0.025);
+    patch(13.4, ZF, hw, ZF + 0.25, M('#b9a98a'), 0.025);
     // vách dãy sau (kính; cửa thông Bố ⇄ phòng nghỉ nằm ở tường kính của phòng Bố)
     partition(true, Zb, -9.9, -1.4, [], { neon: '#4f8cff' });
     partition(false, -1.4, -hd, Zb, [DR], { neon: '#4f8cff' });
@@ -1163,6 +1214,16 @@
     neon(world, 4.6, 0.08, 0.08, '#ff3d81', -12.8, 3.55, hd - 0.4, 3); plight(world, '#ff3d81', 0.8, 14, -12.8, 3.5, hd - 2);
     plight(world, '#ffb347', 0.5, 14, 2.2, 3.2, hd - 3); plight(world, '#19e3ff', 0.6, 14, 20.5, 3.4, hd - 3);
     plight(world, '#3ecf8e', 0.6, 14, hw - 3, 3, -hd + 22);
+    // decor mới: poster, đèn treo, cây, kệ cúp, đèn dây, mèo văn phòng, robot hút bụi, hơi cà phê
+    signBoard('SHIP IT!', '#3ecf8e', 5.2, 1.0, -hw + 0.2, 5.5, 0, Math.PI / 2); signBoard('CODE · CAFE · SHIP', '#19e3ff', 6.4, 1.0, hw - 0.2, 5.5, 0, -Math.PI / 2); signBoard('KHONG BUG!', '#ff4fd8', 5.2, 1.0, 0, 5.8, ZF + 0.2, 0);
+    [-15, -5, 5, 15].forEach(function (x) { cyl(world, 0.02, 0.02, 1.8, '#555', x, 6.3, 0, 6); glow(world, x, 5.4, 0, 1.6, '#ffd34d', 0.35); });
+    plant(world, -hw + 1.5, -hd + 22, 1.4); plant(world, hw - 1.5, -hd + 22, 1.3); plant(world, -hw + 1.5, hd - 8, 1.2); plant(world, 14.5, ZF - 1.5, 1.1);
+    bx(world, 2.6, 0.12, 0.6, '#7a5a3a', hw - 1.1, 2.4, -hd + 25); [-0.9, 0, 0.9].forEach(function (o, i) { cyl(world, 0.09, 0.09, 0.4, '#ffd34d', hw - 1.1 + o, 2.75, -hd + 25, 8); });
+    for (var si = 0; si < 9; si++) glow(world, -20 + si * 5, 4.6, ZF + 0.3, 0.9, ['#ff4fd8', '#19e3ff', '#ffd34d'][si % 3], 0.4);
+    var catG = new THREE.Group(); catG.position.set(20, 0, hd - 6); world.add(catG); bx(catG, 0.7, 0.35, 0.4, '#e8a87c', 0, 0.3, 0); bx(catG, 0.4, 0.35, 0.4, '#e8a87c', 0.45, 0.45, 0); bx(catG, 0.08, 0.2, 0.08, '#e8a87c', 0.3, 0.7, 0.15); bx(catG, 0.08, 0.2, 0.08, '#e8a87c', 0.6, 0.7, 0.15); var catTail = bx(catG, 0.08, 0.08, 0.5, '#e8a87c', -0.4, 0.35, 0, true); anim.push(function (t) { catG.position.x = 20 + Math.sin(t * 0.2) * 3; catG.position.z = hd - 6 + Math.cos(t * 0.2) * 2; catG.rotation.y = Math.atan2(Math.cos(t * 0.2) * 0.2, -Math.sin(t * 0.2) * 0.2) + Math.PI / 2; catTail.rotation.y = Math.sin(t * 3) * 0.4; });
+    var vac = new THREE.Group(); vac.position.set(18, 0, hd - 8); world.add(vac); cyl(vac, 0.45, 0.45, 0.18, '#2b2f66', 0, 0.12, 0, 16); cyl(vac, 0.12, 0.12, 0.06, '#19e3ff', 0, 0.24, 0, 10); anim.push(function (t) { vac.position.x = 18 + Math.sin(t * 0.3) * 4; vac.position.z = hd - 8 + Math.cos(t * 0.3) * 2; vac.rotation.y = t * 0.3; });
+    var steams = []; for (var pi = 0; pi < 4; pi++) { var pf2 = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: '#e9ecf2', transparent: true, opacity: 0, depthWrite: false })); pf2.visible = false; world.add(pf2); steams.push(pf2); }
+    anim.push(function (t) { steams.forEach(function (pf2, i) { var u = (t * 0.5 + i / 4) % 1; pf2.visible = true; pf2.position.set(2.4 + Math.sin(u * 6 + i) * 0.1, 2.0 + u * 1.0, hd - 1.0); var sc = 0.5 + u * 1.2; pf2.scale.set(sc, sc, sc); pf2.material.opacity = 0.4 * (1 - u); }); });
   }
   function buildLobby(hw, hd) {
     var ZF = FP.ZF;
@@ -1184,14 +1245,14 @@
     bx(world, 0.3, 3.1, 0.2, fm, hw - 0.15, 1.55, ez - 1.6, true); bx(world, 0.3, 3.1, 0.2, fm, hw - 0.15, 1.55, ez + 1.6, true); bx(world, 0.3, 0.3, 3.4, fm, hw - 0.15, 3.0, ez, true);
     bx(world, 0.1, 2.8, 1.5, glassMat('#9fe3ff'), hw - 0.15, 1.4, ez - 0.76, true); bx(world, 0.1, 2.8, 1.5, glassMat('#9fe3ff'), hw - 0.15, 1.4, ez + 0.76, true);
     bx(world, 0.08, 0.9, 0.07, '#d9dee8', hw - 0.25, 1.3, ez - 0.12, true); bx(world, 0.08, 0.9, 0.07, '#d9dee8', hw - 0.25, 1.3, ez + 0.12, true);
-    patch(hw - 2.8, ez - 1.5, hw - 0.3, ez + 1.5, '#2f3647', 0.04);
+    patch(hw - 2.8, ez - 1.5, hw - 0.3, ez + 1.5, M('#2f3647'), 0.04);
     signBoard('ENTRANCE', '#3ecf8e', 4.2, 0.95, hw - 2.6, 4.3, ez, 0);
     plight(world, '#3ecf8e', 0.5, 10, hw - 2, 3.2, ez);
   }
   function buildLeisure(hw, hd, cx0, cz0) {
     var pl = chars.filter(function (c) { return c.kind === 'plan'; }), xs = pl.map(function (c) { return c.deskPos.sx; });
     var mn = xs.length ? Math.min.apply(null, xs) : -8, mx = xs.length ? Math.max.apply(null, xs) : 8, sx0 = -hw + 6.8, ZF = FP.ZF, rowZ = FP.rowZ, DD = FP.door;
-    LV = { CL: Math.max(-hw + 1.8, mn - 2.7), CR: Math.min(hw - 2.6, mx + 1.9), FZ: hd - 8.9, BZ: -hd + BACKV - 1.2, cx0: cx0, cz0: cz0, slots: { sofa: [], game: [], tea: [] }, wc: null };
+    LV = { CL: Math.max(-hw + 1.8, mn - 2.7), CR: Math.min(hw - 2.6, mx + 1.9), FZ: hd - 8.9, BZ: -hd + BACKV - 1.2, cx0: cx0, cz0: cz0, slots: { sofa: [], game: [], tea: [], dance: [], snack: [], phone: [], workout: [], ping: [] }, wc: null };
     DIR.nextL = 6; DIR.nextWC = 25; DIR.nextTour = 35;
     // hành lang sáng dọc các lối đi chính
     var BZ = LV.BZ, FZ = LV.FZ, strips = [[-1.4, -hd, 5.6, BZ + 1.0], [-hw + 0.4, BZ - 1.0, hw - 0.4, BZ + 1.0], [-hw + 0.4, FZ - 1.0, hw - 0.4, FZ + 1.0], [LV.CL - 1.0, BZ, LV.CL + 1.0, FZ], [LV.CR - 1.0, BZ, LV.CR + 1.0, FZ],
@@ -1215,6 +1276,12 @@
     [['#e8c9a0', -1.6], ['#f4a6c0', -0.6], ['#b8e0c0', 0.4], ['#f8e8a0', 1.4]].forEach(function (u) { cyl(tb, 0.2, 0.16, 0.5, u[0], u[1], 1.47, -0.1, 12); cyl(tb, 0.21, 0.21, 0.05, '#ffffff', u[1], 1.74, -0.1, 12); });
     var ts = labelSprite('TRÀ SỮA', '#d6538b', 1.0); ts.position.set(0, 3.0, 0); tb.add(ts);
     [1.2, 3.6].forEach(function (x) { LV.slots.tea.push({ x: x, z: hd - 2.7, door: DD.pantry, rowZ: rowZ, busy: null }); });
+    // slot mới: nhảy ở game room, ăn vặt ở pantry, lướt điện thoại ở lobby, tập thể dục ở lobby, bóng bàn ở game room
+    [-17, -14.5, -12].forEach(function (x) { LV.slots.dance.push({ x: x, z: hd - 6.2, door: DD.game, rowZ: rowZ, busy: null }); });
+    [-2.6, 0.2].forEach(function (x) { LV.slots.snack.push({ x: x, z: hd - 5.0, door: DD.pantry, rowZ: rowZ, busy: null }); });
+    [24, 26.5].forEach(function (x) { LV.slots.phone.push({ x: x, z: ZF + 2.5, door: DD.lobby, rowZ: rowZ, busy: null }); });
+    [18, 20].forEach(function (x) { LV.slots.workout.push({ x: x, z: hd - 5.0, door: DD.lobby, rowZ: rowZ, busy: null }); });
+    [-10.5, -7.9].forEach(function (x) { LV.slots.ping.push({ x: x, z: hd - 4.8, door: DD.game, rowZ: rowZ, busy: null }); });
     // WC: phòng kín, cửa trượt ở vách phía bắc
     var wx = 11.4, wz = hd - 3.8, wcg = new THREE.Group(); wcg.position.set(wx, 0, wz); world.add(wcg);
     var wc = { x: wx, doorZ: ZF - 0.3, seatZ: wz + 2.65, visitor: null }; LV.wc = wc;
@@ -1230,6 +1297,62 @@
     });
   }
 
+  /* ---------- case mới: tranh chỗ, xếp hàng, trốn việc ----------
+     Chỉ nhân viên rảnh (done/idle) mới đi chơi/xếp hàng; nhân viên doing không bị đổi trạng thái plan hay terminal khi bị bắt. */
+  var WCQ = [], COFFEEQ = [], GAMEQ = [];
+  function ensurePhone(c) { if (!c.phone) { var g = new THREE.Group(); g.position.set(0, -0.62, 0.2); g.rotation.x = 1.9; bx(g, 0.22, 0.4, 0.04, '#111', 0, 0, 0, true); c.armR.add(g); c.phone = g; } return c.phone; }
+  function queueOf(kind) { return kind === 'wc' ? WCQ : kind === 'coffee' ? COFFEEQ : GAMEQ; }
+  function queueDoor(kind) { return kind === 'wc' ? LV.wc.x : kind === 'coffee' ? FP.door.pantry : FP.door.game; }
+  function queueSpot(kind, i) { return V3(queueDoor(kind) + 2 + i * 1.35, LV.FZ); }
+  function repositionQueue(kind) { var q = queueOf(kind); q.forEach(function (c, i) { var sp = queueSpot(kind, i); if (Math.hypot(c.group.position.x - sp.x, c.group.position.z - sp.z) < 0.2) return; goPath(c, [sp], null, 2.2); }); }
+  function joinQueue(c, kind) { var q = queueOf(kind), d = c.deskPos, cx = sideCx(c), sp = queueSpot(kind, q.length); c.away = kind === 'wc' ? 'queueWC' : kind === 'coffee' ? 'queueCoffee' : 'queueGame'; c.queueKind = kind; c.ev = null; c.act = 'queue'; c.slotDoor = { x: queueDoor(kind), rowZ: FP.rowZ }; showCat(c, 'queue'); q.push(c); goPath(c, [V3(d.sx, d.az), V3(cx, d.az), V3(cx, LV.FZ), V3(sp.x, LV.FZ)], function () { c.group.position.set(sp.x, 0, sp.z); }); }
+  function leaveQueue(c, toDesk) { var kind = c.queueKind, q = queueOf(kind), i = q.indexOf(c); if (i >= 0) q.splice(i, 1); c.queueKind = null; c.act = null; if (toDesk) { c.away = null; c.returning = true; showCat(c, c.cat || 'idle'); goPath(c, pathHome(c), function () { var d = c.deskPos; c.group.position.set(d.sx, 0, d.sz); c.seated = true; c.faceY = Math.PI; c.away = null; c.slotDoor = null; c.returning = false; c.cool = rnd(25, 60); }); } repositionQueue(kind); }
+  function startWCFromQueue(c) { var wc = LV.wc, p = c.group.position; wc.visitor = c; c.away = 'wc'; c.wcStage = 'in'; c.ev = null; c.returning = false; c.slotDoor = { x: wc.x, rowZ: wc.seatZ }; c.act = null; showCat(c, c.cat || 'idle'); goPath(c, [V3(p.x, LV.FZ), V3(wc.x, LV.FZ), V3(wc.x, wc.doorZ), V3(wc.x, wc.seatZ)], function () { c.group.position.set(wc.x, 0, wc.seatZ); c.seated = true; c.faceY = Math.PI; c.act = 'wc'; c.dwell = rnd(7, 11); showCat(c, 'wc'); sfx('door', c.group.position, 0.5); }); }
+  function pumpWCQueue() { if (!LV || !LV.wc || LV.wc.visitor || !WCQ.length) return; var c = WCQ.shift(); repositionQueue('wc'); startWCFromQueue(c); }
+  function pumpSlotQueue(kind) { var q = queueOf(kind), slotType = kind === 'coffee' ? 'tea' : 'game'; if (!q.length) return; var slot = freeSlot(slotType); if (!slot) return; var c = q.shift(); repositionQueue(kind); slot.busy = c; c.slot = slot; c.away = 'leisure'; c.returning = false; c.slotDoor = { x: slot.door, rowZ: slot.rowZ }; var p = c.group.position; goPath(c, [V3(p.x, LV.FZ), V3(slot.door, LV.FZ), V3(slot.door, slot.rowZ), V3(slot.x, slot.rowZ), V3(slot.x, slot.z)], function () { c.group.position.set(slot.x, 0, slot.z); c.act = kind === 'coffee' ? 'tea' : 'game'; c.dwell = kind === 'coffee' ? rnd(12, 22) : rnd(20, 40); c.faceY = 0; if (kind === 'coffee') ensureCup(c).visible = true; showCat(c, c.act); }); }
+  function pumpQueues() { pumpWCQueue(); pumpSlotQueue('coffee'); pumpSlotQueue('game'); }
+  function queueFightRandom() { var kinds = ['wc', 'coffee', 'game'], kind = kinds[Math.floor(Math.random() * kinds.length)], q = queueOf(kind); if (q.length < 2) return; var i = Math.floor(Math.random() * (q.length - 1)), a = q[i], b = q[i + 1]; if (a.mv || b.mv || a.act === 'fight' || b.act === 'fight') return; a.act = 'fight'; b.act = 'fight'; showCat(a, 'fight'); showCat(b, 'fight'); sfx('punch', a.group.position, 0.6); setTimeout(function () { if (queueOf(kind).indexOf(a) < 0 || queueOf(kind).indexOf(b) < 0) return; if (a.act !== 'fight' || b.act !== 'fight') return; var loser = Math.random() < 0.55 ? b : a, qq = queueOf(kind), li = qq.indexOf(loser); qq.splice(li, 1); qq.push(loser); a.act = 'queue'; b.act = 'queue'; showCat(a, 'queue'); showCat(b, 'queue'); repositionQueue(kind); }, 4500); }
+
+  function fightForSleep(c) { var occ = LV.slots.sofa.filter(function (s) { return s.busy; }); if (!occ.length) return startLeisure(c, 'nap'); var slot = occ[Math.floor(Math.random() * occ.length)], o = slot.busy; if (!o || o.mv || o.act === 'fight' || c.mv) return startLeisure(c, 'nap'); var d = c.deskPos, cx = sideCx(c); c.away = 'fight'; c.ev = null; c.act = 'fight'; c.slotDoor = { x: slot.door, rowZ: slot.rowZ }; showCat(c, 'fight'); o.act = 'fight'; showCat(o, 'fight'); goPath(o, [V3(slot.x, slot.appr)], null, 2.4); goPath(c, [V3(d.sx, d.az), V3(cx, d.az), V3(cx, LV.FZ), V3(slot.door, LV.FZ), V3(slot.door, slot.rowZ), V3(slot.x, slot.rowZ), V3(slot.x, slot.appr)], function () { c.group.position.set(slot.x, 0, slot.appr); setTimeout(function () { resolveSleepFight(c, o, slot); }, 4500); }); }
+  function resolveSleepFight(c, o, slot) { if (c.away !== 'fight' || o.act !== 'fight') return; var challengerWins = Math.random() < 0.6, cElig = (c.cat === 'done' || c.cat === 'idle'), oElig = (o.cat === 'done' || o.cat === 'idle'); if (!cElig) challengerWins = false; if (cElig && !oElig) challengerWins = true; if (challengerWins) { endLeisure(o); slot.busy = c; c.slot = slot; c.away = 'leisure'; c.returning = false; c.slotDoor = { x: slot.door, rowZ: slot.rowZ }; goPath(c, [V3(slot.x, slot.z)], function () { c.group.position.set(slot.x, 0, slot.z); c.act = 'sleep'; c.dwell = rnd(25, 50); c.seated = true; c.yoff = 0.25; c.faceY = Math.PI; showCat(c, 'sleep'); }); } else { c.act = null; c.away = null; c.returning = true; showCat(c, c.cat || 'idle'); goPath(c, pathHome(c), function () { var dd = c.deskPos; c.group.position.set(dd.sx, 0, dd.sz); c.seated = true; c.faceY = Math.PI; c.away = null; c.slotDoor = null; c.returning = false; c.cool = rnd(25, 60); }); goPath(o, [V3(slot.x, slot.z)], function () { o.group.position.set(slot.x, 0, slot.z); o.act = 'sleep'; o.dwell = rnd(25, 50); o.seated = true; o.yoff = 0.25; o.faceY = Math.PI; showCat(o, 'sleep'); }); } }
+
+  function tryTruant() { var cand = chars.filter(function (c) { return c.kind === 'plan' && c.cat === 'doing' && !c.away && !c.mv && !c.act; }); if (!cand.length) return; var c = cand[Math.floor(Math.random() * cand.length)]; var toGame = Math.random() < 0.6, door = toGame ? FP.door.game : FP.door.pantry, spotX = toGame ? -14 : 2.4, spotZ = LV.FZ + (toGame ? 3.9 : 4.4); var d = c.deskPos, cx = sideCx(c); c.away = 'sneak'; c.sneak = true; c.ev = null; c.act = 'sneak'; c.slotDoor = { x: door, rowZ: FP.rowZ }; showCat(c, 'sneak'); goPath(c, [V3(d.sx, d.az), V3(cx, d.az), V3(cx, LV.FZ), V3(door, LV.FZ), V3(door, FP.rowZ), V3(spotX, FP.rowZ), V3(spotX, spotZ)], function () { if (!c.sneak) return; c.group.position.set(spotX, 0, spotZ); c.act = 'game'; showCat(c, 'game'); setTimeout(function () { if (c.sneak) catchTruant(c); }, rnd(3000, 6000)); }); }
+  function returnTruant(c) { if (!c.sneak) return; c.sneak = false; c.act = null; c.away = null; c.returning = true; var d = c.deskPos, cx = sideCx(c), p = c.group.position, door = c.slotDoor ? c.slotDoor.x : FP.door.game; showCat(c, c.cat || 'doing'); goPath(c, [V3(p.x, FP.rowZ), V3(door, FP.rowZ), V3(door, LV.FZ), V3(cx, LV.FZ), V3(cx, d.az), V3(d.sx, d.az), V3(d.sx, d.sz)], function () { c.group.position.set(d.sx, 0, d.sz); c.seated = true; c.faceY = Math.PI; c.away = null; c.slotDoor = null; c.returning = false; c.yoff = 0; c.act = null; showCat(c, c.cat || 'doing'); }); }
+
+  function catchTruant(c) { if (!c.sneak || c.away !== 'sneak') return; var useCEO = Math.random() < 0.5; if (useCEO && (!CEOC || CEOC.mv || CEOS.tour || (CEOS.cur && (CEOS.cur.kind === 'punish' || CEOS.cur.kind === 'catch' || CEOS.cur.kind === 'inspect')))) useCEO = false; if (!useCEO && (!PMC || PMC.mv || PMS.hold)) { if (CEOC && !CEOC.mv && !CEOS.tour) useCEO = true; else return; } var spot = c.group.position.clone(), door = c.slotDoor ? c.slotDoor.x : FP.door.game; if (useCEO) { var T = { outPts: [V3(2.1, PML.zl), V3(2.1, LV.BZ), V3(2.1, LV.FZ), V3(door, LV.FZ), V3(door, FP.rowZ), V3(spot.x, FP.rowZ), V3(spot.x, spot.z - 1.2)], rot: Math.PI }; CEOS.cur = null; goPath(CEOC, ceoRoute('out', T), function () { var end = T.outPts[T.outPts.length - 1]; ceoAt('out', end.x, end.z, T.rot, false, 'punch', { outPts: T.outPts }); c.act = 'hurt'; showCat(c, 'caught'); sfx('punch', CEOC.group.position, 0.8); sfx('ouch', c.group.position, 0.5); CEOS.cur = { kind: 'catch', until: Date.now() + 5000 }; setTimeout(function () { returnTruant(c); }, 4500); }); } else { if (PMS.cur && PMS.cur.kind === 'review' && PMS.cur.e && PMS.cur.e.act === 'watched') { PMS.cur.e.act = null; showCat(PMS.cur.e, PMS.cur.e.cat || 'idle'); } PMS.hold = true; var P = PML, pmPts = []; if (PMS.loc && PMS.loc.k === 'emp' && PMS.loc.e && PMS.loc.e.deskPos) { var pdd = PMS.loc.e.deskPos, pce = sideCx(PMS.loc.e); pmPts.push(V3(pdd.sx, pdd.az), V3(pce, pdd.az), V3(pce, LV.BZ), V3(P.hubX, LV.BZ)); } else if (PMS.loc && PMS.loc.k === 'lounge') { pmPts.push(V3(P.hubX, P.zl), V3(P.hubX, LV.BZ)); } else { pmPts.push(V3(P.hubX, P.deskZ), V3(P.hubX, LV.BZ)); } pmPts.push(V3(P.hubX, LV.FZ), V3(door, LV.FZ), V3(door, FP.rowZ), V3(spot.x, FP.rowZ), V3(spot.x, spot.z - 1.2)); goPath(PMC, pmPts, function () { pmAt('catch', spot.x, spot.z - 1.2, Math.PI, false, 'punch'); c.act = 'hurt'; showCat(c, 'caught'); sfx('punch', PMC.group.position, 0.8); sfx('ouch', c.group.position, 0.5); setTimeout(function () { PMS.hold = false; var sp = pmSpot('recline'); goPath(PMC, [V3(spot.x, FP.rowZ), V3(door, FP.rowZ), V3(door, LV.FZ), V3(P.hubX, LV.FZ), V3(P.hubX, P.zl), V3(sp.x, P.zl), V3(sp.x, sp.z)], function () { pmAt('lounge', sp.x, sp.z, sp.rot, sp.seated, 'recline'); PMS.cur = { kind: 'rest', act: 'recline', until: Date.now() + rnd(14, 26) * 1000 }; pmTag('Ngả lưng', '#3ecf8e'); }); returnTruant(c); }, 4500); }); } }
+
+  function tryDeskChat() { var free = chars.filter(function (c) { return c.kind === 'plan' && (c.cat === 'done' || c.cat === 'idle') && !c.away && !c.mv && !c.act; }); if (free.length < 2) return; var a = free[Math.floor(Math.random() * free.length)], rest = free.filter(function (c) { return c !== a; }); rest.sort(function (x, y) { var da = Math.hypot(x.group.position.x - a.group.position.x, x.group.position.z - a.group.position.z), db = Math.hypot(y.group.position.x - a.group.position.x, y.group.position.z - a.group.position.z); return da - db; }); var b = rest[0]; if (!b || Math.hypot(b.group.position.x - a.group.position.x, b.group.position.z - a.group.position.z) > 9) return; a.act = 'chat'; b.act = 'chat'; showCat(a, 'chat'); showCat(b, 'chat'); setTimeout(function () { [a, b].forEach(function (c) { if (c.act === 'chat' && !c.away) { c.act = null; showCat(c, c.cat || 'idle'); } }); }, rnd(12000, 20000)); }
+  function tryHelpBlocked() { var blocked = chars.filter(function (c) { return c.kind === 'plan' && c.cat === 'blocked' && !c.away && !c.mv && !c.act; }); var helpers = chars.filter(function (c) { return c.kind === 'plan' && (c.cat === 'done' || c.cat === 'idle') && !c.away && !c.mv && !c.act; }); if (!blocked.length || !helpers.length) return; var t = blocked[Math.floor(Math.random() * blocked.length)], h = helpers.filter(function (c) { return c !== t; })[0]; if (!h) return; var hd = h.deskPos, td = t.deskPos, cx = sideCx(t); h.away = 'help'; h.ev = null; h.act = null; goPath(h, [V3(hd.sx, hd.az), V3(cx, hd.az), V3(cx, td.az), V3(td.sx, td.az)], function () { if (h.away !== 'help') return; h.group.position.set(td.sx, 0, td.az); h.faceY = Math.PI; h.act = 'help'; showCat(h, 'help'); setTimeout(function () { if (h.away !== 'help') return; h.act = null; h.away = null; h.returning = true; showCat(h, h.cat || 'idle'); goPath(h, [V3(td.sx, td.az), V3(cx, td.az), V3(cx, hd.az), V3(hd.sx, hd.az), V3(hd.sx, hd.sz)], function () { h.group.position.set(hd.sx, 0, hd.sz); h.seated = true; h.faceY = Math.PI; h.away = null; h.returning = false; h.act = null; showCat(h, h.cat || 'idle'); }); }, rnd(10000, 16000)); }); }
+
+  function tryForceFight() { var free = chars.filter(function (c) { return c.kind === 'plan' && (c.cat === 'done' || c.cat === 'idle') && !c.away && !c.mv && !c.act; }); if (!free.length) return; var occ = LV.slots.sofa.filter(function (s) { return s.busy; }); if (occ.length) { fightForSleep(free[Math.floor(Math.random() * free.length)]); return; } var kinds = ['wc', 'coffee', 'game']; for (var i = 0; i < kinds.length; i++) { if (queueOf(kinds[i]).length >= 2) { queueFightRandom(); return; } } startLeisure(free[Math.floor(Math.random() * free.length)], 'sleep'); }
+
+  var AMB = { next: 2, musicNext: 1, musicOn: true, chaosUntil: 0 };
+  function ambientTick(dt) {
+    if (!window.Sfx || document.hidden) return;
+    var chaos = Date.now() < AMB.chaosUntil;
+    AMB.next -= dt;
+    if (AMB.next <= 0) {
+      AMB.next = chaos ? rnd(0.7, 1.4) : rnd(1.2, 2.5);
+      var r = Math.random(), pool = chars.filter(function (c) { return c.kind === 'plan' && !c.mv; });
+      if (r < 0.35 && pool.length) { var c = rpick(pool), lines = r < 0.12 ? TALK.work : r < 0.3 ? TALK.boss : TALK.pm; sfxTalk(c, rpick(lines)); }
+      else if (r < 0.55) { var w = chars.filter(function (cc) { return cc.kind === 'plan' && cc.cat === 'doing' && !cc.away && !cc.mv; }); if (w.length) sfx('typeburst', rpick(w).group.position, 0.35); }
+      else if (r < 0.75) sfx(rpick(['laugh', 'crowd', 'whistle', 'drum', 'clap']), null, 0.4);
+      else if (r < 0.88) sfx('ring', null, 0.35);
+      else { var f = chars.filter(function (cc) { return cc.act === 'fight'; }); if (f.length) sfx('fight', f[0].group.position, 0.6); else sfx('crowd', null, 0.3); }
+    }
+    if (AMB.musicOn) { AMB.musicNext -= dt; if (AMB.musicNext <= 0) { AMB.musicNext = 2.0; sfx('music', null, 0.28); } }
+  }
+  function chaosBurst() {
+    try { if (window.Sfx) window.Sfx.unlock(); } catch (e) {}
+    AMB.chaosUntil = Date.now() + 60000; AMB.musicOn = true;
+    sfx('crowd', null, 0.6); sfx('cheer', null, 0.5); sfx('music', null, 0.35);
+    tryForceFight(); tryForceFight();
+    var free = chars.filter(function (c) { return c.kind === 'plan' && (c.cat === 'done' || c.cat === 'idle') && !c.away && !c.mv && !c.act; });
+    free.slice(0, 8).forEach(function (c, i) { if (i % 3 === 2) joinQueue(c, i % 2 ? 'coffee' : 'game'); else startLeisure(c, ['dance', 'game', 'tea', 'sleep'][i % 4]); });
+    setTimeout(function () { tryTruant(); }, 1500);
+    setTimeout(function () { tryTruant(); }, 3500);
+    try { ceoQueuePunish('chaos', true); } catch (e) {}
+  }
   /* ---------- tương tác ---------- */
   var ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), hover = null, down = null;
   var tip = $('tip'), card = $('card');
@@ -1252,30 +1375,158 @@
     if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) return; var c = pick(e); if (c) showCard(c); else if (hitLogo(e)) { try { window.parent.postMessage({ o3d: 'exit' }, '*'); } catch (x) {} } else hideCard();
   });
   function hideCard() { card.style.display = 'none'; SELECTED = null; }
-  function showCard(c) {
+  function showCard(c, soft) {
     SELECTED = c.kind === 'plan' ? c.plan.id : c.kind; card.style.display = 'block';
     if (c.kind === 'ceo') { card.innerHTML = '<button class="x" id="cx">×</button><h2>Bố Linh · CEO</h2><p class="muted">Người giao việc. Phòng riêng ở góc trái phía sau: bar, karaoke, golf, máy chạy bộ, ghế massage, hồ cá, TV. Task treo thì ra đấm Claude.</p>'; }
     else if (c.kind === 'pm') { card.innerHTML = '<button class="x" id="cx">×</button><h2>PM · Claude</h2><p class="muted">Điều phối Muse, review và cập nhật trạng thái mission. Hay đi lại giữa bàn, bảng trắng và máy cà phê.</p>'; }
     else {
       var p = c.plan, n = counts(p), cat = planCat(p);
-      card.innerHTML = '<button class="x" id="cx">×</button><h2>' + esc(p.title || p.id) + '</h2><div class="mono">' + esc(p.id) + '</div><div class="chip" style="color:' + CAT_COLOR[cat] + '">● ' + CAT_TEXT[cat] + '</div><div class="bar"><i style="width:' + (n.n ? 100 * n.d / n.n : 0) + '%"></i></div><div class="muted">' + n.d + '/' + n.n + ' task xong</div>' +
+      var html = '<button class="x" id="cx">×</button><h2>' + esc(p.title || p.id) + '</h2><div class="mono">' + esc(p.id) + '</div><div class="chip" style="color:' + CAT_COLOR[cat] + '">● ' + CAT_TEXT[cat] + '</div><div class="bar"><i style="width:' + (n.n ? 100 * n.d / n.n : 0) + '%"></i></div><div class="muted">' + n.d + '/' + n.n + ' task xong</div>' +
         p.tasks.map(function (t) { var tc = t.status === 'done' ? '#3ecf8e' : t.status === 'doing' ? '#f2a650' : t.status === 'blocked' ? '#f36c64' : '#8d919c'; return '<div class="trow"><span class="d" style="background:' + tc + '"></span><b>' + esc(t.id) + '</b> ' + esc(t.title || '') + '</div>'; }).join('');
+      var alive = !!(p.term && p.term.alive), left = p.tasks.some(function (t) { return t.status !== 'done'; }), canRun = n.n > 0 && left && !alive;
+      if (p.term && p.term.alive && p.term.need) html += '<div class="runrow"><button class="run" id="okBtn" title="Tự đọc terminal và chọn đúng đáp án Yes (trust folder / auto mode)">Đồng ý ↵</button><button class="run2" id="goBtn" title="Bảo Claude tự quyết, đừng hỏi lại">Làm tiếp</button></div><div class="muted">Terminal đang chờ bố xác nhận (trust folder / auto mode / câu hỏi).</div>';
+      html += '<div class="runrow"><button class="run" id="runBtn"' + (canRun ? '' : ' disabled') + ' title="' + (alive ? 'Claude đang chạy mission này' : !left ? 'Mission đã xong hết' : 'Phiên Claude mới; task đã xong được bỏ qua') + '">Làm việc</button>' +
+        (p.has_session && canRun ? '<button class="run2" id="resumeBtn" title="Mở lại đúng phiên Claude trước">Tiếp tục</button>' : '') + '</div><div class="muted" id="runMsg"></div>';
+      if (soft && card._html === html) return;
+      card._html = html; card.innerHTML = html;
+      var rid = p.id;
+      function runIt(mode, btn) {
+        btn.disabled = true; $('runMsg').textContent = 'Đang gửi lệnh…';
+        post('/api/plan/' + encodeURIComponent(rid) + '/run', mode ? { mode: mode } : {}).then(function () { var m = $('runMsg'); if (m) m.textContent = mode === 'resume' ? 'Đã mở lại phiên Claude của mission.' : 'Claude Code đang chạy mission (xem Terminal trong app).'; load(); })
+          .catch(function (e) { btn.disabled = false; var m = $('runMsg'); if (m) m.textContent = 'Lỗi: ' + e.message; });
+      }
+      if ($('okBtn')) $('okBtn').onclick = function () { smartSend(rid, p.term.id, [this, $('goBtn')]); };
+      if ($('goBtn')) $('goBtn').onclick = function () { sendTerm(rid, p.term.id, GO_TEXT, [this, $('okBtn')]); };
+      if ($('runBtn')) $('runBtn').onclick = function () { runIt('', this); };
+      if ($('resumeBtn')) $('resumeBtn').onclick = function () { runIt('resume', this); };
     }
     $('cx').onclick = hideCard;
   }
 
   /* ---------- nạp dữ liệu ---------- */
+  function runnable() { return PLANS.filter(function (p) { var n = counts(p); return n.n > n.d && !(p.term && p.term.alive) && planCat(p) === 'idle'; }); }
+  var RUNSET = {}, HBUSY = {}, headBtn = {}, hv = new THREE.Vector3();
+  function runFromHead(id, b) {
+    HBUSY[id] = true; b.disabled = true; b.textContent = 'Đang cập nhật…'; sfx('start');
+    function done() { delete HBUSY[id]; b.disabled = false; b.textContent = 'Làm việc'; }
+    post('/api/plan/' + encodeURIComponent(id) + '/run', {}).then(function () {
+      var n = 0, iv = setInterval(function () { n++; load(); if (!RUNSET[id] || n > 30) { clearInterval(iv); done(); } }, 2000);
+    }).catch(function (e) { b.textContent = 'Lỗi: ' + e.message; setTimeout(done, 3000); });
+  }
+  function updHeads() {
+    var host = $('heads'); if (!host) return; var r = renderer.domElement.getBoundingClientRect(), seen = {};
+    chars.forEach(function (c) {
+      if (c.kind !== 'plan' || !c.plan) return; var id = c.plan.id, b = headBtn[id], on = (RUNSET[id] || HBUSY[id]) && !c.away && !c.mv; if (!on) return;
+      if (!b) { b = document.createElement('button'); b.className = 'headrun'; b.textContent = 'Làm việc'; b.title = 'Chạy mission ' + id; b.onclick = function (e) { e.stopPropagation(); runFromHead(id, b); }; host.appendChild(b); headBtn[id] = b; }
+      hv.set(c.group.position.x, 4.1, c.group.position.z).project(camera);
+      if (hv.z > 1) return; seen[id] = 1; b.style.display = 'block'; b.style.left = (r.left + (hv.x + 1) / 2 * r.width) + 'px'; b.style.top = (r.top + (1 - hv.y) / 2 * r.height) + 'px';
+    });
+    Object.keys(headBtn).forEach(function (k) { if (!seen[k]) headBtn[k].style.display = 'none'; });
+  }
+  var NEEDSET = {}, NBUSY = {}, headNeed = {};
+  var GO_TEXT = 'Tiếp tục làm hết plan, tự quyết, đừng hỏi lại trừ khi xoá file/build.\r';
+  function sendTerm(id, tid, data, btns) {
+    NBUSY[id] = Date.now() + 5000; btns.forEach(function (b) { b.disabled = true; }); btns[0].textContent = 'Đã gửi…';
+    post('/api/term/' + encodeURIComponent(tid) + '/write', { data: data }).then(function () { setTimeout(load, 800); setTimeout(load, 2500); })
+      .catch(function (e) { delete NBUSY[id]; btns.forEach(function (b) { b.disabled = false; }); btns[0].textContent = 'Lỗi: ' + e.message; setTimeout(function () { btns[0].textContent = 'Đồng ý ↵'; }, 3000); });
+  }
+  function termTail(tid) {
+    return api('/api/term/' + encodeURIComponent(tid) + '/read?from=0').then(function (r) {
+      var bin = atob(r.data || ''), u = new Uint8Array(bin.length), i; for (i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(u).replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g, '').replace(/\x1b\][^\x07]*\x07/g, '').slice(-4000);
+    });
+  }
+  function pickOpt(s) {
+    var re = /(?:^|\n)[^\S\n]*[❯>›]?[^\S\n]*(\d)\.[^\S\n]*([^\n]+)/g, list = [], m, i;
+    while ((m = re.exec(s))) { if (m[1] === '1') list = []; list.push({ n: m[1], t: m[2] }); }
+    for (i = 0; i < list.length; i++) if (/auto/i.test(list[i].t) && /^yes/i.test(list[i].t)) return list[i];
+    for (i = 0; i < list.length; i++) if (/^yes/i.test(list[i].t)) return list[i];
+    return null;
+  }
+  function smartSend(id, tid, btns) {
+    termTail(tid).then(function (s) { var o = pickOpt(s); sendTerm(id, tid, o ? o.n : '\r', btns); }).catch(function () { sendTerm(id, tid, '\r', btns); });
+  }
+  var NAUTO = {};
+  function autoAccept() {
+    Object.keys(NEEDSET).forEach(function (id) {
+      var p = NEEDSET[id]; if (NAUTO[id] && NAUTO[id] > Date.now()) return; NAUTO[id] = Date.now() + 3000;
+      termTail(p.term.id).then(function (s) {
+        if (!/trust the files|trust this folder|do you trust|auto mode/i.test(s)) return; var o = pickOpt(s); if (!o) return;
+        NAUTO[id] = Date.now() + 20000; sendTerm(id, p.term.id, o.n, [document.createElement('button')]);
+      }).catch(function () { });
+    });
+  }
+  function updNeed() {
+    var host = $('heads'); if (!host) return; var r = renderer.domElement.getBoundingClientRect(), seen = {};
+    chars.forEach(function (c) {
+      if (c.kind !== 'plan' || !c.plan) return; var id = c.plan.id, np = NEEDSET[id]; if (!np || (NBUSY[id] && NBUSY[id] > Date.now()) || askForPlan(id)) return;
+      var g = headNeed[id];
+      if (!g) {
+        g = document.createElement('div'); g.className = 'headneed';
+        var a = document.createElement('button'); a.className = 'headrun'; a.textContent = 'Đồng ý ↵'; a.title = 'Tự đọc terminal và chọn đúng đáp án Yes (trust folder / auto mode)';
+        var b = document.createElement('button'); b.className = 'headrun alt'; b.textContent = 'Làm tiếp'; b.title = 'Bảo Claude tự quyết, đừng hỏi lại';
+        a.onclick = function (e) { e.stopPropagation(); smartSend(id, g._tid, [a, b]); }; b.onclick = function (e) { e.stopPropagation(); sendTerm(id, g._tid, GO_TEXT, [b, a]); };
+        g.appendChild(a); g.appendChild(b); host.appendChild(g); headNeed[id] = g;
+      }
+      g._tid = np.term.id; Array.prototype.forEach.call(g.children, function (x) { x.disabled = false; }); g.children[0].textContent = 'Đồng ý ↵';
+      hv.set(c.group.position.x, 4.1, c.group.position.z).project(camera);
+      if (hv.z > 1) return; seen[id] = 1; g.style.display = 'flex'; g.style.left = (r.left + (hv.x + 1) / 2 * r.width) + 'px'; g.style.top = (r.top + (1 - hv.y) / 2 * r.height) + 'px';
+    });
+    Object.keys(headNeed).forEach(function (k) { if (!seen[k]) headNeed[k].style.display = 'none'; });
+  }
+  /* ---------- hộp hỏi quyền của Claude Code trong terminal → bóng nút trên đầu nhân viên (hoặc PM nếu terminal không thuộc plan) ---------- */
+  var ASKS = {}, headAsk = {}, ASKSEEN = {};
+  function loadAsks() {
+    api('/api/prompts').then(function (r) {
+      var nx = {}; (r.prompts || []).forEach(function (a) { nx[a.term] = a; if (!ASKSEEN[a.prompt.sig]) { ASKSEEN[a.prompt.sig] = 1; sfx('ping'); } }); ASKS = nx;
+    }).catch(function () { });
+  }
+  function askAnchor(a) {
+    if (a.plan) { var c = chars.filter(function (x) { return x.kind === 'plan' && x.plan && x.plan.id === a.plan; })[0]; if (c) return c.group.position; }
+    return PMC ? PMC.group.position : null;
+  }
+  function answerAsk(a, o, g) {
+    Array.prototype.forEach.call(g.querySelectorAll('button'), function (x) { x.disabled = true; }); g.querySelector('.am').textContent = 'Đã gửi ' + o.n + '…';
+    post('/api/term/' + encodeURIComponent(a.term) + '/answer', { n: o.n, sig: a.prompt.sig }).then(function () {
+      sfx(/^no/i.test(o.t) ? 'sigh' : 'done'); delete ASKS[a.term]; g._sig = ''; g.style.display = 'none'; setTimeout(loadAsks, 900); setTimeout(load, 1200);
+    }).catch(function (e) { g.querySelector('.am').textContent = e.message; g._sig = ''; setTimeout(loadAsks, 600); });
+  }
+  function buildAsk(a, g) {
+    var pr = a.prompt; g._sig = pr.sig; g.innerHTML = '';
+    var h = document.createElement('div'); h.className = 'aq'; h.textContent = pr.q || 'Claude hỏi'; g.appendChild(h);
+    var who = document.createElement('div'); who.className = 'aw'; who.textContent = a.plan || a.title || 'terminal'; g.appendChild(who);
+    if (pr.ctx && pr.ctx.length) { var cx = document.createElement('div'); cx.className = 'ac'; cx.textContent = pr.ctx.join('\n'); g.appendChild(cx); }
+    pr.opts.forEach(function (o) {
+      var b = document.createElement('button'); b.className = 'ao' + (/^no/i.test(o.t) ? ' no' : /^yes/i.test(o.t) ? ' yes' : '');
+      b.textContent = o.n + '. ' + o.t; b.title = o.t; b.onclick = function (e) { e.stopPropagation(); answerAsk(a, o, g); }; g.appendChild(b);
+    });
+    var m = document.createElement('div'); m.className = 'am'; g.appendChild(m);
+  }
+  function updAsk() {
+    var host = $('heads'); if (!host) return; var r = renderer.domElement.getBoundingClientRect(), seen = {};
+    Object.keys(ASKS).forEach(function (tid) {
+      var a = ASKS[tid], pos = askAnchor(a); if (!pos) return; var g = headAsk[tid];
+      if (!g) { g = document.createElement('div'); g.className = 'headask'; g.onpointerdown = function (e) { e.stopPropagation(); }; host.appendChild(g); headAsk[tid] = g; }
+      if (g._sig !== a.prompt.sig) buildAsk(a, g);
+      hv.set(pos.x, 4.3, pos.z).project(camera);
+      if (hv.z > 1) return; seen[tid] = 1; g.style.display = 'flex'; g.style.left = (r.left + (hv.x + 1) / 2 * r.width) + 'px'; g.style.top = (r.top + (1 - hv.y) / 2 * r.height) + 'px';
+    });
+    Object.keys(headAsk).forEach(function (k) { if (!seen[k]) { headAsk[k].style.display = 'none'; if (!ASKS[k]) { headAsk[k].remove(); delete headAsk[k]; } } });
+  }
+  function askForPlan(id) { return Object.keys(ASKS).some(function (k) { return ASKS[k].plan === id; }); }
+  function updQuick() { NEEDSET = {}; PLANS.forEach(function (p) { if (p.term && p.term.alive && p.term.need) NEEDSET[p.id] = p; }); autoAccept(); RUNSET = {}; runnable().forEach(function (p) { RUNSET[p.id] = true; }); }
   function refreshAll(force) {
+    sfxWatch();
     var s = structSig();
     if (force || s !== sig) { sig = s; build(); }
     else { chars.forEach(function (c) { if (c.kind === 'plan') { var np = PLANS.filter(function (p) { return p.id === c.plan.id; })[0]; if (np) applyPlan(c, np, false); } }); Object.keys(boards).forEach(function (k) { if (boards[k].redraw) boards[k].redraw(); }); }
-    if (SELECTED && SELECTED !== 'ceo' && SELECTED !== 'pm') { var cc = chars.filter(function (c) { return c.kind === 'plan' && c.plan.id === SELECTED; })[0]; if (cc) showCard(cc); }
+    if (SELECTED && SELECTED !== 'ceo' && SELECTED !== 'pm') { var cc = chars.filter(function (c) { return c.kind === 'plan' && c.plan.id === SELECTED; })[0]; if (cc) showCard(cc, true); }
   }
   var tick = 0;
   function load() {
     api('/api/activity?limit=30').then(function (r) { onEvents(r.events); }).catch(function () { });
     Promise.all([api('/api/plans'), api('/api/state')]).then(function (r) {
-      PLANS = r[0].plans || []; STATE = r[1]; ready = true; refreshAll(false);
+      PLANS = r[0].plans || []; STATE = r[1]; ready = true; refreshAll(false); updQuick();
     }).catch(function () { });
     if (tick++ % 6 === 0) {
       api('/api/usage').then(function (u) { USAGE = u; if (boards.u5) { boards.u5.redraw(); boards.u7.redraw(); } }).catch(function () { });
@@ -1287,16 +1538,76 @@
   var clock = new THREE.Clock(), wp = new THREE.Vector3();
   function resize() { var w = wrap.clientWidth || 800, h = wrap.clientHeight || 600; renderer.setSize(w, h, false); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%'; camera.aspect = w / h; camera.updateProjectionMatrix(); }
   window.addEventListener('resize', resize); resize();
+  /* ---------- nhân viên đang làm: than thở + nói xấu sếp, PM cho vui ---------- */
+  var TALK = {
+    work: ['Khó thế…', 'Làm thế nào nhỉ?', 'Bug ở đâu ra vậy trời', 'Sao nó không chạy nhỉ?', 'Compile lại lần nữa…', 'Thôi, copy StackOverflow', 'Chắc tại cache…', 'Code này ai viết vậy?', 'Để em nghĩ đã…', 'Chạy được rồi? Không, ảo giác'],
+    boss: ['Sếp Linh lại đổi ý rồi…', 'Sếp bảo "đơn giản thôi"…', 'Lương không tăng, việc thì tăng', 'Sếp đi golf, em ngồi fix bug', 'Bố Linh giao việc cứ như đúng rồi', 'Sếp hỏi bao giờ xong, em mới bắt đầu'],
+    pm: ['PM Claude review gắt quá…', 'Lại bị PM bắt sửa nữa', 'PM ơi, deadline là khái niệm trừu tượng', 'PM hỏi hoài, để em làm đã!', 'PM chỉ giỏi gõ "LGTM"… mà đâu có', 'Đang uống trà thì PM ping', 'Xếp hàng WC mà cũng chen, chịu luôn', 'Tranh chỗ ngủ là nghề của tụi em', 'Trốn đi chơi game mà bị PM bắt, quê quá', 'Bố Linh mà thấy em lướt điện thoại là xong', 'Cà phê hết rồi, ai uống ly cuối?', 'Để em giúp bạn bị blocked một tay đã']
+  };
+  /* ---------- âm thanh (sfx.js): mọi lời gọi qua guard + try, sfx lỗi không làm hỏng văn phòng ---------- */
+  var SFXS = { type: 2, think: 6, sigh: 10, beat: -1 }, sfxV = null;
+  function sfxHash(s) { var h = 0, i; s = String(s); for (i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  function sfxPan(p) { if (!sfxV) sfxV = new THREE.Vector3(); sfxV.set(p.x, 2, p.z).project(camera); return Math.max(-1, Math.min(1, sfxV.x)); }
+  function sfxNear(p) { return Math.max(0, 1 - camera.position.distanceTo(p) / 120); }
+  function sfx(name, p, g) { try { if (!window.Sfx || document.hidden) return; var o = {}; if (g !== undefined) o.gain = g; if (p) o.pan = sfxPan(p); window.Sfx.play(name, o); } catch (e) {} }
+  function sfxTalk(c, text) { try { if (!window.Sfx || !c.plan) return; if (c.voice === undefined) c.voice = sfxHash(c.plan.id) % 6; window.Sfx.talk(text, c.voice); } catch (e) {} }
+  /* Theo dõi trạng thái theo id plan (không theo nhân vật): plan xong làm đổi thứ tự danh sách → build() dựng lại nhân vật nên không bắt được ở applyPlan. Lần nạp đầu chỉ ghi nhận, không phát. */
+  function sfxWatch() {
+    var first = !SFXS.cats; SFXS.cats = SFXS.cats || {};
+    PLANS.forEach(function (p) {
+      var cat = planCat(p), prev = SFXS.cats[p.id]; SFXS.cats[p.id] = cat;
+      if (first || prev === undefined || prev === cat) return;
+      var c = chars.filter(function (x) { return x.kind === 'plan' && x.plan && x.plan.id === p.id; })[0], pos = c ? c.group.position.clone() : null;
+      if (cat === 'doing') sfx('ping', pos, 0.7);
+      else if (cat === 'done') { sfx('done', pos, 0.8); setTimeout(function () { sfx('cheer', pos, 0.4); }, 600); }
+      else if (cat === 'blocked') sfx('error', pos, 0.7);
+    });
+  }
+  function sfxTick(t, dt) {
+    if (!window.Sfx) return;
+    SFXS.type -= dt; SFXS.think -= dt; SFXS.sigh -= dt;
+    if (SFXS.type <= 0) {
+      SFXS.type = rnd(3, 7);
+      var w = chars.filter(function (c) { return c.kind === 'plan' && c.cat === 'doing' && !c.away && !c.mv; }), n = Math.min(w.length, 1 + Math.floor(Math.random() * 2));
+      while (n-- > 0) sfx('typeburst', w.splice(Math.floor(Math.random() * w.length), 1)[0].group.position, 0.3);
+    }
+    if (SFXS.think <= 0) {
+      SFXS.think = rnd(7, 14);
+      var q = chars.filter(function (c) { return c.kind === 'plan' && c.cat === 'waiting' && !c.away && !c.mv; });
+      if (q.length) sfx('think', rpick(q).group.position, 0.5);
+    }
+    if (SFXS.sigh <= 0) {
+      SFXS.sigh = rnd(14, 28);
+      if (PMC && !PMC.mv && PMS.cur && PMS.cur.kind === 'rest' && (PMC.act === 'recline' || PMC.act === 'tea')) sfx('sigh', PMC.group.position, 0.5);
+    }
+    if (CEOC && CEOS.cur && CEOS.cur.kind === 'punish' && Date.now() < CEOS.cur.until && !CEOC.mv) {
+      var b = Math.floor(t * 8 / Math.PI + 0.5);
+      if (b !== SFXS.beat) { SFXS.beat = b; sfx('punch', CEOC.group.position, 0.8); if (b % 2 === 0 && PMC) sfx('ouch', PMC.group.position, 0.6); }
+    } else SFXS.beat = -1;
+  }
+  function chatTick(c, dt) {
+    if (c.kind !== 'plan' || !c.plan) return;
+    if (!(c.cat === 'doing' && !c.away && !c.mv)) { if (c.chat) c.chat.visible = false; c.chatT = undefined; return; }
+    if (c.chatT === undefined) c.chatT = rnd(2, 8);
+    c.chatT -= dt;
+    if (c.chatT <= 0) {
+      if (c.chat) { world.remove(c.chat); if (c.chat.material.map) c.chat.material.map.dispose(); }
+      var r = Math.random(), pool = r < 0.45 ? TALK.work : r < 0.75 ? TALK.boss : TALK.pm;
+      var line = rpick(pool); sfxTalk(c, line); c.chat = labelSprite(line, '#ffffff', 1.0, '#1d2433'); world.add(c.chat); c.chatShow = rnd(3.5, 5.5); c.chatT = rnd(9, 22);
+    }
+    if (c.chat) { c.chatShow -= dt; c.chat.visible = c.chatShow > 0; if (c.chat.visible) c.chat.position.set(c.group.position.x, 4.6, c.group.position.z); }
+  }
   function step(dt, t) {
     controls.update();
     var tx = Math.max(-ROOM.W / 2, Math.min(ROOM.W / 2, controls.target.x)), tz = Math.max(-ROOM.D / 2, Math.min(ROOM.D / 2, controls.target.z)); controls.target.x = tx; controls.target.z = tz;
     walls.forEach(function (w) { wp.copy(camera.position).sub(w.mesh.position); var outside = wp.dot(w.n) < 0; w.mesh.material.opacity += ((outside ? 0.07 : 1) - w.mesh.material.opacity) * Math.min(1, dt * 8); w.mesh.visible = w.mesh.material.opacity > 0.03; });
     anim.forEach(function (f) { f(t, dt); }); updateScreens(t);
-    director(dt); pmBrain(); ceoBrain();
+    director(dt); pmBrain(); ceoBrain(); sfxTick(t, dt); ambientTick(dt);
+    chars.forEach(function (c) { chatTick(c, dt); });
     chars.forEach(function (c) { var moving = c.mv ? stepMove(c, t, dt) : (c.walk ? walkPM(c, t, dt) : false); if (!moving) animateChar(c, t, dt); else { c.armL.rotation.x = c.cur.aLx; c.armR.rotation.x = c.cur.aRx; c.armL.rotation.z = 0.05; c.armR.rotation.z = -0.05; c.head.rotation.y = 0; c.head.rotation.x = 0; }
       if (c.bubble) { c.bubble.position.y = 3.2 + Math.sin(t * 2 + c.phase) * 0.06; if (c.deskPos) { if (c.tag) { c.tag.visible = !!c.away; c.tag.position.set(c.group.position.x, 4.1, c.group.position.z); } c.bubble.position.x = c.group.position.x; c.bubble.position.z = c.group.position.z; } } });
   }
-  function frame() { requestAnimationFrame(frame); if (document.hidden) return; step(Math.min(clock.getDelta(), 0.1), clock.elapsedTime); renderer.render(scene, camera); }
-  frame(); load(); setInterval(load, 5000);
+  function frame() { requestAnimationFrame(frame); if (document.hidden) return; step(Math.min(clock.getDelta(), 0.1), clock.elapsedTime); renderer.render(scene, camera); updHeads(); updNeed(); updAsk(); }
+  frame(); load(); setInterval(load, 5000); loadAsks(); setInterval(function () { if (!document.hidden) loadAsks(); }, 1500);
   window.__office3d = { ceo: { state: CEOS, tp: function (act) { ceoTp(act); }, punish: function (id) { ceoQueuePunish(id || 'test', true); }, choose: function () { ceoChoose(); } }, pm: { events: onEvents, state: PMS, choose: function () { return pmChoose(); }, tp: function (act) { var sp = pmSpot(act); pmAt('lounge', sp.x, sp.z, sp.rot, sp.seated, act); PMS.cur = { kind: 'rest', act: act, until: Date.now() + 90000 }; pmTag(ACT_TEXT[act], '#3ecf8e'); } }, force: forceTest, resetCamera: resetView, controls: controls, camera: camera, count: function () { return chars.length; }, step: step, coll: function () { return COLL; }, fp: function () { return FP; }, lv: function () { return LV; }, chars: function () { return chars; }, room: function () { return ROOM; } };
 })();

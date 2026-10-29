@@ -1,55 +1,26 @@
-# Conventions
+# Conventions (Unity)
 
-Authoritative coding conventions. Apply on every edit. Match surrounding code first.
+Apply on every edit. Match surrounding code first.
+
+## ⛔ OneGame: CẤM ODIN
+Project có `companyName: OneGame` trong `ProjectSettings/ProjectSettings.asset` (mọi product của công ty, vd `1941 Air Attack` — Events, Main, WorldBoss…): Odin đã gỡ vì bản quyền. KHÔNG `using Sirenix.*`, attribute Odin (`[Button]`, `[ShowIf]`, `[ShowInInspector]`, `[ReadOnly]`, `[BoxGroup]`, `[TableList]`, `[LabelText]`…), `OdinEditorWindow`/`SerializedMonoBehaviour` — kể cả khi copy/khôi phục code cũ, snapshot, knowledge còn dùng. Thay bằng `[ContextMenu]`, `[Header]`, `[SerializeField]`, custom `Editor`/`EditorWindow`. Không đề xuất cài lại Odin. Project ngoài OneGame đang có Odin thì được dùng.
 
 ## Naming
-- Local variables: `_` prefix → `_count`, `_target`, `_rs`
-- Private fields: camelCase → `itemPlayerShort`, `popupAirport`
-- Public fields / properties: PascalCase → `IsShow`, `MaxLevel`
-- `[SerializeField]` fields follow private-field camelCase (with or without explicit `private`).
-- Public methods with `_` prefix (`_OnClickPlay`) = UnityEvent handlers wired in the Editor — see Rules.md (never rename/delete as unused).
+- Local variables `_` prefix: `_count`, `_target`. Private fields camelCase. Public fields/properties PascalCase. `[SerializeField]` follows private camelCase.
+- `public void _OnClickX` = UnityEvent handler wired in the Editor — never rename/delete as unused (see Rules.md).
 
-## Debug Logging
-- Use `DPDebug` if the project has it (namespace `DP.Utilities` — add `using DP.Utilities;` if missing); otherwise fall back to `UnityEngine.Debug`. Match whichever the project already uses; never mix the two.
-- Use the `.Log(...)` method ONLY — never `LogWarning` / `LogError` (applies to both DPDebug and Debug). Express severity through the text color below.
-- Colors via rich text:
-  - Normal: `<color=#4aff21>`
-  - Warning: `<color=#ffd900>`
-  - Error: `<color=#ff3838>`
-- Severity: error (#ff3838) = breaking null/missing ref; warning (#ffd900) = recoverable skip/retry or abnormal gate; normal (#4aff21) = by-design gate (locked, condition not met).
-- `[...]` contains ONLY a GameObject name or tag. Nothing else.
-- Detailed values go OUTSIDE the brackets.
-- Log message text is in **English** by default.
+## Logging
+- `DPDebug` (`using DP.Utilities;`) if the project has it, else `Debug`; never mix. Only `.Log(...)` — never `LogWarning`/`LogError`; severity by color: normal `#4aff21` (by-design gate), warning `#ffd900` (recoverable skip/retry), error `#ff3838` (breaking null/missing ref).
+- `[...]` holds ONLY a GameObject name or tag; values go outside. Message in English.
+  `DPDebug.Log($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");`
 
-Examples (`.Log` only, severity by color):
-```csharp
-DPDebug.Log($"<color=#4aff21>[{gameObject.name}]</color> loaded level {_level}");
-DPDebug.Log($"<color=#ffd900>[{tag}]</color> retry count {_retry}");
-DPDebug.Log($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");
-```
-No DPDebug → same rules with `Debug.Log`:
-```csharp
-Debug.Log($"<color=#ff3838>[{gameObject.name}]</color> null ref on {_field}");
-```
-Wrong: `DPDebug.LogError(...)` / `Debug.LogWarning(...)` — use `.Log` + color. Wrong: value inside `[]`.
+## Coroutines (default for time-based logic; `async`/Addressables only where already used)
+- Keep a `Coroutine` handle; stop the old one before starting (`StopCoroutine(handle)`, not by name / `StopAllCoroutines`).
+- Dies on `SetActive(false)`/Destroy, not on `enabled = false`; never start on an inactive or pooled/temp object.
+- `WaitForSecondsRealtime` when `timeScale = 0`; cache reused `WaitForSeconds`; `yield return null` (never `0`).
+- Uncaught exception silently kills it; no `yield` inside `try` with `catch`.
 
-## Asynchronous (Coroutines / IEnumerator)
-Default for time-based / multi-frame logic. Match surrounding code; `async`/Addressables only where already used.
-- **Handle:** store a restartable/cancelable coroutine in a `Coroutine` field; stop the old one before starting to avoid overlap → `if (h != null) StopCoroutine(h); h = StartCoroutine(...);`. Prefer `StopCoroutine(handle)` over string-name or `StopAllCoroutines()`.
-- **Lifecycle:** a coroutine dies on `SetActive(false)` / `Destroy` (code after the current `yield` never runs), but **not** on `enabled = false`. `StartCoroutine` on an inactive GameObject throws. It lives on the MonoBehaviour that started it — starting on a pooled/temp object = dead when recycled.
-- **timeScale:** use `WaitForSecondsRealtime` when `Time.timeScale = 0` (pause/popups); `WaitForSeconds` freezes.
-- **GC:** cache a reused `WaitForSeconds` in a field vs `new` in a loop; `yield return null` for next frame (never `yield return 0` — boxes). Avoid lambdas in `WaitUntil`/`WaitWhile` on hot paths.
-- **Exceptions:** an uncaught exception silently kills the coroutine (rest never runs). `yield` is illegal inside a `try` with `catch` (C# rule) — guard only synchronous lines, or split the method.
-- **Nesting:** `yield return Inner()` runs inline (stopping the outer stops it); `yield return StartCoroutine(Inner())` is a separate coroutine the outer's stop won't cancel.
-
-## Code Generation
-- No comments unless explicitly requested. Áp dụng cho MỌI dạng: `//`, `/* */`, `/// <summary>`, `[Tooltip]`, `[Header]` mô tả, đánh dấu kiểu `// [G8]`, `// TEMP`. Khi viết lại/đổi tên file thì bỏ luôn comment/tooltip cũ trong phần mình viết lại. Plan/prompt giao việc cũng không được yêu cầu thêm comment/tooltip (Linh chốt 2026-10-16).
-- No XML/`<summary>` docs unless explicitly requested.
-- Prefer modifying existing architecture over introducing new patterns.
-- Minimize the number of files touched and lines changed.
-- Reuse existing managers, base classes (e.g. `PopupBase`), and helpers before adding new ones.
-
-## Project Stack (for editing decisions only)
-- ⛔ **CỰC KỲ QUAN TRỌNG — CẤM ODIN trong mọi project OneGame** (nhận diện: `ProjectSettings/ProjectSettings.asset` có `companyName: OneGame` — đây là điều kiện chính, áp dụng cho MỌI product của công ty này chứ không riêng gì product tên chứa `1941`; ví dụ đã biết: `1941 Air Attack` — gồm Events, Main, WorldBoss, ...). Odin Inspector đã bị **gỡ hoàn toàn vì vấn đề bản quyền**. KHÔNG được thêm `using Sirenix.*`, attribute Odin (`[Button]`, `[ShowIf]`, `[ShowInInspector]`, `[ReadOnly]`, `[BoxGroup]`, `[TableList]`, `[LabelText]`, ...), `OdinEditorWindow`/`SerializedMonoBehaviour`, kể cả khi code cũ, snapshot, transcript hay knowledge còn dùng — khi khôi phục/copy code cũ phải lọc bỏ Odin. Thay bằng Unity built-in: `[ContextMenu]`, `[Header]`, `[Tooltip]`, `[SerializeField]`, custom `Editor`/`EditorWindow`. Không đề xuất cài lại Odin.
-- Unity C#, I2 Localization (`I2.Loc`). Odin Inspector (`Sirenix.OdinInspector`) CHỈ dùng cho project KHÔNG thuộc OneGame và đang có sẵn Odin.
-- UI popups extend `PopupBase`.
+## Code generation
+- No comments of any kind unless asked: `//`, `/* */`, `///`/XML docs, `[Tooltip]`, descriptive `[Header]`, markers like `// [G8]`, `// TEMP`. Rewriting a file removes old comments in the rewritten part. Plans/prompts must not ask for comments (Linh chốt 2026-10-16).
+- Extend existing architecture; fewest files/lines; reuse managers, base classes (`PopupBase`), helpers.
+- Stack: Unity C#, I2 Localization (`I2.Loc`); UI popups extend `PopupBase`.

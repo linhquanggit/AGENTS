@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muse Win</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#1c2230;--mute:#6b7488;--line:#e3e6ec;--acc:#5b5bd6;--accink:#fff;--user:#e9ecff;--agent:#f0f2f5;--ok:#1a8f4d;--bad:#d03a3a}
+@media (prefers-color-scheme:dark){:root{--bg:#14161b;--panel:#1b1e25;--ink:#e6e9f0;--mute:#8d96a8;--line:#2a2e38;--acc:#7c7cf0;--accink:#0f1014;--user:#262a4a;--agent:#232730;--ok:#4cc47f;--bad:#f06b6b}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",system-ui,sans-serif;display:flex}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)}button.primary{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+button.danger{color:var(--bad)}button:disabled{opacity:.5;cursor:default}
+input,textarea,select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}
+textarea{resize:vertical}
+aside{width:260px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+aside header{padding:14px;display:flex;align-items:center;justify-content:space-between;font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mute);display:inline-block;margin-right:6px}
+.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}
+#list{flex:1;overflow:auto;padding:0 8px}
+.chat{padding:9px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:6px}
+.chat:hover{background:var(--agent)}.chat.on{background:var(--user)}
+.chat .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat .id{color:var(--mute);font-size:11px}
+.chat .x{visibility:hidden;color:var(--mute);border:0;background:none;padding:0 4px}.chat:hover .x{visibility:visible}
+aside footer{padding:10px;border-top:1px solid var(--line);display:grid;gap:6px}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;gap:10px;align-items:center;justify-content:space-between}
+.top .name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#thread{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:min(760px,88%);padding:9px 13px;border-radius:12px;background:var(--agent);white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;background:var(--user)}
+.who{font-size:11px;color:var(--mute);margin-bottom:3px;display:flex;gap:8px;align-items:center}
+.who button{border:0;background:none;padding:0;font-size:11px;color:var(--mute);text-decoration:underline}
+.media{display:grid;gap:8px;margin-top:8px}
+.media img,.media video{max-width:100%;max-height:420px;border-radius:8px;border:1px solid var(--line);background:#000}
+.media a{font-size:12px;color:var(--acc);word-break:break-all}
+pre.raw{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:11px;overflow:auto;max-height:240px;margin:6px 0 0;white-space:pre-wrap}
+.foldbar{padding:6px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;color:var(--mute);border-top:1px solid var(--line);background:var(--panel)}
+.foldbar span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips{padding:0 16px;display:flex;gap:6px;flex-wrap:wrap;background:var(--panel)}
+.chip{background:var(--user);border-radius:999px;padding:2px 10px;font-size:12px;display:flex;gap:6px;align-items:center}
+.chip b{cursor:pointer;color:var(--mute)}
+#fList{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px;padding:4px}
+#fList label{display:flex;gap:8px;margin:0;padding:3px 6px;font-size:12.5px;color:var(--ink);cursor:pointer}
+#fList label.no{color:var(--mute);cursor:default;text-decoration:line-through}
+#fList input{width:auto;padding:0;flex:none}
+#fList label{align-items:center}
+#fList small{color:var(--mute);margin-left:auto;white-space:nowrap;padding-left:10px}
+dialog#dFiles{width:min(680px,94vw)}
+.readbtn{margin:6px 6px 0 0;font-size:12px}
+.empty{margin:auto;color:var(--mute);text-align:center}
+.bar{padding:6px 16px;font-size:12px;color:var(--mute);min-height:26px}.bar.err{color:var(--bad)}
+.composer{padding:12px 16px;border-top:1px solid var(--line);background:var(--panel);display:flex;gap:10px;align-items:flex-end}
+.composer textarea{min-height:44px;max-height:200px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);width:min(560px,94vw);padding:18px}
+dialog::backdrop{background:#0008}
+dialog h2{margin:0 0 10px}label{display:block;font-size:12px;color:var(--mute);margin:12px 0 4px}
+.row{display:flex;gap:8px;align-items:center}.foot{justify-content:flex-end;margin-top:16px}
+pre.out{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;max-height:200px;overflow:auto;white-space:pre-wrap}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<aside>
+  <header><span><span class="dot" id="dot"></span>Muse Win</span><button id="bSettings" title="Cài đặt">Cài đặt</button></header>
+  <div id="list"></div>
+  <footer>
+    <button class="primary" id="bNew">+ Chat mới</button>
+    <button id="bAdd">Thêm thread ID có sẵn</button>
+  </footer>
+</aside>
+<main>
+  <div class="top"><div class="name" id="title">Chưa chọn chat</div><button id="bRefresh">Làm mới</button></div>
+  <div id="thread"><div class="empty">Chọn hoặc tạo một chat ở bên trái.<br>Nếu chưa đăng nhập: Cài đặt → Đăng nhập muse.ai.</div></div>
+  <div class="bar" id="bar"></div>
+  <div class="foldbar"><span id="foldInfo">Chưa gắn thư mục local</span><span class="row"><button id="bFolder">Thư mục / file…</button><button id="bAttach" title="Đính kèm file chữ từ máy">📎 File</button><input type="file" id="fileIn" multiple hidden></span></div>
+  <div class="chips" id="chips"></div>
+  <div class="composer"><textarea id="msg" placeholder="Nhắn cho Muse… (Ctrl+Enter để gửi)"></textarea><button class="primary" id="bSend">Gửi</button></div>
+</main>
+
+<dialog id="dFiles">
+  <h2>Thư mục local cho chat này</h2>
+  <p style="margin:0 0 6px;font-size:12px;color:var(--mute)">Muse chạy trên cloud nên không tự đọc được máy bạn. App chỉ gửi nội dung các file bạn chọn (hoặc file Muse xin bằng <code>[READ: đường/dẫn]</code>, bạn bấm gửi). Nội dung đi lên muse.ai. File khoá/cookie/.env, ảnh/asset và file &gt;200 KB bị chặn.</p>
+  <div class="row"><input id="fPath" placeholder="D:\Projects\WB"><button id="fSet" class="primary">Gắn</button><button id="fClear">Gỡ</button></div>
+  <input id="fFilter" placeholder="Lọc theo tên…" style="margin-top:8px">
+  <div id="fList"></div>
+  <div class="row" style="justify-content:space-between;margin-top:8px"><span id="fSum" style="font-size:12px;color:var(--mute)"></span><span class="row"><button id="fTree">Gửi cấu trúc thư mục cho Muse</button><button id="fAdd" class="primary">Thêm file đã chọn vào tin</button><button id="fClose">Đóng</button></span></div>
+</dialog>
+
+<dialog id="dSet">
+  <h2>Cài đặt</h2>
+  <div class="row"><button id="sStatus">Kiểm tra muse-cli status</button><button id="sDiag">Dò cấu hình muse-cli</button><button id="sLogin" class="primary">Đăng nhập muse.ai</button></div>
+  <pre class="out" id="sOut" style="display:none"></pre>
+  <label>Cookie hatch_sess (dán tay nếu không đăng nhập được: muse.ai → F12 → Application → Cookies)</label>
+  <div class="row"><input id="sCookie" type="password" autocomplete="off" placeholder="dán giá trị hatch_sess…"><button id="sCookieSave">Lưu cookie</button></div>
+  <label>Đường dẫn muse-cli (trống = tự dò)</label><input id="sMuse" placeholder="C:\Users\...\.local\bin\muse-cli.exe">
+  <label>Thư mục cấu hình muse-cli (trống = tự dò)</label><input id="sCfg" placeholder="%APPDATA%\muse-cli">
+  <div class="row"><div style="flex:1"><label>Chờ khi gửi (giây)</label><input id="sWait" type="number"></div>
+  <div style="flex:1"><label>Làm mới chat (giây)</label><input id="sPoll" type="number"></div></div>
+  <div class="foot row"><button id="sClose">Đóng</button><button class="primary" id="sSave">Lưu</button></div>
+</dialog>
+
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let ST=null, MSGS=[], RAW=new Set(), LASTSIG="";
+async function api(path,body){
+  const r=await fetch(path,body===undefined?{}:{method:"POST",headers:{"X-Bridge":"1","Content-Type":"application/json"},body:JSON.stringify(body)});
+  const j=await r.json(); if(j.error&&body!==undefined)throw new Error(j.error); return j}
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),2400)}
+
+/* ---------- media: link ảnh/video trong text + trường attachment trong JSON ---------- */
+const IMG=/\.(png|jpe?g|gif|webp|bmp|svg)(\?[^\s]*)?$/i, VID=/\.(mp4|webm|mov|m4v|ogv)(\?[^\s]*)?$/i;
+function mediaOf(m){
+  const found=new Map();
+  const add=(u,hint)=>{if(typeof u!=="string")return; u=u.trim().replace(/[)\].,;]+$/,"");
+    if(!/^(https?:\/\/|data:(image|video)\/)/i.test(u))return;
+    const kind=VID.test(u)||/^data:video/.test(u)||hint==="video"?"video":(IMG.test(u)||/^data:image/.test(u)||hint==="image")?"image":"link";
+    if(!found.has(u))found.set(u,kind)};
+  (String(m.text||"").match(/!\[[^\]]*\]\(([^)\s]+)\)/g)||[]).forEach(x=>add(x.replace(/^.*\(|\)$/g,"")));
+  (String(m.text||"").match(/https?:\/\/[^\s<>"')]+/g)||[]).forEach(u=>{if(IMG.test(u)||VID.test(u))add(u)});
+  const walk=(o,k)=>{ if(o==null)return;
+    if(typeof o==="string"){ if(/^(url|src|href|image|image_url|video|video_url|thumbnail|file_url|download_url|signed_url)$/i.test(k||""))add(o,/video/i.test(k||"")?"video":/image|thumb/i.test(k||"")?"image":""); return}
+    if(Array.isArray(o))return o.forEach(v=>walk(v,k));
+    if(typeof o==="object")for(const [kk,v] of Object.entries(o))if(kk!=="text")walk(v,kk)};
+  walk(m);
+  return [...found].map(([u,kind])=>({u,kind}));
+}
+function mediaHtml(m){const ms=mediaOf(m); if(!ms.length)return "";
+  return `<div class="media">`+ms.map(x=>x.kind==="video"?`<video controls preload="metadata" src="${esc(x.u)}"></video>`:
+    x.kind==="image"?`<a href="${esc(x.u)}" target="_blank" rel="noreferrer"><img loading="lazy" src="${esc(x.u)}" alt="" onerror="this.parentNode.textContent=this.src+' (không tải được — có thể cần đăng nhập)'"></a>`:
+    `<a href="${esc(x.u)}" target="_blank" rel="noreferrer">${esc(x.u)}</a>`).join("")+`</div>`}
+
+/* ---------- render ---------- */
+function curId(){return ST&&ST.config.thread_id||""}
+function renderList(){
+  const ts=ST.threads, cur=curId();
+  $("#list").innerHTML=ts.length?ts.map(t=>`<div class="chat ${t.id===cur?"on":""}" data-id="${esc(t.id)}"><div style="min-width:0"><div class="t">${esc(t.title)}</div><div class="id">${esc(t.id.slice(0,8))}</div></div><button class="x" data-rm="${esc(t.id)}" title="Bỏ khỏi danh sách (không xoá trên muse.ai)">✕</button></div>`).join(""):`<div class="empty" style="padding:20px">Chưa có chat nào.</div>`;
+  const t=ts.find(x=>x.id===cur); $("#title").textContent=t?t.title+" · "+t.id.slice(0,8):"Chưa chọn chat";
+  const ok=ST.status&&!ST.status_error; $("#dot").className="dot "+(ok?"ok":ST.status_error?"bad":"");
+  $("#dot").title=ok?"muse-cli OK":(ST.status_error||"chưa kiểm tra");
+}
+function renderThread(){
+  const box=$("#thread"), near=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+  if(!curId()){return}
+  box.innerHTML=MSGS.length?MSGS.map((m,i)=>{const u=String(m.role||"").toLowerCase().includes("user");
+    return `<div class="msg ${u?"user":""}"><div class="who"><span>${u?"Bạn":"Muse"} · #${esc(m.seq??"")}</span><button data-raw="${i}">JSON thô</button></div>${esc(m.text||"")}${u?"":readBtns(m)}${mediaHtml(m)}${RAW.has(i)?`<pre class="raw">${esc(JSON.stringify(m,null,2))}</pre>`:""}</div>`}).join(""):`<div class="empty">Chưa có tin nhắn.</div>`;
+  if(near)box.scrollTop=box.scrollHeight;
+}
+function renderBar(){const b=$("#bar"), busy=ST.busy.filter(x=>x.thread===curId()).length;
+  if(ST.last_error){b.className="bar err";b.textContent="Lỗi gửi: "+ST.last_error}
+  else{b.className="bar";b.textContent=busy?"Đang gửi cho Muse… (đợi reply có thể mất một lúc)":""}}
+
+async function refreshState(){ST=await api("/api/state");renderList();renderBar();if(typeof renderFold==="function")renderFold()}
+async function refreshChat(){const id=curId(); if(!id)return;
+  const j=await api("/api/history?id="+encodeURIComponent(id));
+  if(j.error){$("#bar").className="bar err";$("#bar").textContent="Lỗi đọc chat: "+j.error;return}
+  const sig=JSON.stringify(j.messages); if(sig===LASTSIG)return; LASTSIG=sig; MSGS=j.messages; renderThread()}
+async function selectChat(id){await api("/api/chat/select",{id});MSGS=[];LASTSIG="";RAW.clear();$("#thread").innerHTML="";await refreshState();await refreshChat();const b=$("#thread");b.scrollTop=b.scrollHeight}
+
+/* ---------- events ---------- */
+$("#list").onclick=async e=>{const rm=e.target.closest("[data-rm]"); if(rm){e.stopPropagation();await api("/api/chat/remove",{id:rm.dataset.rm});MSGS=[];LASTSIG="";await refreshState();return refreshChat()}
+  const c=e.target.closest(".chat"); if(c)selectChat(c.dataset.id)};
+$("#thread").onclick=e=>{const r=e.target.closest("[data-raw]"); if(!r)return; const i=+r.dataset.raw; RAW.has(i)?RAW.delete(i):RAW.add(i); renderThread()};
+$("#bNew").onclick=async()=>{const t=prompt("Tên chat mới:","Muse Win · "+new Date().toLocaleString("vi-VN")); if(t===null)return;
+  try{toast("Đang tạo chat…");const j=await api("/api/chat/new",{title:t});await selectChat(j.thread_id)}catch(e){toast("Lỗi: "+e.message)}};
+$("#bAdd").onclick=async()=>{const id=prompt("Dán thread ID:"); if(!id)return; const t=prompt("Tên hiển thị:",id.slice(0,8))||id.slice(0,8);
+  try{await api("/api/chat/add",{id,title:t});await selectChat(id.trim())}catch(e){toast("Lỗi: "+e.message)}};
+$("#bRefresh").onclick=()=>{LASTSIG="";refreshChat()};
+/* ---------- thư mục local + file đính kèm ---------- */
+let PENDING=[], FTREE=[];
+const curThread=()=>ST&&ST.threads.find(t=>t.id===curId());
+const block=(name,text)=>`[FILE ${name}]\n\`\`\`\n${text}\n\`\`\``;
+function renderFold(){const f=curThread()&&curThread().folder;
+  $("#foldInfo").textContent=f?"Thư mục: "+f:"Chưa gắn thư mục local";
+  $("#chips").innerHTML=PENDING.map((p,i)=>`<span class="chip">📎 ${esc(p.name)} <b data-x="${i}">✕</b></span>`).join("")}
+function readBtns(m){const out=[]; String(m.text||"").replace(/\[READ:\s*([^\]\n]+)\]/g,(_,p)=>{out.push(p.trim())});
+  return out.length?`<div>`+out.map(p=>`<button class="readbtn" data-read="${esc(p)}">Gửi file ${esc(p)} cho Muse</button>`).join("")+`</div>`:""}
+$("#chips").onclick=e=>{const x=e.target.closest("[data-x]"); if(x){PENDING.splice(+x.dataset.x,1);renderFold()}};
+$("#bAttach").onclick=()=>$("#fileIn").click();
+$("#fileIn").onchange=async e=>{for(const f of e.target.files){
+  if(f.size>200*1024){toast(f.name+": quá 200 KB");continue}
+  const text=await f.text(); if(text.includes("\0")){toast(f.name+": file nhị phân");continue}
+  PENDING.push({name:f.name,text})} e.target.value="";renderFold()};
+$("#thread").addEventListener("click",async e=>{const b=e.target.closest("[data-read]"); if(!b)return;
+  if(!(curThread()&&curThread().folder))return toast("Chưa gắn thư mục — bấm Thư mục / file…");
+  const j=await api("/api/folder/read?id="+encodeURIComponent(curId())+"&p="+encodeURIComponent(b.dataset.read));
+  if(j.error)return toast(j.error);
+  await api("/api/send",{id:curId(),text:block(b.dataset.read,j.text)});toast("Đã gửi "+b.dataset.read);refreshState()});
+async function loadTree(){const box=$("#fList"); FTREE=[]; box.innerHTML="";
+  const f=curThread()&&curThread().folder; $("#fPath").value=f||""; if(!f){$("#fSum").textContent="";return}
+  box.textContent="Đang quét…"; const j=await api("/api/folder/tree?id="+encodeURIComponent(curId()));
+  if(j.error){box.textContent=j.error;return} FTREE=j.entries; drawTree(j.truncated)}
+function drawTree(cut){const q=$("#fFilter").value.toLowerCase();
+  $("#fList").innerHTML=FTREE.map((x,i)=>({x,i})).filter(o=>!q||o.x.p.toLowerCase().includes(q)).map(({x,i})=>
+    `<label class="${x.ok?"":"no"}"><input type="checkbox" data-i="${i}" ${x.ok?"":"disabled"}> ${esc(x.p)}<small>${(x.size/1024).toFixed(1)} KB</small></label>`).join("")||"Không có file.";
+  $("#fSum").textContent=FTREE.length+" file"+(cut?" (đã cắt ở 600)":"")+" · gạch ngang = bị chặn"}
+$("#bFolder").onclick=async()=>{if(!curId())return toast("Chưa chọn chat");$("#dFiles").showModal();await loadTree()};
+$("#fFilter").oninput=()=>drawTree(false);
+$("#fClose").onclick=()=>$("#dFiles").close();
+$("#fSet").onclick=async()=>{try{await api("/api/chat/folder",{id:curId(),path:$("#fPath").value});await refreshState();renderFold();await loadTree()}catch(e){toast(e.message)}};
+$("#fClear").onclick=async()=>{await api("/api/chat/folder",{id:curId(),path:""});await refreshState();renderFold();await loadTree()};
+const checked=()=>[...document.querySelectorAll("#fList input:checked")].map(c=>FTREE[+c.dataset.i]);
+$("#fAdd").onclick=async()=>{let n=0;for(const x of checked()){const j=await api("/api/folder/read?id="+encodeURIComponent(curId())+"&p="+encodeURIComponent(x.p));
+  if(j.error)toast(j.error);else{PENDING.push({name:x.p,text:j.text});n++}} renderFold();$("#dFiles").close();if(n)toast("Đã thêm "+n+" file vào tin")};
+$("#fTree").onclick=async()=>{if(!FTREE.length)return toast("Chưa có thư mục");
+  const name=(curThread().folder||"").split(/[\\/]/).filter(Boolean).pop();
+  const t=`Mình có thư mục local "${name}" trên máy mình. Danh sách file:\n`+FTREE.filter(x=>x.ok).map(x=>x.p).join("\n")+
+    `\n\nBạn không tự đọc được máy mình. Cần xem file nào thì reply dòng đúng dạng [READ: đường/dẫn/tương/đối] (mỗi file một dòng), mình sẽ gửi lại nội dung dạng [FILE ...].`;
+  await api("/api/send",{id:curId(),text:t});$("#dFiles").close();toast("Đã gửi cấu trúc thư mục");refreshState()};
+
+const send=async()=>{let t=$("#msg").value.trim(); if(!t&&!PENDING.length)return; if(!curId())return toast("Chưa chọn chat");
+  const full=[t,...PENDING.map(p=>block(p.name,p.text))].filter(Boolean).join("\n\n"), shown=t+(PENDING.length?"\n📎 "+PENDING.map(p=>p.name).join(", "):"");
+  try{await api("/api/send",{id:curId(),text:full});$("#msg").value="";PENDING=[];renderFold();MSGS.push({role:"user",text:shown,seq:"…"});renderThread();$("#thread").scrollTop=1e9;refreshState()}catch(e){toast("Lỗi: "+e.message)}};
+$("#bSend").onclick=send; $("#msg").onkeydown=e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();send()}};
+
+const out=(t)=>{const o=$("#sOut");o.style.display="block";o.textContent=t};
+$("#bSettings").onclick=()=>{const c=ST.config;$("#sMuse").value=c.muse_cli||"";$("#sCfg").value=c.muse_cfg_dir||"";$("#sWait").value=c.send_wait_seconds;$("#sPoll").value=c.poll_seconds;$("#sOut").style.display="none";$("#sLogin").disabled=!ST.can_login_window;$("#sLogin").title=ST.can_login_window?"":"Chỉ có trong app cửa sổ";$("#dSet").showModal()};
+$("#sClose").onclick=()=>$("#dSet").close();
+$("#sSave").onclick=async()=>{try{await api("/api/config",{muse_cli:$("#sMuse").value.trim(),muse_cfg_dir:$("#sCfg").value.trim(),send_wait_seconds:Math.max(5,+$("#sWait").value||20),poll_seconds:Math.max(2,+$("#sPoll").value||5)});$("#dSet").close();toast("Đã lưu");await refreshState();schedule()}catch(e){toast("Lỗi: "+e.message)}};
+$("#sStatus").onclick=async()=>{out("Đang kiểm tra…");try{await api("/api/status",{});await refreshState();out(ST.status?"OK ✓\n"+JSON.stringify(ST.status,null,2):"Lỗi: "+ST.status_error)}catch(e){out("Lỗi: "+e.message)}};
+$("#sDiag").onclick=async()=>{out("Đang dò…");const j=await api("/api/diagnose");out(JSON.stringify(j,null,2))};
+$("#sCookieSave").onclick=async()=>{const v=$("#sCookie").value.trim(); if(!v)return; out("Đang ghi cookie…");
+  try{const j=await api("/api/cookie",{value:v});$("#sCookie").value="";await refreshState();out(j.ok?"Cookie OK ✓\n"+j.files.join("\n"):"Đã ghi cookie nhưng status lỗi: "+j.error)}catch(e){out("Lỗi: "+e.message)}};
+$("#sLogin").onclick=async()=>{try{await api("/api/login",{});out("Đã mở cửa sổ đăng nhập muse.ai. Đăng nhập xong app tự lưu cookie và đóng cửa sổ.");
+  const t=setInterval(async()=>{await refreshState();const l=ST.login; if(l&&l!=="running"){clearInterval(t);out(l==="ok"?"Đăng nhập OK ✓ — cookie đã lưu, muse-cli status tốt.":l==="closed"?"Cửa sổ đã đóng, chưa thấy cookie.":l==="saved_status_error"?"Đã lưu cookie nhưng muse-cli status lỗi: "+ST.status_error:"Lỗi: "+l)}},2000)}catch(e){out("Lỗi: "+e.message)}};
+
+let timer=null;
+function schedule(){clearInterval(timer);const s=Math.max(2,(ST&&ST.config.poll_seconds)||5);timer=setInterval(()=>{refreshState().catch(()=>{});refreshChat().catch(()=>{})},s*1000)}
+(async()=>{await refreshState();if(ST.threads.length&&!curId()){await selectChat(ST.threads[0].id)}else await refreshChat();schedule();
+  if(!ST.status&&!ST.status_error)api("/api/status",{}).then(refreshState)})();
+</script>
+</body>
+</html>

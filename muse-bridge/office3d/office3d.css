@@ -24,3 +24,49 @@ body.embed .back{display:none}
 #card .trow .d{flex:none;width:8px;height:8px;border-radius:50%;transform:translateY(-1px)}
 .hint{position:fixed;left:14px;bottom:12px;font-size:12px;color:var(--mute);background:rgba(22,26,36,.7);border-radius:8px;padding:5px 10px;pointer-events:none}
 @media(max-width:700px){#card{left:10px;right:10px;top:auto;width:auto;height:46%}.hint{display:none}}
+
+#card .runrow{display:flex;gap:8px;margin:12px 0 6px}
+#card .runrow button{font:inherit;font-size:13px;font-weight:700;border-radius:10px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:#272e40;color:var(--ink)}
+#card .runrow button.run{background:var(--accent);border-color:var(--accent);color:#0d1018;flex:1}
+#card .runrow button:disabled{opacity:.45;cursor:not-allowed}
+#heads{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.headrun{position:fixed;display:none;transform:translate(-50%,-100%);pointer-events:auto;font:inherit;font-size:10px;font-weight:800;line-height:14px;height:16px;color:#0d1018;background:var(--accent);border:0;border-radius:999px;padding:0 9px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3);white-space:nowrap}
+.headrun:hover{filter:brightness(1.12)}
+.headrun:disabled{opacity:.6;cursor:default}
+
+.headneed{position:fixed;display:none;transform:translate(-50%,-100%);gap:4px;pointer-events:none;align-items:center}
+.headneed .headrun{position:static;transform:none;display:block;pointer-events:auto;background:#f2a650}
+.headneed .headrun.alt{background:var(--accent)}
+
+/* hộp hỏi quyền Claude Code → bóng nút trên đầu nhân viên */
+.headask{position:fixed;display:none;flex-direction:column;gap:4px;transform:translate(-50%,-100%);pointer-events:auto;width:max-content;max-width:280px;background:rgba(22,26,36,.95);backdrop-filter:blur(8px);border:1px solid #f2a650;border-radius:12px;padding:8px 9px;box-shadow:0 4px 16px rgba(0,0,0,.45);font-size:11.5px;z-index:5;animation:askPulse 1.6s ease-in-out infinite}
+.headask::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-6px;border:6px solid transparent;border-top-color:#f2a650;border-bottom:0}
+.headask .aq{font-weight:800;color:#f2a650}
+.headask .aw{font:10.5px ui-monospace,Menlo,monospace;color:var(--mute);margin-top:-3px}
+.headask .ac{font:10.5px/1.35 ui-monospace,Menlo,monospace;color:var(--ink);background:#0d1018;border-radius:6px;padding:4px 6px;white-space:pre-wrap;word-break:break-all;max-height:72px;overflow:auto}
+.headask .ao{font:inherit;font-weight:700;text-align:left;color:var(--ink);background:#272e40;border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.headask .ao.yes{background:#3ecf8e;border-color:#3ecf8e;color:#0d1018}
+.headask .ao.no{background:#3a2a2e;border-color:#f36c64;color:#f6b1ad}
+.headask .ao:hover{filter:brightness(1.12)}
+.headask .ao:disabled{opacity:.5;cursor:default}
+.headask .am{font-size:10.5px;color:var(--mute)}
+.headask .am:empty{display:none}
+@keyframes askPulse{0%,100%{box-shadow:0 4px 16px rgba(0,0,0,.45)}50%{box-shadow:0 0 0 3px rgba(242,166,80,.35),0 4px 16px rgba(0,0,0,.45)}}
+
+/* T2: bảng âm thanh — nút loa góc phải-dưới + panel, tiền tố .sfx */
+.sfx-btn{position:fixed;right:14px;bottom:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;z-index:7;font:inherit;color:var(--ink);background:rgba(22,26,36,.82);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:0;cursor:pointer}
+.sfx-btn:hover{border-color:var(--accent)}
+.sfx-btn svg{display:block}
+.sfx-panel{position:fixed;right:14px;bottom:62px;width:280px;max-width:calc(100vw - 28px);display:none;z-index:8;background:rgba(22,26,36,.94);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px;padding:12px;color:var(--ink)}
+.sfx-title{font-weight:700;margin-bottom:4px}
+.sfx-row{display:flex;gap:8px;align-items:center;margin:8px 0}
+.sfx-mute-label{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600}
+.sfx-mute-label input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.sfx-label{flex:none;font-size:12.5px;color:var(--mute)}
+.sfx-volume{flex:1;accent-color:var(--accent);cursor:pointer}
+.sfx-vol{flex:none;width:36px;text-align:right;font-size:12px;color:var(--mute)}
+.sfx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.sfx-grid button,.sfx-talk{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:rgba(22,26,36,.82);border:1px solid var(--line);border-radius:999px;padding:6px 8px;cursor:pointer}
+.sfx-grid button:hover,.sfx-talk:hover{border-color:var(--accent)}
+.sfx-voice{font:inherit;font-size:12.5px;color:var(--ink);background:rgba(22,26,36,.82);border:1px solid var(--line);border-radius:999px;padding:6px 8px;cursor:pointer}
+.sfx-talk{flex:1}

@@ -1,0 +1,37 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse sửa PylonLinkShot.cs; compile OK (field column1/2LaunchFrom, launchSpeed=8 TEMP, OnLinkFired(bool), OnLaunchStarted có thật, 0 error). Lưu ý: Muse nhận tới nơi bằng IsArrived||dist<0.2 vì Init ép stopAtTarget=false.",
+  "at": "2026-10-28T15:55:49"
+ },
+ "T2": {
+  "status": "done",
+  "note": "WB-Shooter/EnemyWB6_P2_A/G6-PylonLink có node Gun6_1 (BoneFollower Gun6_1, Spine Gun6, D4–D6) và Gun6_2 (BoneFollower Gun6_2, Spine Gun6 nhân bản, D1–D3, local offset tính lại theo bone (1.24,2.07) để world position D giữ nguyên). column1/2Points vẫn 3+3, Console 0 error. Scene chưa lưu.",
+  "at": "2026-10-28T15:47:18"
+ },
+ "T3": {
+  "status": "done",
+  "note": "2 Spine Gun6 có SpineAnimFlow (Close/Open=In→Idle/Attack→Idle/Stop=Out) + component mới PylonLinkGunAnim (nối ueStartShot→In, OnLinkFired(bool)→Attack gun cột bắt đầu, ueEndShot→Out). column1LaunchFrom=Gun6_2, column2LaunchFrom=Gun6_1, launchSpeed=8, delayShot=3.7 (TEMP = dài In). Play: In 0–3.7s, cọc spawn/phóng ngay sau In, Attack mỗi L, Stop → Out cả 2 gun + cọc despawn. Muse sửa thêm 2 bug PylonLinkShot (cọc bay lố; Init không spawn khi có launch).",
+  "at": "2026-10-28T16:07:48"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Play (boss ngang, Path1 từ trái 3.5s → Path2 loop, chạy G4+G5+G6): rotZ đứng yên 270°, velocity 0, cọc notAtAnchor=0 sau khi tới, 9 súng + 6 cọc luôn trong khung x[-2.49,2.51] y[-0.54,4.69] (lề ≥0.30) qua ~30s loop; O1–O6 mỗi O đúng 3 L, mỗi D 1 lần, không cặp cùng cột; link chỉ sau 'all pylons arrived'; P3 S9 y như cũ (spawn ở Init). Phát hiện+sửa: LinkLaser collider non-trigger con của Rigidbody2D root làm boss xoay trôi → đặt Rigidbody2D P2 constraints=FreezeRotation (scene, chưa lưu). Console: chỉ NRE Fighter dummy sẵn có.",
+  "at": "2026-10-28T16:27:10"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Library 18.6 + brief WB6_P2 cập nhật (vào ngang, Path, anchor, FreezeRotation, bẫy laser/mũi tàu); chưa đồng bộ Project '1941' (claude.ai). Đã dọn: xoá Temp/t7-*,t4-* png, không đổi spritePackerMode lần này, debugLog giữ nguyên, 0 .spriteatlas đổi, không file tạm.",
+  "at": "2026-10-28T16:27:10"
+ },
+ "T6": {
+  "status": "done",
+  "note": "EnemyWB6_P2.cs: Init áp startRotation*Euler(0,0,sidewaysAngle) ngay (startRotation chụp 1 lần, không cộng dồn), bỏ tween/coroutine/rotateDuration/rotateEase, OnAttack bắn ngay; giữ rotateTarget/weaponS4/sidewaysAngle. Compile 0 error.",
+  "at": "2026-10-28T16:18:36"
+ },
+ "T7": {
+  "status": "done",
+  "note": "Path_WB6_P2_1: 5 waypoint ngang từ (-7.4,1.9) → (0,1.9); Path_WB6_P2_2 dịch về (0,1.9), biên độ x 1.0→0.5 (y ±0.3 giữ); splineMove#1 speed 0.68→2.1 (vào 3.5s); anchors D: C1 (Gun6_2, trái) x_rel=-2.0, C2 (Gun6_1, phải) x_rel=+2.0, y_rel -0.14/-1.14/-2.14 (3 cọc cách 1). Khung camera ortho 5 × aspect 0.5625 = x±2.81, y±5; đo live 15 điểm (G4×5, G5×2, Gun6×2, D1–D6) qua nhiều vòng loop: x[-2.49,2.51] y[-0.54,4.69] → lề ≥0.30. rotZ đứng yên 270° (không trôi). Lưu ý: nếu EnemyWB6_P3_A đang active cùng cảnh thì collider P3 đẩy xoay P2 (test artifact, tắt P3 khi test). Lưu ý: -90° ⇒ mũi tàu thực tế hướng TRÁI (bay lùi khi vào từ trái sang phải).",
+  "at": "2026-10-28T16:22:40"
+ }
+}

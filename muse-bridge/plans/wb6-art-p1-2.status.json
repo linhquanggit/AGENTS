@@ -30,8 +30,8 @@
   "at": "2026-10-26T15:51:20"
  },
  "T7": {
-  "status": "blocked",
-  "note": "Đã Restore+lưu MakeAll, báo cáo + library mục 11 + brief WB6_P1 xong (bản project worldboss-boss-library.md chỉ là stub trỏ về Brain nên không sửa). Cần Linh OK: xoá Assets/Editor/WB6/ (AttachArt_WB6_P1.cs, TestGun_WB6_P1.cs + .meta) và ~/.claude/logs/wb6-*.log/json?",
-  "at": "2026-10-26T15:53:08"
+  "status": "done",
+  "note": "Linh OK: đã xoá Assets/Editor/WB6 (2 script + meta + folder) và log wb6-*; MakeAll đã lưu",
+  "at": "2026-10-26T16:27:51"
  }
 }

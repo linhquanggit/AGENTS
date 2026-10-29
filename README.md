@@ -24,7 +24,7 @@ Coding agents forget your conventions, re-derive the same decisions, and behave 
 - 🎯 **Profile-based** — the right ruleset auto-selects per project (Unity vs. anything else). Add a profile per domain.
 - 🪶 **Token-efficient first** — one shared `AI/Core/Rules.md` + two small profile files load per session; skills are inline contracts; everything else is pulled in on demand.
 - 🧠 **Self-improving** — agents record durable lessons to `knowledge/learnings/` and read them before acting.
-- ✅ **Guardrailed & tested** — per-skill "DO NOT" lists plus `evals/` behavioral checks.
+- ✅ **Guardrailed & tested** — per-skill "DO NOT" lists.
 - 🌐 **Machine-wide** — one install wires `~/.claude` so every project routes through it automatically.
 
 ---
@@ -58,7 +58,7 @@ A **SessionStart hook** injects this directive into every new session, so the ag
 
 ## Profiles
 
-Each profile under `AI/<Profile>/` is a **self-contained runtime**: its own `AGENTS.md` + `context/` + `skills/` + `knowledge/` + `evals/`.
+Each profile under `AI/<Profile>/` is a **self-contained runtime**: its own `AGENTS.md` + `context/` + `skills/` + `knowledge/`.
 
 | Profile | When it's used | Skills |
 |---|---|---|
@@ -78,10 +78,9 @@ AGENTS/
 ├── GEMINI.md            # Gemini CLI bootstrap (points at AGENTS.md)
 ├── AI/
 │   ├── Common/          # language-agnostic profile
-│   │   ├── context/     #   Conventions.md · Rules.md · Workflows.md  (loaded every task)
+│   │   ├── context/     #   Rules.md (every task) · Conventions.md · Workflows.md (only when writing/reviewing code)
 │   │   ├── skills/      #   one procedure per task type
-│   │   ├── knowledge/   #   deep reference + learnings/ (pulled in on demand)
-│   │   └── evals/       #   behavioral checks
+│   │   └── knowledge/   #   deep reference + learnings/ (pulled in on demand)
 │   └── Unity/           # Unity profile — same layout
 ├── bin/ai-runtime       # install / uninstall / status / update CLI
 ├── packaging/           # Homebrew formula

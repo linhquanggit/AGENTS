@@ -4,7 +4,7 @@ Shared runtime for coding agents (Claude Code, Gemini CLI, Codex). This file pic
 
 ## Load order (once per session)
 1. This file → pick profile: **Unity** (`AI/Unity/`) if project has `Assets/` + `ProjectSettings/`, else **Common** (`AI/Common/`).
-2. `AI/Core/Rules.md` (shared gates) + profile `context/Conventions.md` + profile `context/Workflows.md`.
+2. `AI/Core/Rules.md` + profile `context/Rules.md` (gates). Profile `context/Conventions.md` + `context/Workflows.md`: read ONLY when this session itself writes/reviews code — skip for questions, plan coordination and Muse orchestration (Muse reads them itself).
 3. First reply of the session starts with `[AI_RUNTIME_LOADED · global · <Profile>]`. Nothing else to announce.
 
 Everything else (`knowledge/`, `skills/`, snapshots) is pulled **on demand** — never preloaded.
@@ -20,11 +20,10 @@ Reply in **Vietnamese** by default. Keep code, identifiers, APIs, file names, lo
 - **Reports**: `Reports/<project-basename>/<YYYY-MM-DD>-<slug>.md` in THIS repo (never inside the project's SCM). On "lưu báo cáo / ghi tiến trình": write it, then add one line to `Reports/INDEX.md` (`- [title](path) — hook`).
 
 ## Dọn rác (BẮT BUỘC, mọi agent)
-- KHÔNG tạo thư mục/file ScreenShot, Capture, Temp, Test, backup `*.before-*`, log thử… trong project hay thư mục của Linh. Ảnh chụp màn hình, capture, file thử, script dùng 1 lần → để ở thư mục scratch của phiên (hoặc `/tmp`), KHÔNG để trong project/Assets/repo.
-- Cần giữ vì Linh yêu cầu → chỉ 1 chỗ đã thống nhất (`Reports/<project>/…`), nói rõ với Linh đã để ở đâu.
-- Tạo cái gì tạm trong project (backup, file thử, folder chụp) → DỌN ngay khi xong việc, trước khi báo xong. Báo cáo cuối phải có dòng "Đã dọn: …" (hoặc "Không tạo file tạm").
-- Xoá bị chặn (Operation not permitted) → xin quyền xoá đúng thư mục một lần; Linh từ chối thì nói rõ file nào còn lại để Linh xoá, không đổi tên/giấu sang thư mục khác.
-- Trước khi báo xong: rà `git status`/Plastic hoặc danh sách file đổi, mọi file lạ ngoài phạm vi task → xoá hoặc hỏi.
+- ⛔ **Ảnh chụp/capture KHÔNG BAO GIỜ lưu trong project** (kể cả `Assets/Screenshots`, gốc project, thư mục Capture tự tạo): lưu thẳng vào `~/AGENTS/muse-bridge/.agent/shots/` (hoặc scratch/`/tmp`). Tool MCP chỉ lưu được trong project → chuyển ảnh ra ngay, xoá ảnh + `.meta` + thư mục nó vừa tạo. Hook `capture-guard` tự dọn nếu sót, nhưng không được dựa vào nó.
+- Không tạo file/thư mục tạm (ScreenShot, Capture, Temp, Test, backup `*.before-*`, log thử, script dùng 1 lần) trong project hay thư mục của Linh → để ở scratch của phiên hoặc `/tmp`. Cần giữ theo yêu cầu Linh → chỉ `Reports/<project>/…`, nói rõ chỗ.
+- Lỡ tạo đồ tạm trong project → dọn trước khi báo xong; báo cáo cuối có dòng "Đã dọn: …" (hoặc "Không tạo file tạm"). Rà `git status`/Plastic: file lạ ngoài phạm vi → xoá hoặc hỏi.
+- Xoá bị chặn → xin quyền xoá đúng thư mục một lần; Linh từ chối → nói rõ file nào còn lại, không đổi tên/giấu đi.
 
 ## Project entry points
 - **WB / World Boss / project "1941"** (`~/wkspaces/WB`): read `~/wkspaces/Brain/BR_WorldBoss/AGENT.md` FIRST — it is the map for the whole module. Follow its reading order (brief → library sections → design rows R… → Figma tiles). Do not scan WB code beyond what the brief/library points to; widen only when they don't cover the task, and say so.

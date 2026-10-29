@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""capture-guard — hook PostToolUse: ảnh chụp KHÔNG được nằm trong project.
+
+Sau mỗi lệnh MCP/Bash: ảnh mới (≤15 phút) trong thư mục kiểu Screenshot/Capture của project, hoặc ở gốc project,
+bị chuyển sang ~/AGENTS/muse-bridge/.agent/shots/ ; xoá .meta của ảnh; thư mục chỉ còn rác thì xoá cả thư mục + .meta.
+Báo lại đường dẫn mới cho Claude. Lỗi bất kỳ → im lặng (không bao giờ làm hỏng phiên).
+"""
+import json
+import os
+import re
+import shutil
+import sys
+import time
+
+IMG = re.compile(r"\.(png|jpe?g|exr|tga|bmp|gif|webp)$", re.I)
+DIRPAT = re.compile(r"^(screen[\s_-]*shots?|screen[\s_-]*caps?|captures?|snapshots?_tmp|shots?)$", re.I)
+JUNK = {".DS_Store", "Thumbs.db"}
+SHOTS = os.path.join(os.path.expanduser("~"), "AGENTS", "muse-bridge", ".agent", "shots")
+FRESH = 15 * 60
+
+
+def project_root(cwd):
+    p = os.path.abspath(cwd)
+    for _ in range(6):
+        if os.path.isdir(os.path.join(p, "Assets")) and os.path.isdir(os.path.join(p, "ProjectSettings")):
+            return p
+        nxt = os.path.dirname(p)
+        if nxt == p:
+            break
+        p = nxt
+    return None
+
+
+def move_out(path, proj, moved):
+    os.makedirs(SHOTS, exist_ok=True)
+    base = "%s-%s-%s" % (os.path.basename(proj), time.strftime("%m%d-%H%M%S"), os.path.basename(path))
+    dst = os.path.join(SHOTS, base)
+    shutil.move(path, dst)
+    meta = path + ".meta"
+    if os.path.exists(meta):
+        os.remove(meta)
+    moved.append((os.path.relpath(path, proj), dst))
+
+
+def sweep_dir(d, proj, now, moved):
+    for root, _dirs, files in os.walk(d):
+        for f in files:
+            fp = os.path.join(root, f)
+            if IMG.search(f) and now - os.path.getmtime(fp) <= FRESH:
+                move_out(fp, proj, moved)
+    for root, dirs, files in os.walk(d, topdown=False):
+        left = [f for f in os.listdir(root) if f not in JUNK and not f.endswith(".meta")]
+        if not left:
+            for f in os.listdir(root):
+                os.remove(os.path.join(root, f))
+            os.rmdir(root)
+            if os.path.exists(root + ".meta"):
+                os.remove(root + ".meta")
+
+
+def main():
+    d = json.load(sys.stdin)
+    proj = project_root(d.get("cwd") or os.getcwd())
+    if not proj:
+        return
+    now, moved = time.time(), []
+    for f in os.listdir(proj):
+        fp = os.path.join(proj, f)
+        if os.path.isfile(fp) and IMG.search(f) and now - os.path.getmtime(fp) <= FRESH:
+            move_out(fp, proj, moved)
+    for base in (proj, os.path.join(proj, "Assets")):
+        for f in os.listdir(base):
+            fp = os.path.join(base, f)
+            if os.path.isdir(fp) and DIRPAT.match(f):
+                sweep_dir(fp, proj, now, moved)
+    if moved:
+        msg = "capture-guard: ảnh chụp không được lưu trong project — đã chuyển %d ảnh ra ngoài: %s. Dùng đường dẫn mới; lần sau lưu thẳng vào %s." % (
+            len(moved), "; ".join("%s → %s" % m for m in moved[:5]), SHOTS)
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": msg}}, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception:  # noqa: BLE001
+        pass

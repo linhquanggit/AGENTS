@@ -21,6 +21,7 @@
 |---|---|---|---|---|
 | PVP BattlePass | `RewardMultiplier` (Type+Multiplier) trong `BattlePassLevelData.FreeReward/PremiumReward` | `BP_GOLD`, `BP_GEM`, ... (dùng chung) | `BattlePassData.ResolveReward()` | Quantity resolve → làm **multiplier** cho `GoldByChapter.GetGoldByChapterWithMultiply(PVP_SEASON_BATTLE_PASS, qty)`, KHÔNG dùng thẳng làm Count |
 | MilestoneProgression | *(chưa làm — TODO)* | | | |
+| WorldBoss (rank + BattlePass) | giữ `RewardCount`; Type `BP_*` → Count = gem, Type thường → cấp thẳng | `BP_GOLD/GEM/BF_TICKET/ENERGY` (WB_CURRENCY cấp thẳng) | `WorldBossRewardResolver` (1 điểm cho grant + mọi UI) | Quantity × `GoldByChapter` (`WORLD_BOSS_RANK` / `WORLD_BOSS_BATTLE_PASS`) với chapter đã chốt |
 
 ## 2. Case 1 — PVP BattlePass (`Assets/Project/BattlePass/`)
 
@@ -58,3 +59,12 @@ Luồng đầy đủ ở [BattlePassData.cs:126-163](Assets/Project/BattlePass/S
 → **Toàn bộ loại reward Milestone cần scale theo tiến độ đã có sẵn alias `BP_*` dùng chung** — không cần tạo `REWARD_TYPE` mới, chỉ cần đổi `Type` trong data từ giá trị gốc (vd `1`) sang alias (vd `1000001`) và đổi `Count` cố định thành `GemValue`.
 
 ⚠️ `FIGHTER_13`/`FIGHTER_14` KHÔNG thuộc phạm vi convert — đây không phải reward dạng "số lượng quy đổi theo giá gem". Trong data thật ([MilestoneProgressions1.asset:305-312, 602-609](Assets/Project/Resources/Data/MilestoneProgressions1.asset#L305-L312)) chúng chỉ xuất hiện ở mốc cuối cùng (grand prize) với `Count=1` cố định — cấp thẳng 1 phi công cụ thể ([Rewards.cs:211-216](Assets/Project/Rewards/Scripts/Rewards.cs#L211-L216)), không có khái niệm "giá/đơn vị" để scale. Loại reward dạng "cấp thẳng 1 unit cố định, không đổi theo level" thì giữ nguyên `RewardCount`, không đưa vào RewardByProgression.
+
+## 4. Case 3 — WorldBoss (`Assets/Project/WorldBoss/`, 2026-10-29)
+
+- Resolver riêng `WorldBoss/Use/Scripts/WorldBossRewardResolver.cs`: `Resolve(raw, multiplier, goldId[, group, chapter, abyss])`, `ResolveList(...)`. Không sửa lõi RBP.
+- Chốt group + chapter + abyss 1 lần/mùa trong `WorldBoss.Process` (`LockRewardProgression`, gọi sau `ApplyServerProgress` ở `UIWorldBoss`; `GetRewardProgression` tự chốt nếu chưa). Mùa mới → `ResetAll` tạo Process mới → chốt lại. Mẫu lấy từ BattleTeam.
+- Hệ số hạng nhân vào **gem trước** khi quy đổi (floor 1 lần).
+- Đi qua resolver: `WorldBossSO.GetRankRewards`, `UIWorldBoss.ShowCurrentReward`, `UIWorldBossLeaderBoardReward` (InitDict + SetBaseRewardPreview), `WorldBoss.AddBattlePassReward`, `ScrollerWorldBossPass`, `ScrollerWorldBossPassReward`; `CastRewardType` ghi runtime type.
+- Data (TEMP, chờ design): `RewardsByLevel.csv` header `Level,1000001,1000002,60001,1000008,1000006`, ô = gem (5L, 10L, 50L, ceil(1.5L), 3L); `BattlePass.csv` Free `1000001,5`, Premium `1000002,20`.
+- ⚠️ **Bẫy float của lõi**: `Resolver` tính `floor((double)gem / price)` với `price` là float → giá 0.1/0.3/6.3 bị hụt 1 (vd BP_BF_TICKET LATE 30 gem → 299, 750 gem → 7499). WorldBoss bù bằng `decimal` (`(decimal)price` làm tròn 7 chữ số) + `Max(core, decimal)`; đã quét 315.000 case (mọi giá × group × gem 1–5000): 0 sai. Module khác gọi thẳng lõi vẫn bị hụt → nên sửa ở lõi.

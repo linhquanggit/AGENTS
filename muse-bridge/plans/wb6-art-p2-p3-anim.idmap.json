@@ -1,0 +1,42 @@
+{
+ "T1-C01": {
+  "thread": "72baaf8c-35b2-4503-84f4-ac607c9ed16e",
+  "task": "T1",
+  "at": "2026-10-28T17:02:32"
+ },
+ "T2-C01": {
+  "thread": "905b50d0-230d-4a21-9a9c-575e8fd008c9",
+  "task": "T2",
+  "at": "2026-10-28T17:02:35"
+ },
+ "T3-C01": {
+  "thread": "dbaddd3d-f8ca-4f4d-9a3d-5caf784dbfc0",
+  "task": "T3",
+  "at": "2026-10-28T17:02:39"
+ },
+ "T1-C02": {
+  "thread": "72baaf8c-35b2-4503-84f4-ac607c9ed16e",
+  "task": "T1",
+  "at": "2026-10-28T17:09:29"
+ },
+ "T2-C02": {
+  "thread": "905b50d0-230d-4a21-9a9c-575e8fd008c9",
+  "task": "T2",
+  "at": "2026-10-28T17:09:32"
+ },
+ "T3-C02": {
+  "thread": "dbaddd3d-f8ca-4f4d-9a3d-5caf784dbfc0",
+  "task": "T3",
+  "at": "2026-10-28T17:12:34"
+ },
+ "T3-C03": {
+  "thread": "dbaddd3d-f8ca-4f4d-9a3d-5caf784dbfc0",
+  "task": "T3",
+  "at": "2026-10-28T17:15:04"
+ },
+ "T3-C04": {
+  "thread": "dbaddd3d-f8ca-4f4d-9a3d-5caf784dbfc0",
+  "task": "T3",
+  "at": "2026-10-28T17:18:52"
+ }
+}

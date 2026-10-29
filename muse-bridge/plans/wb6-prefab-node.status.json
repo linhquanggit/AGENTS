@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "compile 0 error CS",
+  "at": "2026-10-29T13:26:33"
+ },
+ "T2": {
+  "status": "done",
+  "note": "P3 targetDefault nulled; 3 prefab+3 node, Test-WB=6, 0 missing",
+  "at": "2026-10-29T13:28:07"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Enemy.type=WB6(50006) set on 3 prefab _A; P1_A had 6 gun SkeletonAnimation+SpineAnimFlow skeletonDataAsset null (mat khi dong goi) -> gan Gun1/2/3_SkeletonData (World_Boss_6). Play: P1,P2,P3 spawn 10s moi phase, 0 NRE/error (chi warn [Mission] Event is not active o P2). Pre-existing: TestManager.OnDestroy NRE (TestManager.cs:28) khi LoadScene GamePlay; TestManager.DestroyEnemy sua list khi duyet (TestManager.cs:102).",
+  "at": "2026-10-29T13:42:59"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Muse DONE: library (mục 11, 14) + learnings worldboss-prefab-node-from-scene.md (+INDEX); 6/6 GUID khớp .meta; không đụng .unity/.prefab/.asset/code",
+  "at": "2026-10-29T13:47:09"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Đã xoá WB6MakePrefabNode.cs+.meta, thư mục Editor+.meta, log, 5 shots; unity-errors 0 error CS",
+  "at": "2026-10-29T13:52:33"
+ }
+}

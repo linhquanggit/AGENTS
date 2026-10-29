@@ -1,0 +1,27 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "Muse kiểm: PylonLinkShot đã có column1/2LaunchFrom, launchSpeed(8 TEMP), OnLinkFired 1 lần/L cho cả PairUnique+OneToMany, đợi đủ cọc tới nơi trước O đầu (từ plan P2) — không cần sửa file. Claude refresh: compile OK, 0 error (chỉ log 'Unable to perform online search' của Editor)",
+  "at": "2026-10-28T16:38:16"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Gun9_1 (BoneFollower Gun3_Mix_Gun9_1, Spine Gun9, D1–D4) + Gun9_2 (BoneFollower Gun3_Mix_Gun9_2, Spine Gun9 nhân bản, D5–D8) dưới G9-PylonLink; C2 dời x=+2.55 (TEMP), y giữ 2.99/2.39/1.79/1.19; column1/2Points 4+4; Console 0 error; scene chưa lưu",
+  "at": "2026-10-28T16:37:25"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Gun9_1/2: SpineAnimFlow (Close/Open=In→Idle/Attack→Idle/Stop=Out) copy từ P2; PylonLinkGunAnim trên PylonLinkShot (gunC1=Gun9_1, gunC2=Gun9_2); column1/2LaunchFrom=Gun9_1/Gun9_2; launchSpeed 8→2.5 TEMP (cọc bay 0.54s, ở 8 chỉ 0.2s không thấy). Khác P2: In theo weapon.ueAttack (1 lần/phase), Out theo weapon.ueStop, delayStart=3.7 (lần đầu, delayShot=0) vì OneToMany mỗi O là 1 chu kỳ shot — nối theo ueStartShot/ueEndShot như P2 làm In/Out lặp mỗi O + cộng 3.7s vào nhịp CD. Play: In 0.3–3.2s, Idle, cọc spawn 3.7s bay 0.54s tới anchor, Attack đúng gun cột điểm đầu mỗi L. Ảnh: scratchpad g9_in.png / g9_launch.png / g9_play1.png. Đã thêm FreezeRotation cho Rigidbody2D EnemyWB6_P3_A (như P2; scene chưa lưu)",
+  "at": "2026-10-28T16:46:10"
+ },
+ "T4": {
+  "status": "done",
+  "note": "2 lần Play (launchSpeed 8 và 2.5), boss giữ đứng yên (runtime FreezeAll vì scene không path): 12 O đầy đủ qua Console (log flow-capture.log rỗng trong phiên này nên dùng Console): mỗi O đúng 4 L, 4 điểm đầu không trùng, mỗi cột ≥1, N=3, không cặp cùng cột, đích không trùng trong L; 'all pylons arrived' trước O1; CD 2s giữa O (anim trace); cọc đứng yên maxDist=0.00 suốt; P2 S6 không đổi (không sửa code PylonLinkShot trong plan này). Console chỉ 2 NRE Fighter dummy có sẵn",
+  "at": "2026-10-28T16:46:10"
+ },
+ "T5": {
+  "status": "done",
+  "note": "Library 18.6 (dòng P3 G9 + khối báo cáo) + mục 17 + brief WB6_P3 'Chốt Linh 2026-10-28' đã cập nhật (bản Brain; WB/worldboss-boss-library.md chỉ là file trỏ). Chưa đồng bộ Project '1941' (claude.ai) — không có công cụ. Đã dọn: xoá chk.py tạm, screenshot chuyển khỏi Temp/ project sang scratchpad, không có log wb6-p3-gun9-split-*, debugLog giữ nguyên (true), spritePackerMode không đổi, 0 .spriteatlas đổi, SoundManager tạm tự biến mất khi thoát Play",
+  "at": "2026-10-28T16:46:50"
+ }
+}

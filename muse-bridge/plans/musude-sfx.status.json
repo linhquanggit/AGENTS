@@ -1,0 +1,22 @@
+{
+ "T1": {
+  "status": "done",
+  "note": "sfx.js 389 dòng, node --check OK, list() đủ 15 tên, gọi 15 âm + talk với AudioContext giả không lỗi. CHƯA đo đỉnh/NaN bằng OfflineAudioContext thật (Edge headless không chờ render) — đo lại khi test T2/T4 trong trình duyệt",
+  "at": "2026-10-27T09:35:40"
+ },
+ "T2": {
+  "status": "done",
+  "note": "Muse tạo sfx-ui.js + CSS .sfx + 2 script tag. Harness Edge headless: nút loa, panel mở, 15 nút nghe thử + Nói thử, slider đổi Sfx volume + lưu mb_sfx, 0 lỗi JS. Chưa nghe tiếng thật (Linh nghe ở T4)",
+  "at": "2026-10-27T09:38:40"
+ },
+ "T3": {
+  "status": "done",
+  "note": "Nối Sfx vào office3d.js (sfxWatch theo plan id: ping/done+cheer/error; chatTick→talk voice=hash(plan.id)%6; typeburst thưa; start ở runFromHead; door/flush WC; step theo khoảng cách camera; punch+ouch theo nhịp; sigh PM; think khi chờ Muse; guard try+window.Sfx, im khi tab ẩn). node --check OK. Harness Edge headless + server giả + Sfx giả: đếm đủ mọi âm, 0 lỗi JS. Chưa chạy: nút 'Làm việc' (start) chỉ review code; panel mute dựa vào Sfx.setMuted (đã test ở T2)",
+  "at": "2026-10-27T09:43:11"
+ },
+ "T4": {
+  "status": "done",
+  "note": "Linh nghe thử trong app thật, xác nhận âm lượng ổn. README có mục Âm thanh; không còn file tạm trong muse-bridge/. Chưa đo CPU 10+ nhân viên và peak/NaN bằng OfflineAudioContext thật",
+  "at": "2026-10-27T09:50:55"
+ }
+}

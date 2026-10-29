@@ -59,6 +59,19 @@ def _find_transcript(sid):
 
 
 def _parse_transcript(path):
+    """Phiên chính + mọi transcript subagent nằm trong thư mục <sid>/ cạnh file .jsonl."""
+    res = _parse_one(path)
+    for sub in sorted(glob.glob(os.path.join(path[:-6], "**", "*.jsonl"), recursive=True)):
+        r = _parse_one(sub)
+        res["mcp"] += r["mcp"]
+        res["models"] = sorted(set(res["models"]) | set(r["models"]))
+        for k in res["tokens"]:
+            res["tokens"][k] += r["tokens"][k]
+        res["subagents"] = res.get("subagents", 0) + 1
+    return res
+
+
+def _parse_one(path):
     mcp, models = 0, set()
     usage = {}  # message.id -> usage (mỗi message có thể lặp qua nhiều dòng; lấy bản cuối)
     seen_tool = set()

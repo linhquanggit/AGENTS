@@ -41,6 +41,9 @@ FOOTER = (
     "Sửa/tạo file TRỰC TIẾP trong project trên (không dán code vào reply). Task có outputs thì ghi đúng đường dẫn/định dạng đó.\n"
     "Kiến thức Unity: /Users/mobione/AGENTS/AI/Unity/knowledge/ (đọc INDEX.md, chỉ mở file liên quan).\n"
     "Chỉ đụng các file trong phạm vi task. Không xoá file, không sửa scene/prefab dùng chung trừ khi task ghi rõ.\n"
+    "KHÔNG tạo thư mục/ảnh chụp/file tạm (Screenshots, Capture, Temp, Test, backup) trong project; ảnh cần lưu thì để ngoài project (~/AGENTS/muse-bridge/.agent/shots/).\n"
+    "Trước khi DONE: tự review code của mình theo /Users/mobione/AGENTS/AI/Unity/context/Conventions.md và tự kiểm lỗi compile/logic có thể. "
+    "Reply NGẮN (≤15 dòng): kết quả, file:line chính đã đổi, đã tự kiểm gì — không dán code, không kể lại task.\n"
     "Reply dòng đầu ĐÚNG 1 trong các format:\n"
     "[DONE-{id}] <tóm tắt, tạo bằng cách nào> | files: <danh sách đường dẫn đã tạo/sửa>\n"
     "[BLOCKED-{id}] <lý do / cần gì>\n"
@@ -53,6 +56,9 @@ FOOTER_GENERIC = (
     "Sửa/tạo file TRỰC TIẾP trong project trên (không dán code vào reply). Task có outputs thì ghi đúng đường dẫn/định dạng đó.\n"
     "Project KHÔNG phải Unity: không dùng Unity Editor/knowledge Unity. Kiểm chứng bằng công cụ của project (node/npm test, chạy app).\n"
     "Chỉ đụng các file trong phạm vi task. Không xoá file trừ khi task ghi rõ.\n"
+    "KHÔNG tạo thư mục/ảnh chụp/file tạm (Screenshots, Capture, Temp, Test, backup) trong project; ảnh cần lưu thì để ngoài project (~/AGENTS/muse-bridge/.agent/shots/).\n"
+    "Trước khi DONE: tự review và tự chạy kiểm tra của project nếu được. "
+    "Reply NGẮN (≤15 dòng): kết quả, file:line chính đã đổi, đã tự kiểm gì — không dán code, không kể lại task.\n"
     "Reply dòng đầu ĐÚNG 1 trong các format:\n"
     "[DONE-{id}] <tóm tắt, tạo bằng cách nào> | files: <danh sách đường dẫn đã tạo/sửa>\n"
     "[BLOCKED-{id}] <lý do / cần gì>\n"
@@ -389,6 +395,7 @@ def main():
     ap.add_argument("--thread", help="thread_id Muse cho lần gọi này (ghi đè thread của plan/config)")
     ap.add_argument("--status", choices=["todo", "doing", "done", "blocked"])
     ap.add_argument("--show", action="store_true")
+    ap.add_argument("--full", action="store_true", help="--show: in cả plan (tốn token, chỉ khi thật cần)")
     ap.add_argument("--ready", action="store_true", help="liệt kê task sẵn sàng của --plan")
     ap.add_argument("--project", help="đường dẫn project Muse được ghi (mặc định: project Unity chứa thư mục hiện tại)")
     ap.add_argument("--agent", choices=sorted(AGENTS), default=None, help="ai đang điều phối (mặc định env MUSE_AGENT hoặc claude)")
@@ -434,7 +441,31 @@ def main():
         spath = os.path.join(pdir, a.plan + ".status.json")
         st = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
         if a.show or not a.task:
-            print(open(os.path.join(pdir, a.plan + ".md"), encoding="utf-8").read())
+            md = open(os.path.join(pdir, a.plan + ".md"), encoding="utf-8").read()
+            secs = re.split(r"(?m)^(?=## )", md)
+            head, tasks = secs[0], [x for x in secs[1:] if re.match(r"## T[0-9A-Za-z_.-]*\b", x)]
+            def tid_of(x):
+                return re.match(r"## (T[0-9A-Za-z_.-]*)", x).group(1)
+            def st_line(k):
+                v = st.get(k) or st.get("%s/%s" % (a.plan, k)) or {}
+                return "%s — %s" % (v.get("status", "todo"), (v.get("note") or "")[:160])
+            if a.full:
+                print(md)
+            elif a.task:
+                hit = [x for x in tasks if tid_of(x) == a.task]
+                if not hit:
+                    die("plan %s không có task %s" % (a.plan, a.task))
+                print(head.strip()[:2500])
+                print("\n" + hit[0].strip())
+                print("\nTRẠNG THÁI %s: %s" % (a.task, st_line(a.task)))
+                return
+            else:
+                print(head.strip()[:2500])
+                print("\n=== TASK (đọc 1 task: --task Tn --show) ===")
+                for x in tasks:
+                    k = tid_of(x)
+                    print("%s | %s | %s" % (k, x.split("\n", 1)[0][3:].strip()[:110], st_line(k)))
+                return
             print("\n=== TRẠNG THÁI ===")
             for k, v in sorted(st.items()):
                 print("%s: %s — %s" % (k, v.get("status"), v.get("note", "")))

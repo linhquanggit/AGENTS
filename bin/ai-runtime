@@ -25,7 +25,7 @@ HOME_DIR="$(resolve_home)"
 # SessionStart hook: actively inject the routing directive into every new session so
 # the agent loads the runtime instead of relying on the model to read CLAUDE.md itself.
 # The text carries no ' or " so it embeds safely in the printf JSON literal below.
-HOOK_TEXT="ACTIVE DIRECTIVE — do this BEFORE the first task: read $LINK/AGENTS.md (profile selector) and follow it. Pick the profile (Unity if the project has Assets/ + ProjectSettings/, else Common), load AI/Core/Rules.md plus that profile context/ files, then route via its Workflows.md. Prepend your first response of the session with [AI_RUNTIME_LOADED · global · <Profile>]. This is not optional background context."
+HOOK_TEXT="ACTIVE DIRECTIVE — before the first task read $LINK/AGENTS.md and follow its load order: Core rules always; profile Conventions and Workflows only when this session writes or reviews code. Prepend your first response of the session with [AI_RUNTIME_LOADED · global · <Profile>]."
 HOOK_JSON="{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"$HOOK_TEXT\"}}"
 HOOK_CMD="printf '%s' '$HOOK_JSON'"
 
@@ -36,7 +36,7 @@ $BEGIN
 For **every task in any project**, use the shared AI Runtime at \`$LINK\`:
 1. Read \`$LINK/AGENTS.md\` (the profile selector) and follow it.
 2. Unity project (has \`Assets/\` + \`ProjectSettings/\`) -> \`AI/Unity/\`, else \`AI/Common/\`.
-3. Load that profile's \`context/\`, then route to a skill per its \`Workflows.md\`.
+3. Load \`AI/Core/Rules.md\` + the profile \`context/Rules.md\`; read the profile \`Conventions.md\` + \`Workflows.md\` only when this session writes or reviews code.
 4. Prepend your first response of the session with \`[AI_RUNTIME_LOADED · global · <Profile>]\` (\`<Profile>\` = Unity or Common) — confirms the global runtime was read. Verification only.
 $END
 EOF
@@ -134,6 +134,29 @@ PY
   mv "$tmp" "$SETTINGS"
 }
 
+# PostToolUse hook: ảnh chụp (MCP/Bash) không được nằm trong project → capture-guard chuyển ra muse-bridge/.agent/shots.
+CAPTURE_CMD="$HOME_DIR/muse-bridge/bin/capture-guard"
+capture_wire() { # $1 = add | remove   (cần python3)
+  [ -x "$CAPTURE_CMD" ] || [ "$1" = remove ] || return 0
+  command -v python3 >/dev/null 2>&1 || { echo "  ! no python3 — add PostToolUse capture-guard hook manually" >&2; return 2; }
+  local tmp; tmp="$(mktemp)"
+  OP="$1" CMD="$CAPTURE_CMD" python3 - "$SETTINGS" > "$tmp" 2>/dev/null <<'PY' || { rm -f "$tmp"; return 1; }
+import json, os, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    if not isinstance(d, dict): d = {}
+except Exception:
+    d = {}
+hooks = d.setdefault("hooks", {})
+pt = [g for g in (hooks.get("PostToolUse") or []) if not any("capture-guard" in (h.get("command") or "") for h in g.get("hooks", []))]
+if os.environ["OP"] == "add":
+    pt.append({"matcher": "Bash|mcp__.*", "hooks": [{"type": "command", "command": os.environ["CMD"]}]})
+hooks["PostToolUse"] = pt
+json.dump(d, sys.stdout, indent=2)
+PY
+  mv "$tmp" "$SETTINGS"
+}
+
 cmd_install() {
   [ -f "$HOME_DIR/AGENTS.md" ] || { echo "runtime not found at $HOME_DIR" >&2; exit 1; }
   mkdir -p "$CLAUDE_DIR"
@@ -144,7 +167,9 @@ cmd_install() {
   echo "installed: $LINK -> $HOME_DIR"
   echo "updated:   $GLOBAL_MD (managed block)"
   perms_wire add && echo "updated:   $SETTINGS (read scope: no prompts to read the runtime)" || true
+  hook_wire remove >/dev/null 2>&1 || true  # thay hook cũ bằng bản mới (add bỏ qua nếu đã có marker)
   hook_wire add && echo "updated:   $SETTINGS (SessionStart hook: auto-loads runtime each session)" || true
+  capture_wire add && echo "updated:   $SETTINGS (PostToolUse capture-guard: ảnh chụp không nằm trong project)" || true
 }
 
 cmd_uninstall() {
@@ -156,6 +181,7 @@ cmd_uninstall() {
   fi
   [ -f "$SETTINGS" ] && perms_wire remove && echo "removed read scope from $SETTINGS" || true
   [ -f "$SETTINGS" ] && hook_wire remove && echo "removed SessionStart hook from $SETTINGS" || true
+  [ -f "$SETTINGS" ] && capture_wire remove && echo "removed capture-guard hook from $SETTINGS" || true
 }
 
 cmd_status() {

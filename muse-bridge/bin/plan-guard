@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""plan-guard — hook PreToolUse (Bash) cho phiên chạy plan của Musude.
+
+allow  : lệnh chỉ gồm các lệnh an toàn (đọc, muse-ask, unity-errors, git đọc…) → không dừng hỏi Linh.
+deny   : lệnh nguy hiểm (git push/reset --hard/clean, sudo, rm ngoài vùng dọn, curl|sh…) → Claude nhận lý do, đánh blocked.
+im lặng: mọi thứ khác → hỏi quyền như cũ. Lỗi bất kỳ → im lặng (không bao giờ tự cho phép khi không chắc).
+"""
+import json
+import os
+import re
+import shlex
+import sys
+
+HOME = os.path.expanduser("~")
+SAFE = {"ls", "cat", "head", "tail", "wc", "grep", "rg", "find", "file", "stat", "du", "pwd", "echo", "printf", "date",
+        "which", "sort", "uniq", "cut", "tr", "diff", "jq", "basename", "dirname", "realpath", "sips", "screencapture",
+        "muse-ask", "gemini-ask", "unity-errors", "plan-guard", "true", "test", "["}
+GIT_READ = {"status", "diff", "log", "show", "blame", "rev-parse", "ls-files", "branch"}
+CLEAN_ROOTS = (os.path.join(HOME, ".claude", "logs") + os.sep,
+               os.path.join(HOME, "AGENTS", "muse-bridge", ".agent", "shots") + os.sep)
+
+
+def out(decision, reason):
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "permissionDecision": decision, "permissionDecisionReason": reason}},
+                     ensure_ascii=False))
+    sys.exit(0)
+
+
+def segments(cmd):
+    return [s.strip() for s in re.split(r"&&|\|\||;|\||\n", cmd) if s.strip()]
+
+
+def plan_text():
+    pid = os.environ.get("MUSE_PLAN") or ""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", pid):
+        return ""
+    try:
+        with open(os.path.join(HOME, "AGENTS", "muse-bridge", "plans", pid + ".md"), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+def delete_zones(text):
+    """Đoạn plan nói tới việc xoá: từ chữ 'xoá/xóa/delete' tới 'GIỮ/Giữ/KHÔNG/keep' hoặc hết dòng."""
+    zones = []
+    for line in text.splitlines():
+        for m in re.finditer(r"(xoá|xóa|delete|remove)", line, re.I):
+            seg = line[m.end():]
+            stop = re.search(r"(GIỮ|Giữ|giữ|KHÔNG|Không|keep|KEEP)", seg)
+            zones.append(seg[:stop.start()] if stop else seg)
+    return zones
+
+
+def plan_approved(full, cwd, text, is_rmdir):
+    """Đường dẫn trong <project>/Assets được plan ghi rõ trong đoạn 'xoá …' → được xoá (+ .meta; thư mục cha rỗng qua rmdir)."""
+    if not text or not full.startswith(os.path.join(cwd, "Assets") + os.sep):
+        return False
+    rel = os.path.relpath(full, cwd)
+    base = (rel[:-5] if rel.endswith(".meta") else rel).rstrip("/")
+    if len(base) < 12:
+        return False
+    paths = [t for z in delete_zones(text) for t in re.findall(r"Assets/[^\s`'\"(),]+", z)]
+    if base in paths:
+        return True
+    if not any(t.startswith(base + "/") for t in paths):
+        return False
+    if is_rmdir:
+        return True
+    d = os.path.join(cwd, base)
+    return rel.endswith(".meta") and (not os.path.isdir(d) or not os.listdir(d))
+
+
+def rm_kind(argv, cwd):
+    is_rmdir = os.path.basename(argv[0]) == "rmdir"
+    """allow: chỉ xoá log/ảnh/tmp · ask: có đường dẫn trong <project>/Assets/Editor (đồ dựng tạm) · deny: còn lại."""
+    paths = [a for a in argv[1:] if not a.startswith("-")]
+    flags = "".join(a for a in argv[1:] if a.startswith("-"))
+    if not paths or set(flags) - set("-rfv"):
+        return "deny"
+    edit_root = os.path.join(cwd, "Assets", "Editor") + os.sep
+    text = plan_text()
+    kind = "allow"
+    for p in paths:
+        if any(ch in p for ch in "*?$`") or ".." in p.split("/"):
+            return "deny"
+        full = os.path.abspath(os.path.join(cwd, os.path.expanduser(p)))
+        if full.startswith(CLEAN_ROOTS) or full.startswith("/tmp/") or ("r" not in flags and plan_approved(full, cwd, text, is_rmdir)):
+            continue
+        if full.startswith(edit_root):
+            kind = "ask"
+            continue
+        return "deny"
+    return kind
+
+
+def main():
+    d = json.load(sys.stdin)
+    if d.get("tool_name") != "Bash":
+        return
+    cmd = (d.get("tool_input") or {}).get("command") or ""
+    cwd = d.get("cwd") or os.getcwd()
+    low = cmd.lower()
+    if re.search(r"\bgit\s+(push|reset\s+--hard|clean|checkout\s+--\s|restore\b)|\bsudo\b|\bcurl\b[^|]*\|\s*(sh|bash|zsh)|\bmkfs\b|\bdd\s+if=", low):
+        out("deny", "plan-guard: lệnh nguy hiểm — không tự chạy. Đánh task --status blocked kèm câu hỏi cho Linh rồi làm task khác.")
+    if re.search(r"(^|[^>])>(?!&)\s*/(etc|usr|System|Library)\b", cmd):
+        out("deny", "plan-guard: ghi vào thư mục hệ thống bị chặn.")
+    if "$(" in cmd or "`" in cmd:
+        return
+    allow = True
+    for seg in segments(cmd):
+        try:
+            argv = shlex.split(seg)
+        except ValueError:
+            return
+        while argv and re.fullmatch(r"[A-Z_][A-Z0-9_]*=.*", argv[0]):
+            argv = argv[1:]
+        if not argv:
+            continue
+        name = os.path.basename(argv[0])
+        if name == "cd":
+            continue
+        if name in ("rm", "rmdir"):
+            k = rm_kind(argv, cwd)
+            if k == "allow":
+                continue
+            if k == "ask":
+                return
+            out("deny", "plan-guard: chỉ tự xoá ~/.claude/logs, .agent/shots, /tmp và đường dẫn Assets/... ghi rõ trong plan (không wildcard). "
+                        "File khác: đánh --status blocked hỏi Linh.")
+        if name == "git" and len(argv) > 1 and argv[1] in GIT_READ:
+            continue
+        if name == "sed" and "-i" not in argv and not any(a.startswith("-i") for a in argv):
+            continue
+        if name in SAFE:
+            continue
+        allow = False
+    if allow and re.search(r"(^|[^0-9&])>{1,2}\s*(?!/dev/null|&)", cmd):
+        allow = False  # có ghi file bằng redirect → hỏi như thường
+    if allow:
+        out("allow", "plan-guard: lệnh đọc/an toàn")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:  # noqa: BLE001
+        pass

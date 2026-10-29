@@ -1,0 +1,1 @@
+Tiếp tục plan wb6-art-p2-p3-anim (phiên trước bị dừng giữa chừng). Chạy lại: muse-ask --plan wb6-art-p2-p3-anim --show. Task đang 'doing': kiểm tra trước (muse-ask --history 10 trong chat của plan, file đã tạo/sửa) — Muse đã trả lời DONE thì dùng kết quả, KHÔNG gửi lại; chưa có thì --wait hoặc làm tiếp. Rồi làm các task còn lại theo skill muse-collab.
